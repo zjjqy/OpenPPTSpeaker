@@ -88,7 +88,7 @@ function wireEvents(): void {
   const origUserUtterance = speechSession.onUserUtterance
   speechSession.onUserUtterance = (text) => {
     if (tourEngine.state === 'idle' && isStartPptCmd(text)) {
-      // 语音里带 PPT 名称（如"讲解智慧消防"）→ 直接讲对应 deck；否则讲当前活动 deck
+      // 语音里带 PPT 名称（如"讲解产品介绍"）→ 直接讲对应 deck；否则讲当前活动 deck
       const target = pptLibrary
         .list()
         .find((d) => d.source !== 'builtin' && d.name && d.name !== '未命名演示' && text.includes(d.name))

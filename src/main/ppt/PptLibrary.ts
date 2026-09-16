@@ -38,7 +38,7 @@ class PptLibrary {
     if (!this.data.decks.some((d) => d.id === BUILTIN_DECK_ID)) {
       this.data.decks.unshift({
         id: BUILTIN_DECK_ID,
-        name: '内置演示（智慧消防）',
+        name: '内置演示（产品介绍）',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         slideCount: 0,
