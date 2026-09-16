@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PPT 库管理 · OpenPPTSpeaker UI</title>
+<link rel="stylesheet" href="../assets/theme.css" />
+<link rel="stylesheet" href="../assets/ui.css" />
+<style>
+  .page { max-width: 1080px; margin: 0 auto; padding: 26px 24px 80px; }
+  .page-h { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+  .page-h h1 { font-size: 22px; letter-spacing: -0.01em; }
+  .page-h .spread { flex: 1; }
+  .tabs-line { display:flex; gap:2px; margin-bottom: 18px; }
+  .deck-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(296px, 1fr)); gap:16px; }
+  .deck { padding: 14px; display:flex; flex-direction:column; gap:12px; position:relative; }
+  .deck.active { border-color: var(--vd-accent); box-shadow: 0 0 0 3px var(--vd-accent-soft), var(--vd-shadow-md); }
+  .deck.active::before { content:"讲解中 · 活动"; position:absolute; top:-1px; right:14px; transform: translateY(-50%);
+    background: var(--vd-accent); color:#fff; font-size:10.5px; font-weight:700; padding:3px 10px; border-radius:999px; }
+  .slides-strip { display:flex; gap:6px; padding:6px; border-radius:12px; background: var(--vd-bg-2);
+    border:1px solid var(--vd-line-2); overflow-x:auto; }
+  .tile { width: 74px; height: 54px; flex:none; border-radius:7px; border:1px solid var(--vd-hairline);
+    background: var(--vd-surface); position:relative; overflow:hidden; }
+  .tile .bg { position:absolute; inset:0; }
+  .tile .ln { position:absolute; left:8px; right:8px; height:4px; border-radius:3px; background: var(--vd-line); }
+  .tile .ln.a { background: var(--vd-accent); opacity:.85; }
+  .tile .ln.xx { background: var(--vd-text-3); opacity:.3; }
+  .t1 .bg { background: radial-gradient(120% 100% at 20% 0%, var(--vd-accent-soft), transparent 55%), linear-gradient(160deg, var(--vd-accent) -20%, transparent 60%); opacity:.5; }
+  .t2 .bg { background: radial-gradient(120% 100% at 80% 20%, #8b5cf6, transparent 60%); opacity:.38; }
+  .t3 .bg { background: linear-gradient(140deg, transparent 30%, var(--vd-accent) 130%); opacity:.5; }
+  .t4 .bg { background: radial-gradient(circle at 70% 70%, var(--vd-accent) 0 6%, transparent 7%), linear-gradient(120deg, transparent 40%, var(--vd-accent-soft)); }
+  .tile .pnum { position:absolute; right:4px; bottom:2px; font-size:9px; color:var(--vd-text-3); font-family:var(--vd-font-mono); }
+  .tile.more { display:flex; align-items:center; justify-content:center; color: var(--vd-text-3); font-size:16px; border-style:dashed; }
+  .deck .d-name { display:flex; align-items:center; gap:8px; min-width:0; }
+  .deck .d-name b { font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .deck .d-meta { display:flex; gap:6px; flex-wrap:wrap; }
+  .deck .d-foot { display:flex; gap:6px; align-items:center; }
+  .deck .d-foot .spread { flex:1; }
+  .icon-btn2 { width:30px; height:30px; border-radius:9px; border:none; background:transparent;
+    color:var(--vd-text-3); display:inline-flex; align-items:center; justify-content:center; transition:all .15s; }
+  .icon-btn2:hover { background:var(--vd-accent-soft); color:var(--vd-accent); }
+  .icon-btn2.danger:hover { background:var(--vd-danger-soft); color:var(--vd-danger); }
+  .icon-btn2 svg { width:15px; height:15px; }
+  .hint-strip { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:12px;
+    background: var(--vd-info-soft); border:1px solid var(--vd-info); color: var(--vd-text-1); font-size:13px; }
+  .hint-strip svg { width:16px; height:16px; color: var(--vd-info); flex:none; }
+  .dash-import { border-style:dashed; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:10px; color:var(--vd-text-3); padding:26px; min-height:200px; text-align:center; transition:all .18s; }
+  .dash-import:hover { border-color: var(--vd-accent); color: var(--vd-accent); background: var(--vd-accent-softer); }
+  .dash-import .big-ic { background:transparent; }
+
+  /* 弹窗 */
+  .overlay { position: fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center;
+    background: var(--vd-overlay); backdrop-filter: blur(6px); padding: 20px; }
+  .overlay.on { display:flex; }
+  .modal { width: 520px; max-width: 100%; border-radius: 18px; background: var(--vd-surface);
+    border:1px solid var(--vd-line); box-shadow: var(--vd-shadow-lg); overflow:hidden;
+    animation: pop .22s var(--vd-ease); }
+  @keyframes pop { from { transform: translateY(8px) scale(.98); opacity:0 } to { transform:none; opacity:1 } }
+  .modal-h { display:flex; align-items:center; gap:10px; padding: 16px 20px 12px; }
+  .modal-h b { font-size:15px; }
+  .modal-h .spread{flex:1;}
+  .modal-x { border:none; background:var(--vd-surface-2); width:26px;height:26px;border-radius:8px; color:var(--vd-text-2); font-size:14px; }
+  .modal-x:hover { background: var(--vd-danger-soft); color: var(--vd-danger); }
+  .modal-b { padding: 0 20px 18px; display:flex; flex-direction:column; gap: 12px; }
+  .m-mode-seg { display:flex; gap:8px; }
+  .m-mode-seg .opt { flex:1; border:1px solid var(--vd-line); border-radius:11px; padding:10px 12px; cursor:pointer;
+    display:flex; flex-direction:column; gap:2px; background: var(--vd-surface-2); transition:all .15s; }
+  .m-mode-seg .opt b { font-size:13px; color:var(--vd-text-2); display:flex; align-items:center; gap:7px; }
+  .m-mode-seg .opt span { font-size:11px; color:var(--vd-text-3); }
+  .m-mode-seg .opt.on { border-color:var(--vd-accent); background: var(--vd-accent-soft); }
+  .m-mode-seg .opt.on b { color:var(--vd-accent); }
+  .m-mode-seg .opt svg { width:15px; height:15px; }
+  .modal .f-label { display:flex; align-items:center; gap:8px; }
+  .modal .f-label .opt-tip { font-weight:400; color:var(--vd-text-3); font-size:11.5px; }
+  .modal .prompt-samples { display:flex; gap:6px; flex-wrap:wrap; }
+  .modal .prompt-samples .chip { cursor:pointer; }
+  .modal .prompt-samples .chip:hover { border-color:var(--vd-accent); color:var(--vd-accent); }
+  .modal-f { display:flex; justify-content:flex-end; gap:8px; margin-top: 4px; }
+  .field-hint { font-size:11.5px; color: var(--vd-text-3); margin-top: 5px; line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="toolbar-slot" data-page="PPT 库管理"></div>
+<div class="page">
+
+  <div class="page-h">
+    <h1>PPT 库</h1>
+    <span class="faint" style="font-size:13px;">导入 PDF / 图片为可讲解的演示，并用大模型生成逐句讲稿</span>
+    <span class="spread"></span>
+    <button class="btn btn-muted" id="btnImages">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+      导入图片
+    </button>
+    <button class="btn btn-primary" id="btnPdf">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      导入 PDF
+    </button>
+  </div>
+
+  <div class="tabs-line">
+    <div class="tab on">全部演示 <span class="chip acc" style="margin-left:6px;">3</span></div>
+    <div class="tab">无讲稿 <span class="chip" style="margin-left:6px;">1</span></div>
+    <div class="tab">有讲稿 <span class="chip ok" style="margin-left:6px;">2</span></div>
+  </div>
+
+  <div class="hint-strip" style="margin-bottom:18px;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    <span>导入时可填写「讲稿生成提示词」让大模型按你的受众 / 风格撰写逐句讲解词；不填则按页面内容自动生成。</span>
+  </div>
+
+  <div class="deck-grid">
+
+    <!-- Deck 1: 活动 -->
+    <div class="card deck active">
+      <div class="slides-strip">
+        <div class="tile t1"><span class="bg"></span><span class="ln xx" style="top:20px;width:56%;"></span><span class="ln" style="top:29px;width:70%;"></span><span class="ln a" style="top:38px;width:44%;"></span><span class="pnum">1</span></div>
+        <div class="tile t2"><span class="bg"></span><span class="ln xx" style="top:18px;width:66%;"></span><span class="ln" style="top:27px;width:50%;"></span><span class="ln xx" style="top:36px;width:62%;"></span><span class="pnum">2</span></div>
+        <div class="tile t3"><span class="bg"></span><span class="ln" style="top:22px;width:58%;"></span><span class="ln xx" style="top:31px;width:72%;"></span><span class="pnum">3</span></div>
+        <div class="tile more">…</div>
+      </div>
+      <div class="d-name">
+        <svg style="width:16px;height:16px;flex:none;color:var(--vd-accent);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="10" rx="1.5"/><rect x="13" y="3" width="8" height="6" rx="1.5"/><rect x="3" y="15" width="8" height="6" rx="1.5"/><rect x="13" y="11" width="8" height="10" rx="1.5"/></svg>
+        <b>开源项目入门讲解</b>
+      </div>
+      <div class="d-meta">
+        <span class="chip">12 页</span><span class="chip ok">有讲稿</span><span class="chip">图片导入</span><span class="chip">刚刚</span>
+      </div>
+      <div class="d-foot">
+        <button class="btn btn-primary btn-sm">开始讲解</button>
+        <button class="btn btn-soft btn-sm">编辑讲稿</button>
+        <span class="spread"></span>
+        <button class="icon-btn2" title="重命名"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button class="icon-btn2" title="更多"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+        <button class="icon-btn2 danger" title="删除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+      </div>
+    </div>
+
+    <!-- Deck 2 -->
+    <div class="card deck">
+      <div class="slides-strip">
+        <div class="tile t4"><span class="bg"></span><span class="ln" style="top:22px;width:62%;"></span><span class="ln xx" style="top:31px;width:46%;"></span><span class="ln a" style="top:40px;width:34%;"></span><span class="pnum">1</span></div>
+        <div class="tile t2"><span class="bg"></span><span class="ln" style="top:20px;width:70%;"></span><span class="ln xx" style="top:29px;width:54%;"></span><span class="pnum">2</span></div>
+        <div class="tile t1"><span class="bg"></span><span class="ln xx" style="top:24px;width:60%;"></span><span class="ln" style="top:33px;width:40%;"></span><span class="pnum">3</span></div>
+        <div class="tile t4"><span class="bg"></span><span class="ln" style="top:26px;width:52%;"></span><span class="pnum">4</span></div>
+        <div class="tile t3"><span class="bg"></span><span class="ln" style="top:22px;width:66%;"></span><span class="ln xx" style="top:31px;width:58%;"></span><span class="ln a" style="top:40px;width:30%;"></span><span class="pnum">5</span></div>
+        <div class="tile t2"><span class="bg"></span><span class="ln" style="top:20px;width:70%;"></span><span class="pnum">6</span></div>
+        <div class="tile t1"><span class="bg"></span><span class="ln xx" style="top:22px;width:64%;"></span><span class="ln" style="top:31px;width:48%;"></span><span class="pnum">7</span></div>
+      </div>
+      <div class="d-name"><b>示例 · 智能硬件产品线</b></div>
+      <div class="d-meta">
+        <span class="chip">7 页</span><span class="chip ok">有讲稿</span><span class="chip">PDF 导入</span><span class="chip">昨天</span>
+      </div>
+      <div class="d-foot">
+        <button class="btn btn-muted btn-sm">设为活动</button>
+        <button class="btn btn-ghost btn-sm">编辑讲稿</button>
+        <span class="spread"></span>
+        <button class="icon-btn2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button class="icon-btn2 danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+      </div>
+    </div>
+
+    <!-- Deck 3: 无讲稿 → 生成讲稿（含提示词） -->
+    <div class="card deck">
+      <div class="slides-strip">
+        <div class="tile t3"><span class="bg"></span><span class="ln xx" style="top:24px;width:54%;"></span><span class="ln" style="top:33px;width:68%;"></span><span class="ln xx" style="top:42px;width:40%;"></span><span class="pnum">1</span></div>
+        <div class="tile t4"><span class="bg"></span><span class="ln" style="top:26px;width:60%;"></span><span class="ln xx" style="top:35px;width:44%;"></span><span class="pnum">2</span></div>
+        <div class="tile t1"><span class="bg"></span><span class="ln xx" style="top:22px;width:66%;"></span><span class="pnum">3</span></div>
+        <div class="tile more">…</div>
+      </div>
+      <div class="d-name"><b>本周分享会材料（草稿）</b></div>
+      <div class="d-meta">
+        <span class="chip">10 页</span><span class="chip warn">暂无讲稿</span><span class="chip">图片导入</span><span class="chip">今天</span>
+      </div>
+      <div class="d-foot">
+        <button class="btn btn-primary btn-sm" data-regen>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          AI 生成讲稿
+        </button>
+        <span class="spread"></span>
+        <button class="icon-btn2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button class="icon-btn2 danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+      </div>
+    </div>
+
+    <!-- 导入占位 -->
+    <div class="card dash-import" id="dropImport">
+      <div class="big-ic" style="background:transparent;">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3M12 3v12M7 8l5-5 5 5"/></svg>
+      </div>
+      <div style="font-size:14px;font-weight:600;">把 PDF 拖到这里</div>
+      <div class="faint" style="font-size:12px;">或点右上角「导入 PDF / 导入图片」</div>
+    </div>
+
+  </div>
+
+  <!-- 导入/生成进度（模拟） -->
+  <div style="margin-top:30px;" id="progressWrap" hidden>
+    <div class="faint" style="font-size:12.5px; margin-bottom:8px;">处理进度（示意）</div>
+    <div class="card" style="padding:16px;">
+      <div class="row gap-3" style="margin-bottom:10px;">
+        <span class="pulse-dot on"></span>
+        <span style="font-size:13px;" id="progMsg">正在导入 PDF · 转页面图片 3/12</span>
+        <span class="spread"></span>
+        <button class="btn btn-ghost btn-sm">后台运行</button>
+        <button class="btn btn-danger btn-sm" onclick="document.getElementById('progressWrap').hidden=true">取消</button>
+      </div>
+      <div class="progress"><i id="progBar" style="width:0%"></i></div>
+      <div class="row between faint" style="font-size:11.5px; margin-top:6px;">
+        <span id="progStage">转图 → 读文字 → 生成逐句讲稿 → 预合成语音</span><span class="mono" id="progPct">0%</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 导入 / 生成讲稿 弹窗 -->
+<div class="overlay" id="ovl" onclick="if(event.target===this)closeDlg()">
+  <div class="modal" role="dialog">
+    <div class="modal-h">
+      <b id="dlgTitle">导入 PPT</b>
+      <span class="spread"></span>
+      <button class="modal-x" onclick="closeDlg()">✕</button>
+    </div>
+    <div class="modal-b">
+
+      <!-- 导入方式（仅导入模式显示） -->
+      <div class="m-mode-seg" id="dlgModeSeg" hidden>
+        <div class="opt on" data-kind="pdf" onclick="pickKind('pdf')">
+          <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>导入 PDF</b>
+          <span>整份 PDF 逐页转图</span>
+        </div>
+        <div class="opt" data-kind="images" onclick="pickKind('images')">
+          <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>导入图片</b>
+          <span>多选逐页图片（PNG/JPG）</span>
+        </div>
+      </div>
+
+      <div class="field" id="dlgNameRow">
+        <label class="f-label">演示名称 <span class="opt-tip">留空使用文件名</span></label>
+        <input class="input" id="dlgName" placeholder="例如：产品发布会（2026 夏季）" />
+      </div>
+
+      <div class="field" id="dlgGenRow">
+        <label class="f-label">
+          <span class="switch" style="width:34px;height:19px;"><input type="checkbox" id="dlgGen" checked><i></i></span>
+          导入后自动生成演讲稿
+          <span class="opt-tip">取消勾选可先导入，稍后在「编辑讲稿」中手动编写或再生成</span>
+        </label>
+      </div>
+
+      <div class="field">
+        <label class="f-label">讲稿生成提示词 <span class="opt-tip">可选 · 决定讲解的语气与侧重</span></label>
+        <textarea class="textarea" id="dlgPrompt" rows="3"
+          placeholder='例如：面向首次体验的听众，语气轻松口语化，每页讲 3~5 句，先讲结论再解释…'></textarea>
+        <div class="prompt-samples">
+          <span class="chip" onclick="useSample(0)">面向领导汇报 · 简明扼要</span>
+          <span class="chip" onclick="useSample(1)">面向新员工 · 讲清背景</span>
+          <span class="chip" onclick="useSample(2)">技术分享 · 突出重点</span>
+        </div>
+      </div>
+
+      <div class="modal-f">
+        <button class="btn btn-ghost" onclick="closeDlg()">取消</button>
+        <button class="btn btn-primary" id="dlgOk">开始导入</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/app.js"></script>
+<script>
+  var SAMPLES = [
+    '面向公司领导的汇报场合：简明扼要、突出成果与价值，避免术语堆砌。',
+    '面向新入职员工：先用大白话解释背景，再逐页带读，语气耐心。',
+    '面向开发者社区的技术分享：语速适中，重点讲架构与设计取舍。'
+  ]
+  var ovl = document.getElementById('ovl')
+  var MODE = { kind: 'pdf', regen: false }
+  function pickKind(k) {
+    MODE.kind = k
+    ;[].forEach.call(document.querySelectorAll('#dlgModeSeg .opt'), function (o) {
+      o.classList.toggle('on', o.dataset.kind === k)
+    })
+  }
+  function useSample(i) {
+    document.getElementById('dlgPrompt').value = SAMPLES[i]
+  }
+  function openDlg(regen) {
+    MODE.regen = !!regen
+    document.getElementById('dlgModeSeg').hidden = !!regen
+    document.getElementById('dlgNameRow').style.display = regen ? 'none' : ''
+    document.getElementById('dlgGenRow').style.display = regen ? 'none' : ''
+    document.getElementById('dlgTitle').textContent = regen ? 'AI 生成讲稿' : (MODE.kind === 'pdf' ? '导入 PPT（PDF）' : '导入 PPT（图片）')
+    document.getElementById('dlgOk').textContent = regen ? '开始生成' : '开始导入'
+    document.getElementById('dlgPrompt').value = ''
+    document.getElementById('dlgName').value = ''
+    document.getElementById('dlgGen').checked = true
+    ovl.classList.add('on')
+  }
+  function closeDlg() { ovl.classList.remove('on') }
+  document.getElementById('btnPdf').addEventListener('click', function () { MODE.kind = 'pdf'; pickKind('pdf'); openDlg(false) })
+  document.getElementById('btnImages').addEventListener('click', function () { MODE.kind = 'images'; pickKind('images'); openDlg(false) })
+  document.getElementById('dropImport').addEventListener('click', function () { openDlg(false) })
+  ;[].forEach.call(document.querySelectorAll('[data-regen]'), function (b) {
+    b.addEventListener('click', function () { openDlg(true) })
+  })
+  document.getElementById('dlgOk').addEventListener('click', function () {
+    closeDlg()
+    var wrap = document.getElementById('progressWrap')
+    var bar = document.getElementById('progBar')
+    var pct = document.getElementById('progPct')
+    var msg = document.getElementById('progMsg')
+    var stage = document.getElementById('progStage')
+    wrap.hidden = false
+    bar.style.width = '4%'; pct.textContent = '4%'
+    if (MODE.regen) {
+      msg.textContent = '正在为「本周分享会材料（草稿）」生成讲稿…'
+      stage.textContent = 'AI 读取 10 页文字 → 撰写逐句讲解词 → 预合成语音'
+    } else {
+      msg.textContent = '正在导入 ' + (MODE.kind === 'pdf' ? 'PDF' : '图片') + ' · 转页面图片…'
+      stage.textContent = '转图 → 读文字 → 生成逐句讲稿 → 预合成语音'
+    }
+    var p = 4
+    var t = setInterval(function () {
+      p += Math.round(Math.random() * 13)
+      if (p >= 100) {
+        p = 100; clearInterval(t)
+        wrap.querySelector('.pulse-dot').classList.remove('on')
+        msg.textContent = '完成。可在「PPT 库」查看讲稿与试听。'
+        stage.textContent = '处理完成'
+      }
+      bar.style.width = p + '%'; pct.textContent = p + '%'
+    }, 320)
+  })
+</script>
+</body>
+</html>

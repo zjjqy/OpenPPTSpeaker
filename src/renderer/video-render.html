@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>video-render</title>
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:;"
+  />
+</head>
+<body>
+  <!-- 隐藏窗口：视频导出帧合成（主进程通过 executeJavaScript 调用 window.__renderFrame） -->
+  <script type="module" src="/src/video-render.ts"></script>
+</body>
+</html>

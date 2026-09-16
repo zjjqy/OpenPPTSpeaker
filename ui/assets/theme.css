@@ -1,0 +1,177 @@
+/* ============================================================
+   OpenPPTSpeaker · Design System —— Design Tokens（语义化，双主题 + 强调色）
+   ------------------------------------------------------------
+   · 前缀 --vd- 仅为命名空间，不含品牌含义，开源后无需再改。
+   · 主题切换：html[data-theme="light"|"dark"]，默认跟随系统。
+   · 强调色切换：html[data-accent="..."]，见下方预设。
+   · 所有组件只消费语义变量，不直接写死颜色。
+   ============================================================ */
+
+/* ---------- 基础重置 ---------- */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+/* ============ 1) 主题色板（语义 Token） ============ */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  --vd-bg: #f4f6fa;            /* 应用底 */
+  --vd-bg-2: #eef1f7;          /* 次级底/凹面 */
+  --vd-surface: #ffffff;       /* 卡片/浮层 */
+  --vd-surface-2: #fafbfd;     /* 卡片内嵌底 */
+  --vd-overlay: rgba(18, 22, 28, 0.46);
+  --vd-glass: rgba(255, 255, 255, 0.66);
+  --vd-glass-strong: rgba(255, 255, 255, 0.86);
+
+  --vd-text-1: #161a22;
+  --vd-text-2: #5a6474;
+  --vd-text-3: #98a1b1;
+  --vd-text-invert: #ffffff;
+
+  --vd-line: #e3e7ef;
+  --vd-line-2: #eef1f6;
+  --vd-hairline: rgba(20, 24, 33, 0.08);
+
+  --vd-danger: #e5484d;
+  --vd-warning: #e8960c;
+  --vd-success: #2fbf6f;
+  --vd-info: #3b82f6;
+
+  --vd-danger-soft: rgba(229, 72, 77, 0.12);
+  --vd-warning-soft: rgba(232, 150, 12, 0.14);
+  --vd-success-soft: rgba(47, 191, 111, 0.14);
+  --vd-info-soft: rgba(59, 130, 246, 0.13);
+
+  --vd-shadow-sm: 0 1px 2px rgba(16, 22, 34, 0.05), 0 1px 3px rgba(16, 22, 34, 0.05);
+  --vd-shadow-md: 0 6px 16px -6px rgba(16, 22, 34, 0.12), 0 2px 6px rgba(16, 22, 34, 0.05);
+  --vd-shadow-lg: 0 24px 48px -18px rgba(16, 22, 34, 0.24), 0 6px 14px -6px rgba(16, 22, 34, 0.08);
+  --vd-glow: 0 0 0 1px var(--vd-hairline), 0 10px 30px -10px var(--vd-overlay);
+
+  --vd-stage-dot: rgba(16, 22, 34, 0.06);
+  --vd-scrollbar: rgba(16, 22, 34, 0.18);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --vd-bg: #0f1216;
+  --vd-bg-2: #13171d;
+  --vd-surface: #1a1f27;
+  --vd-surface-2: #151a21;
+  --vd-overlay: rgba(0, 0, 0, 0.58);
+  --vd-glass: rgba(26, 31, 39, 0.62);
+  --vd-glass-strong: rgba(26, 31, 39, 0.9);
+
+  --vd-text-1: #edf1f7;
+  --vd-text-2: #9aa4b4;
+  --vd-text-3: #5c6675;
+  --vd-text-invert: #0d1014;
+
+  --vd-line: #262d38;
+  --vd-line-2: #20262f;
+  --vd-hairline: rgba(255, 255, 255, 0.07);
+
+  --vd-danger: #f15f64;
+  --vd-warning: #f0a832;
+  --vd-success: #3dd680;
+  --vd-info: #62a1ff;
+
+  --vd-danger-soft: rgba(241, 95, 100, 0.15);
+  --vd-warning-soft: rgba(240, 168, 50, 0.16);
+  --vd-success-soft: rgba(61, 214, 128, 0.15);
+  --vd-info-soft: rgba(98, 161, 255, 0.16);
+
+  --vd-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --vd-shadow-md: 0 8px 20px -8px rgba(0, 0, 0, 0.5);
+  --vd-shadow-lg: 0 28px 60px -20px rgba(0, 0, 0, 0.66), 0 8px 18px -6px rgba(0, 0, 0, 0.4);
+  --vd-glow: 0 0 0 1px var(--vd-hairline), 0 12px 34px -12px rgba(0, 0, 0, 0.7);
+
+  --vd-stage-dot: rgba(255, 255, 255, 0.05);
+  --vd-scrollbar: rgba(255, 255, 255, 0.2);
+}
+
+/* ============ 2) 强调色预设 ============ */
+/* accent-ink = 强调色背景上文字色；accent-soft = 弱化底色 */
+:root {
+  --vd-accent: #3d7eff;
+  --vd-accent-strong: #2a64e8;
+  --vd-accent-soft: rgba(61, 126, 255, 0.13);
+  --vd-accent-softer: rgba(61, 126, 255, 0.08);
+  --vd-accent-ink: #ffffff;
+  --vd-accent-ring: rgba(61, 126, 255, 0.35);
+}
+html[data-accent="sky"] {
+  --vd-accent: #22a9e0;
+  --vd-accent-strong: #128bc4;
+  --vd-accent-soft: rgba(34, 169, 224, 0.14);
+  --vd-accent-softer: rgba(34, 169, 224, 0.08);
+  --vd-accent-ring: rgba(34, 169, 224, 0.36);
+}
+html[data-accent="violet"] {
+  --vd-accent: #8b5cf6;
+  --vd-accent-strong: #7241e0;
+  --vd-accent-soft: rgba(139, 92, 246, 0.15);
+  --vd-accent-softer: rgba(139, 92, 246, 0.09);
+  --vd-accent-ring: rgba(139, 92, 246, 0.36);
+}
+html[data-accent="emerald"] {
+  --vd-accent: #10b981;
+  --vd-accent-strong: #059669;
+  --vd-accent-soft: rgba(16, 185, 129, 0.14);
+  --vd-accent-softer: rgba(16, 185, 129, 0.08);
+  --vd-accent-ring: rgba(16, 185, 129, 0.35);
+}
+html[data-accent="amber"] {
+  --vd-accent: #f5a623;
+  --vd-accent-strong: #dd8c0e;
+  --vd-accent-soft: rgba(245, 166, 35, 0.16);
+  --vd-accent-softer: rgba(245, 166, 35, 0.1);
+  --vd-accent-ring: rgba(245, 166, 35, 0.36);
+}
+html[data-accent="rose"] {
+  --vd-accent: #f4537a;
+  --vd-accent-strong: #de3361;
+  --vd-accent-soft: rgba(244, 83, 122, 0.14);
+  --vd-accent-softer: rgba(244, 83, 122, 0.08);
+  --vd-accent-ring: rgba(244, 83, 122, 0.35);
+}
+
+/* ============ 3) 形状 / 字距 / 字体 ============ */
+:root {
+  --vd-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --vd-font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+
+  --vd-r-sm: 8px;
+  --vd-r-md: 12px;
+  --vd-r-lg: 16px;
+  --vd-r-xl: 22px;
+  --vd-r-full: 999px;
+
+  --vd-space-1: 4px;
+  --vd-space-2: 8px;
+  --vd-space-3: 12px;
+  --vd-space-4: 16px;
+  --vd-space-5: 24px;
+  --vd-space-6: 32px;
+  --vd-space-7: 48px;
+
+  --vd-fs-xs: 11px;
+  --vd-fs-sm: 12.5px;
+  --vd-fs-md: 14px;
+  --vd-fs-lg: 16px;
+  --vd-fs-xl: 20px;
+  --vd-fs-2xl: 26px;
+  --vd-fs-3xl: 34px;
+
+  --vd-ease: cubic-bezier(0.25, 0.6, 0.3, 1);
+  --vd-motion: 0.18s;
+}
+
+/* ============ 4) 主题过渡 ============ */
+body.theme-anim, body.theme-anim * {
+  transition: background-color 0.28s var(--vd-ease), border-color 0.28s var(--vd-ease),
+    color 0.28s var(--vd-ease), box-shadow 0.28s var(--vd-ease), fill 0.28s var(--vd-ease);
+}

@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>OpenPPTSpeaker · 手机遥控</title>
+  <style>
+    :root {
+      --bg: #0f1216;
+      --surface: #1a1f27;
+      --surface-2: #151a21;
+      --line: #262d38;
+      --text-1: #edf1f7;
+      --text-2: #9aa4b4;
+      --text-3: #5c6675;
+      --accent: #3d7eff;
+      --accent-soft: rgba(61, 126, 255, 0.15);
+      --ok: #3dd680;
+      --err: #f15f64;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      touch-action: pan-y;
+      -webkit-text-size-adjust: 100%;
+      background: var(--bg);
+      color: var(--text-1);
+      font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 22px 18px 34px;
+      user-select: none;
+    }
+    .head { width: 100%; max-width: 460px; display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .lg { width: 26px; height: 26px; border-radius: 50%;
+      background: radial-gradient(circle at 34% 30%, #fff, var(--accent) 45%, #2a64e8 80%); flex: none; }
+    .head .t b { font-size: 15px; display: block; }
+    .head .t span { font-size: 11px; color: var(--text-3); }
+    .head .spread { flex: 1; }
+    .conn { font-size: 11px; padding: 3px 10px; border-radius: 999px;
+      background: var(--accent-soft); color: var(--accent); font-weight: 600; display: inline-flex; gap: 6px; align-items: center; }
+    .conn i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .conn.ok { background: rgba(61, 214, 128, 0.16); color: var(--ok); }
+    .conn.err { background: rgba(241, 95, 100, 0.16); color: var(--err); }
+
+    .card { width: 100%; max-width: 460px; background: var(--surface); border: 1px solid var(--line);
+      border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+    .now-lab { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-3);
+      font-weight: 700; letter-spacing: .04em; }
+    .now-name { font-size: 15px; font-weight: 700; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pg { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+    .pg .bar { flex: 1; height: 6px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+    .pg .bar i { display: block; height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--accent), #2a64e8); transition: width .3s; }
+    .pg .mono { font-size: 11px; color: var(--text-3); font-family: ui-monospace, monospace; }
+    .acts { display: flex; gap: 6px; margin-top: 12px; }
+    .mini { flex: 1; height: 36px; border-radius: 10px; border: 1px solid var(--line);
+      background: var(--surface-2); color: var(--text-1); font-size: 13px; font-weight: 600; }
+    .mini:active { background: #1e242e; }
+    .mini:disabled { opacity: .35; }
+    .mini.play { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .mini.end { color: var(--err); border-color: rgba(241, 95, 100, .45); }
+
+    .mic-wrap { position: relative; width: 100%; max-width: 460px; text-align: center; padding: 18px 0 8px; }
+    .mic { width: 64px; height: 64px; margin: 0 auto 10px; border-radius: 50%; border: none;
+      background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 0 10px var(--accent-soft), 0 8px 22px -6px var(--accent); }
+    .mic svg { width: 26px; height: 26px; }
+    .mic.hold { animation: pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 10px var(--accent-soft), 0 8px 22px -6px var(--accent); }
+      50% { box-shadow: 0 0 0 20px transparent, 0 8px 22px -6px var(--accent); }
+    }
+    .mic-hint { font-size: 13px; font-weight: 700; }
+    .mic-sub { font-size: 11.5px; color: var(--text-3); margin-top: 2px; }
+    .meter { margin-top: 12px; height: 6px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+    .meter i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), #2a64e8); }
+    .tip { font-size: 11px; color: var(--text-3); line-height: 1.7; margin-top: 12px; }
+    .logs { width: 100%; max-width: 460px; font-size: 11px; color: var(--text-3); line-height: 1.7; }
+  </style>
+</head>
+<body>
+  <div class="head">
+    <span class="lg"></span>
+    <div class="t">
+      <b>OpenPPTSpeaker</b>
+      <span>手机遥控 · 无线麦克风</span>
+    </div>
+    <span class="spread"></span>
+    <span id="conn" class="conn"><i></i><span id="connText">连接中…</span></span>
+  </div>
+
+  <div class="card">
+    <div class="now-lab"><span>正在讲解</span><span id="stateText">—</span></div>
+    <div class="now-name" id="deckName">未开始讲解</div>
+    <div class="pg">
+      <span class="mono" id="pgText">0 / 0</span>
+      <div class="bar"><i id="pgBar"></i></div>
+      <span id="db" class="mono">0</span>
+    </div>
+    <div class="acts">
+      <button id="btnPrev" class="mini" disabled>上一页</button>
+      <button id="btnPause" class="mini" disabled>暂停</button>
+      <button id="btnPlay" class="mini play" disabled>开始讲解</button>
+      <button id="btnNext" class="mini" disabled>下一页</button>
+    </div>
+    <div class="acts" style="margin-top: 6px">
+      <button id="btnEnd" class="mini end" disabled>结束讲解</button>
+      <button id="btnTray" class="mini">隐藏到托盘</button>
+    </div>
+  </div>
+
+  <div class="mic-wrap">
+    <button id="btn" class="mic">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg>
+    </button>
+    <div class="mic-hint" id="micHint">按住说话</div>
+    <div class="mic-sub">按住即打断讲解并收音，松开结束</div>
+    <div class="meter"><i id="meter"></i></div>
+    <p class="tip">此页面把手机变成电脑的<b>无线麦克风</b>：按住按钮再讲，松开即停止收音，避免长时间占用麦克风；同时可播放电脑讲解的语音回复。</p>
+  </div>
+
+  <div class="logs" id="logs"></div>
+
+  <script>
+    // ============ 禁止页面缩放 ============
+    document.addEventListener('gesturestart', function (e) { e.preventDefault() })
+    document.addEventListener('gesturechange', function (e) { e.preventDefault() })
+    document.addEventListener('gestureend', function (e) { e.preventDefault() })
+    document.addEventListener('touchmove', function (e) {
+      if (e.touches.length > 1) e.preventDefault()
+    }, { passive: false })
+
+    var AC = window.AudioContext || window.webkitAudioContext
+    var TARGET_RATE = 16000
+    var logEl = document.getElementById('logs')
+    var connEl = document.getElementById('conn')
+    var connText = document.getElementById('connText')
+    var btnEl = document.getElementById('btn')
+    var micHint = document.getElementById('micHint')
+    var meterEl = document.getElementById('meter')
+    var dbEl = document.getElementById('db')
+
+    var ws = null
+    var micCtx = null
+    var playCtx = null
+    var source = null
+    var stream = null
+    var collecting = false
+    var pressed = false
+    var wsAlive = false
+    var currentSampleRate = 24000
+    var pcmQueue = []
+    var currentSrc = null
+
+    // 讲解进度（本地估算：翻页时更新，用于进度条观感）
+    var pgTotal = 0
+    var pgIndex = 0
+
+    function log(msg) { logEl.textContent = '› ' + msg + '\n' + logEl.textContent }
+    function setConn(text, cls) {
+      connText.textContent = text
+      connEl.className = 'conn ' + (cls || '')
+    }
+    function renderPg() {
+      document.getElementById('pgText').textContent = pgIndex + ' / ' + (pgTotal || 0)
+      document.getElementById('pgBar').style.width = pgTotal ? (pgIndex / pgTotal * 100) + '%' : '0%'
+    }
+
+    function connect() {
+      var proto = location.protocol === 'https:' ? 'wss' : 'ws'
+      ws = new WebSocket(proto + '://' + location.host + '/ws')
+      ws.binaryType = 'arraybuffer'
+
+      ws.onopen = function () {
+        wsAlive = true
+        setConn('已连接', 'ok')
+        log('已连接 ' + location.host)
+        if (collecting) ensureMic()
+      }
+      ws.onclose = function () {
+        wsAlive = false
+        setConn('连接断开，重连中…', 'err')
+        setTimeout(connect, 2000)
+      }
+      ws.onerror = function () {
+        wsAlive = false
+        setConn('连接出错', 'err')
+      }
+
+      ws.onmessage = function (e) {
+        if (typeof e.data === 'string') {
+          var msg = JSON.parse(e.data)
+          if (msg.type === 'welcome') {
+            log('服务端握手成功，采样率 ' + msg.sampleRate)
+            if (msg.state) applyTourState(msg.state)
+            if (msg.orbVisible !== undefined) applyOrbVisible(msg.orbVisible)
+          } else if (msg.type === 'tour-state') {
+            applyTourState(msg.state, msg.message)
+          } else if (msg.type === 'orb-visible') {
+            applyOrbVisible(msg.visible)
+          } else if (msg.type === 'audio') {
+            currentSampleRate = msg.sampleRate || 24000
+          } else if (msg.type === 'control') {
+            handleControl(msg.action)
+          } else if (msg.type === 'busy') {
+            handleBusy()
+          } else if (msg.type === 'free') {
+            log('另一台设备发言结束，现在可以说话了')
+          }
+        } else {
+          pushPcm(new Float32Array(e.data.byteLength / 2), new Int16Array(e.data))
+        }
+      }
+    }
+
+    // ============ 遥控 ============
+    var btnPause = document.getElementById('btnPause')
+    var btnPlay = document.getElementById('btnPlay')
+    var btnPrev = document.getElementById('btnPrev')
+    var btnNext = document.getElementById('btnNext')
+    var btnEnd = document.getElementById('btnEnd')
+    var btnTray = document.getElementById('btnTray')
+
+    function sendRemote(cmd) {
+      if (wsAlive && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'remote', cmd: cmd }))
+      }
+    }
+    btnPause.onclick = function () { sendRemote('pause') }
+    btnPlay.onclick = function () { sendRemote('play') }
+    btnPrev.onclick = function () { sendRemote('prev') }
+    btnNext.onclick = function () { sendRemote('next') }
+    btnEnd.onclick = function () { sendRemote('end') }
+    btnTray.onclick = function () { sendRemote('hidetray') }
+
+    var orbVisibleNow = true
+    var tourIdleNow = true
+    function refreshTrayBtn() { btnTray.disabled = !tourIdleNow && orbVisibleNow }
+    function applyOrbVisible(visible) {
+      orbVisibleNow = visible
+      btnTray.textContent = visible ? '隐藏到托盘' : '显示主界面'
+      refreshTrayBtn()
+    }
+
+    var STATE_LABEL = {
+      idle: '未开始', opening: '准备中', presenting: '讲解中', listening: '倾听中',
+      paused: '已暂停', answering: '回答中', resuming: '继续讲解', ended: '已结束'
+    }
+    function applyTourState(s, message) {
+      var idle = (s === 'idle' || s === 'ended' || !s)
+      tourIdleNow = idle
+      refreshTrayBtn()
+      document.getElementById('stateText').textContent = STATE_LABEL[s] || '—'
+      btnPause.disabled = (s !== 'presenting')
+      if (s === 'opening') {
+        btnPlay.disabled = true
+        btnPlay.textContent = message || '准备中…'
+      } else {
+        btnPlay.disabled = (s !== 'paused' && !idle)
+        btnPlay.textContent = idle ? '开始讲解' : '继续播放'
+      }
+      var nav = (s === 'presenting' || s === 'paused')
+      btnPrev.disabled = !nav
+      btnNext.disabled = !nav
+      btnEnd.disabled = idle
+      if (idle) { pgIndex = 0; renderPg() }
+    }
+    document.getElementById('btnPrev').addEventListener('click', function () { if (pgTotal) { pgIndex = Math.max(1, pgIndex - 1); renderPg() } })
+    document.getElementById('btnNext').addEventListener('click', function () { if (pgTotal) { pgIndex = Math.min(pgTotal, pgIndex + 1); renderPg() } })
+
+    // ============ 播放（下行 TTS） ============
+    function ensurePlayCtx() {
+      if (!playCtx) {
+        playCtx = new AC()
+        if (playCtx.resume) playCtx.resume()
+      }
+      return playCtx
+    }
+    function handleControl(action) {
+      if (action === 'play' || action === 'resume') {
+        if (playCtx && playCtx.state === 'suspended') playCtx.resume()
+      } else if (action === 'pause') {
+        if (playCtx && playCtx.state === 'running') playCtx.suspend()
+      } else if (action === 'interrupt') {
+        pcmQueue.length = 0
+        if (currentSrc) { try { currentSrc.stop() } catch (e) {} currentSrc = null }
+        if (playCtx && playCtx.state === 'suspended') playCtx.resume()
+      }
+    }
+    function pushPcm(f32, i16) {
+      for (var i = 0; i < i16.length; i++) f32[i] = i16[i] / 32768
+      pcmQueue.push(f32)
+      drain()
+    }
+    function drain() {
+      if (!pcmQueue.length) return
+      var ctx = ensurePlayCtx()
+      if (ctx.state !== 'running') return
+      var buf = ctx.createBuffer(1, pcmQueue[0].length, currentSampleRate)
+      buf.getChannelData(0).set(pcmQueue[0])
+      pcmQueue.shift()
+      var src = ctx.createBufferSource()
+      currentSrc = src
+      src.buffer = buf
+      src.connect(ctx.destination)
+      src.onended = function () { if (currentSrc === src) currentSrc = null; drain() }
+      src.start()
+    }
+
+    // ============ 采集（上行麦克风） ============
+    function ensureMic() {
+      if (!collecting || !wsAlive) return
+      if (source) return
+      micCtx = new AC()
+      var input = micCtx.createScriptProcessor(4096, 1, 1)
+      input.onaudioprocess = function (e) {
+        if (!collecting || !wsAlive) return
+        var data = e.inputBuffer.getChannelData(0)
+        var down = downsample(data, micCtx.sampleRate, TARGET_RATE)
+        var i16 = toInt16(down)
+        ws.send(i16.buffer)
+        var sum = 0
+        for (var i = 0; i < down.length; i++) sum += down[i] * down[i]
+        var rms = Math.sqrt(sum / (down.length || 1))
+        var db = Math.round(rms * 100)
+        meterEl.style.width = Math.min(100, db) + '%'
+        dbEl.textContent = rms < 0.001 ? '0' : db
+      }
+      if (micCtx.resume) micCtx.resume()
+      source = micCtx.createMediaStreamSource(stream)
+      source.connect(input)
+      input.connect(micCtx.destination)
+      log('麦克风已接入，' + micCtx.sampleRate + 'Hz → ' + TARGET_RATE + 'Hz')
+    }
+    function downsample(input, inRate, outRate) {
+      if (inRate === outRate) return input
+      var ratio = inRate / outRate
+      var outLen = Math.floor(input.length / ratio)
+      var out = new Float32Array(outLen)
+      for (var i = 0; i < outLen; i++) out[i] = input[Math.floor(i * ratio)]
+      return out
+    }
+    function toInt16(f32) {
+      var out = new Int16Array(f32.length)
+      for (var i = 0; i < f32.length; i++) {
+        var s = Math.max(-1, Math.min(1, f32[i]))
+        out[i] = s < 0 ? s * 0x8000 : s * 0x7fff
+      }
+      return out
+    }
+    function handleBusy() {
+      pressed = false
+      if (collecting) stopMic()
+      log('发言权被占用：另一台设备正在说话')
+    }
+    function stopMic() {
+      collecting = false
+      micHint.textContent = '按住说话'
+      btnEl.classList.remove('hold')
+      if (source) { try { source.disconnect() } catch (e) {} source = null }
+      if (micCtx) { try { micCtx.close() } catch (e) {} micCtx = null }
+      if (stream) { stream.getTracks().forEach(function (t) { t.stop() }); stream = null }
+      meterEl.style.width = '0%'
+      dbEl.textContent = '0'
+    }
+    function startListen() {
+      if (collecting) return
+      if (!wsAlive) { log('等待连接电脑…'); return }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        log('请使用 HTTPS 访问（iOS Safari / Chrome）')
+        return
+      }
+      navigator.mediaDevices
+        .getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } })
+        .then(function (s) {
+          if (!pressed) { s.getTracks().forEach(function (t) { t.stop() }); return }
+          stream = s
+          collecting = true
+          micHint.textContent = '松开结束'
+          btnEl.classList.add('hold')
+          ensureMic()
+          if (navigator.wakeLock && navigator.wakeLock.request) {
+            navigator.wakeLock.request('screen').then(function () {}).catch(function () {})
+          }
+        })
+        .catch(function (err) { log('getUserMedia: ' + err.message) })
+    }
+    function stopListen() {
+      pressed = false
+      if (wsAlive && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'barge-in', active: false }))
+      }
+      if (collecting) stopMic()
+    }
+    function pressStart(e) {
+      e.preventDefault()
+      pressed = true
+      if (wsAlive && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'barge-in', active: true }))
+      }
+      startListen()
+    }
+    btnEl.addEventListener('mousedown', pressStart)
+    btnEl.addEventListener('touchstart', pressStart, { passive: false })
+    btnEl.addEventListener('mouseup', function () { stopListen() })
+    btnEl.addEventListener('mouseleave', function () { stopListen() })
+    btnEl.addEventListener('touchend', function () { stopListen() })
+    btnEl.addEventListener('touchcancel', function () { stopListen() })
+    window.addEventListener('mouseup', function () { stopListen() })
+    window.addEventListener('touchend', function () { stopListen() })
+    window.addEventListener('touchcancel', function () { stopListen() })
+
+    connect()
+  </script>
+</body>
+</html>

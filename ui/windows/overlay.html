@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>讲解演示外壳 · OpenPPTSpeaker UI</title>
+<link rel="stylesheet" href="../assets/theme.css" />
+<link rel="stylesheet" href="../assets/ui.css" />
+<style>
+  body { background: var(--vd-bg); }
+  .page { max-width: 1180px; margin: 0 auto; padding: 20px 22px 70px; }
+  .page-h { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+  .page-h h1 { font-size:19px; }
+  .page-h .faint { font-size:13px; }
+  .page-h .spread{flex:1;}
+  .hint-strip { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:12px;
+    background: var(--vd-info-soft); border:1px solid var(--vd-info); color: var(--vd-text-1); font-size:13px; margin-bottom:16px; }
+  .hint-strip svg { width:16px; height:16px; color: var(--vd-info); flex:none; }
+  .ctl-bar { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+  .ctl-bar .chip { cursor:pointer; }
+  .ctl-bar .chip.on { background:var(--vd-accent); color:#fff; border-color:transparent; }
+
+  .screen { border-radius: 20px; overflow:hidden; border:1px solid var(--vd-line); box-shadow: var(--vd-shadow-lg); }
+  .screen-cap { padding: 8px 14px; background: var(--vd-surface); border-bottom:1px solid var(--vd-line-2);
+    display:flex; align-items:center; gap:10px; font-size:12px; color:var(--vd-text-2); }
+  .stage2 { background: radial-gradient(120% 160% at 50% 0%, #1c232e, #0c0f14 70%);
+    min-height: 660px; position:relative; display:flex; align-items:center; justify-content:center; padding: 36px 5% 46px; }
+  .outer-ui { position:absolute; left:18px; top:12px; color:#9fb0c4; font-size:11.5px; display:flex; gap:10px; align-items:center; }
+  .outer-ui b { color:#e9eef6; }
+  .deck-slide { position:relative; width: 100%; max-width: 1120px; aspect-ratio: 16/9; border-radius: 4px; overflow:hidden;
+    background:#fff; box-shadow: 0 50px 110px -30px rgba(0,0,0,.75); }
+  .ds-title { position:absolute; left:7%; top:11%; font-size: clamp(15px,2.2vw,30px); font-weight:800; color:#1b2233; }
+  .ds-sub { position:absolute; left:7%; top:21%; font-size: clamp(10px,1.2vw,16px); color:#5b6780; font-weight:600; }
+  .ds-pill { position:absolute; left:7%; top:32%; width:38%; height:10%; border-radius:8px;
+    background: linear-gradient(90deg,#dfe5ef,#eef1f6); }
+  .ds-pill.p2 { left:52%; width:36%; }
+  .ds-line { position:absolute; left:7%; width:44%; height:2.5px; border-radius:2px; background:#e7ecf4; }
+  .ds-dot { position:absolute; right:8%; top:28%; width:17%; aspect-ratio:1; border-radius:50%;
+    background: radial-gradient(circle at 34% 30%, var(--vd-accent), var(--vd-accent-strong) 80%); }
+  .ds-ph { position:absolute; left:60%; bottom:13%; width:28%; height:36%; border-radius:10px;
+    background: linear-gradient(150deg,#eef1f7,#dbe3ee); }
+  .ds-spot { position:absolute; border:2.5px solid var(--vd-accent); border-radius:6px;
+    box-shadow: 0 0 0 5px var(--vd-accent-soft), 0 0 44px -4px var(--vd-accent); transition: all .4s var(--vd-ease); }
+  .ds-spot .tg { position:absolute; top:-30px; left:-3px; font-size:11px; font-weight:700; color:#fff;
+    background: var(--vd-accent); padding:3px 10px; border-radius:999px; white-space:nowrap; }
+  /* 字幕（与讲演字幕窗口同构） */
+  .deck-sub { position:absolute; left:50%; bottom:4%; transform:translateX(-50%); width:88%; text-align:center; pointer-events:none; }
+  .deck-sub .m { font-size: clamp(9px,.8vw,12px); color:#fff; opacity:.92; letter-spacing:2px;
+    text-shadow:0 1px 3px #000; margin-bottom:2px; }
+  .deck-sub .t { color:#fff; font-weight:600; font-size: clamp(13px,1.6vw,22px); line-height:1.45;
+    text-shadow:-1.6px 0 0 #000,1.6px 0 0 #000,0 -1.6px 0 #000,0 1.6px 0 #000,-1.2px -1.2px 0 #000,1.2px 1.2px 0 #000,-1.2px 1.2px 0 #000,1.2px -1.2px 0 #000; }
+  .pg-ind { position:absolute; left:18px; bottom:14px; display:flex; gap:5px; }
+  .pg-ind i { width:26px; height:3px; border-radius:2px; background:#39414e; }
+  .pg-ind i.on { background: var(--vd-accent); }
+  .tctl { position:absolute; right:18px; bottom:14px; display:flex; align-items:center; gap:6px;
+    background: rgba(20,25,33,.72); backdrop-filter: blur(12px); border:1px solid rgba(255,255,255,.12);
+    padding:6px 8px; border-radius:999px; }
+  .tctl .b { width:26px;height:26px;border-radius:50%; border:none; background:transparent; color:#cfd8e4;
+    display:flex;align-items:center;justify-content:center; }
+  .tctl .b:hover{ background:rgba(255,255,255,.12); color:#fff; }
+  .tctl .b.play { background:var(--vd-accent); color:#fff; }
+  .tctl .b.end { color:#ff8b90; }
+  .side-note { display:flex; gap:18px; margin-top:14px; font-size:12.5px; color:var(--vd-text-3); flex-wrap:wrap; }
+  .side-note b { color: var(--vd-text-2); }
+</style>
+</head>
+<body>
+<div class="toolbar-slot" data-page="讲解演示外壳"></div>
+
+<div class="page">
+  <div class="page-h">
+    <h1>讲解演示外壳</h1>
+    <span class="faint">讲解 PPT 时观众看到的大屏 / 录屏画面</span>
+    <span class="spread"></span>
+    <a href="./ppt.html"><button class="btn btn-muted btn-sm">← PPT 库</button></a>
+  </div>
+
+  <div class="hint-strip">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    <span>演示外壳由本地 HTML 生成（DeckHtmlGen）：页图 + 聚光定位 + 字幕同屏；播放、导出视频都使用这份画面。</span>
+  </div>
+
+  <div class="ctl-bar" id="pageChips"></div>
+
+  <div class="screen">
+    <div class="screen-cap">
+      <span class="win-dots" style="display:flex;gap:5px;"><i style="width:9px;height:9px;border-radius:50%;background:#f26d6d"></i><i style="width:9px;height:9px;border-radius:50%;background:#f0b44c"></i><i style="width:9px;height:9px;border-radius:50%;background:#57bb75"></i></span>
+      <span class="faint">讲解演示画面 · OpenPPTSpeaker</span>
+      <span class="spread"></span>
+      <span class="chip ok">正在讲解</span>
+      <span class="chip" id="pageCap">第 5 / 12 页</span>
+    </div>
+    <div class="stage2">
+      <div class="outer-ui"><b>演示外壳</b><span id="outerPg">第 5 页 / 共 12 页 · 能力总览</span></div>
+      <div class="deck-slide" id="deckSlide">
+        <div class="ds-title" id="dsTitle">数据基础设施平台</div>
+        <div class="ds-sub" id="dsSub">三大核心能力总览</div>
+        <span class="ds-pill"></span><span class="ds-pill p2"></span>
+        <span class="ds-dot"></span>
+        <span class="ds-line" style="top:48%;"></span>
+        <span class="ds-line" style="top:53%; width:36%;"></span>
+        <span class="ds-ph"></span>
+        <div class="ds-spot" id="dsSpot"><span class="tg">正在讲解</span></div>
+        <div class="deck-sub">
+          <div class="m" id="dsMeta">第 5 / 12 页 · 能力总览</div>
+          <div class="t" id="dsText">围绕「管道、分析、治理」三条主线，我们把数据资产真正用起来。</div>
+        </div>
+      </div>
+      <div class="pg-ind" id="pgInd"></div>
+      <div class="tctl">
+        <button class="b" id="btnPrev" title="上一页">‹</button>
+        <button class="b play" title="暂停/播放"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+        <button class="b" id="btnNext" title="下一页">›</button>
+        <button class="b end" title="结束">■</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="side-note">
+    <span><b>聚光</b>：讲解到哪一句，页面其余区域压暗，仅保留该句定位的矩形区域高亮。</span>
+    <span><b>字幕</b>：跟随真实语音进度逐句推进，样式来自讲稿「字幕样式」。</span>
+    <span><b>比例</b>：16:9，适配投影 / 大屏 / 导出视频。</span>
+  </div>
+</div>
+
+<script src="../assets/app.js"></script>
+<script>
+  var PAGES = [
+    { n: 5, title: '数据基础设施平台', sub: '三大核心能力总览', pg: 5,
+      text: '围绕「管道、分析、治理」三条主线，我们把数据资产真正用起来。',
+      sL: 7, sT: 30, sW: 40, sH: 26 },
+    { n: 6, title: '数据管道', sub: '统一采集 · 实时入仓', pg: 6,
+      text: '平台内置上百个连接器，无需开发即可把各类数据源持续接入。',
+      sL: 52, sT: 12, sW: 34, sH: 30 },
+    { n: 7, title: '实时分析', sub: '毫秒级 OLAP 查询', pg: 7,
+      text: '查询引擎对全量明细做实时聚合，让指标变化随时可见。',
+      sL: 8, sT: 44, sW: 34, sH: 34 }
+  ]
+  var i = 0
+  function paint() {
+    var p = PAGES[i]
+    document.getElementById('dsTitle').textContent = p.title
+    document.getElementById('dsSub').textContent = p.sub
+    document.getElementById('outerPg').textContent = '第 ' + p.pg + ' 页 / 共 12 页 · ' + p.title
+    document.getElementById('pageCap').textContent = '第 ' + p.pg + ' / 12 页'
+    document.getElementById('dsMeta').textContent = '第 ' + p.pg + ' / 12 页 · ' + p.title
+    document.getElementById('dsText').textContent = p.text
+    var spot = document.getElementById('dsSpot')
+    spot.style.left = p.sL + '%'; spot.style.top = p.sT + '%'
+    spot.style.width = p.sW + '%'; spot.style.height = p.sH + '%'
+    var chips = document.getElementById('pageChips'); chips.innerHTML = ''
+    PAGES.forEach(function (x, k) {
+      var c = document.createElement('span')
+      c.className = 'chip' + (k === i ? ' on' : '')
+      c.textContent = x.title
+      c.addEventListener('click', function () { i = k; paint() })
+      chips.appendChild(c)
+    })
+    var ind = document.getElementById('pgInd'); ind.innerHTML = ''
+    for (var k = 1; k <= 12; k++) {
+      var b = document.createElement('i'); b.className = k === p.pg ? 'on' : ''; ind.appendChild(b)
+    }
+  }
+  document.getElementById('btnPrev').addEventListener('click', function () { if (i > 0) { i--; paint() } })
+  document.getElementById('btnNext').addEventListener('click', function () { if (i < PAGES.length - 1) { i++; paint() } })
+  paint()
+</script>
+</body>
+</html>

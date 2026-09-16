@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>pdf-render</title>
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; worker-src 'self' blob:;"
+  />
+</head>
+<body>
+  <!-- 隐藏窗口：用 pdf.js 把 PDF 页渲染为 PNG（主进程通过 executeJavaScript 调用 window.__pdf*） -->
+  <script type="module" src="/src/pdf-render.ts"></script>
+</body>
+</html>

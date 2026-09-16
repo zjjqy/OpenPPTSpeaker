@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>讲稿编辑器 · OpenPPTSpeaker UI</title>
+<link rel="stylesheet" href="../assets/theme.css" />
+<link rel="stylesheet" href="../assets/ui.css" />
+<style>
+  body { background: var(--vd-bg); }
+  .wb { max-width: 1520px; margin: 0 auto; padding: 14px 20px 24px; }
+  /* 顶栏 */
+  .ed-top { display:flex; align-items:center; gap:12px; padding: 2px 2px 12px; flex-wrap:wrap; }
+  .ed-top .back { display:inline-flex; align-items:center; gap:6px; color:var(--vd-text-2); font-weight:600; padding:6px 10px; border-radius:9px; }
+  .ed-top .back:hover { background:var(--vd-surface-2); color:var(--vd-accent); text-decoration:none; }
+  .ed-top h1 { font-size:17px; }
+  .ed-top .spread { flex:1; }
+  .icon-b { width:30px;height:30px;border-radius:9px;border:1px solid transparent;background:transparent;color:var(--vd-text-2);
+    display:inline-flex;align-items:center;justify-content:center;transition:all .15s; }
+  .icon-b:hover { background:var(--vd-surface-2); color:var(--vd-text-1); }
+  .icon-b:disabled { opacity:.35; pointer-events:none; }
+  .icon-b svg{width:15px;height:15px;}
+
+  /* 工作区三栏 */
+  .work { display:grid; grid-template-columns: 212px minmax(0,1fr) 360px; gap:12px; align-items:stretch; }
+  .pane { border-radius: 16px; background: var(--vd-surface); border:1px solid var(--vd-line); box-shadow: var(--vd-shadow-sm);
+    display:flex; flex-direction:column; overflow:hidden; }
+  .pane-h { display:flex; align-items:center; gap:8px; padding: 11px 14px; border-bottom:1px solid var(--vd-line-2);
+    font-weight:700; font-size:13px; flex:none; }
+  .pane-h .spread { flex:1; }
+  .pane-h .sub { font-weight:500; font-size:11.5px; color:var(--vd-text-3); }
+
+  /* 左：页面缩略图列表 */
+  .rail { padding:8px; overflow:auto; height: calc(100vh - 208px); }
+  .pg { display:flex; gap:10px; align-items:center; padding:7px; border-radius:11px; cursor:pointer; border:1px solid transparent; }
+  .pg + .pg { margin-top:2px; }
+  .pg:hover { background: var(--vd-surface-2); }
+  .pg.on { background: var(--vd-accent-soft); border-color: var(--vd-accent-ring); }
+  .pg .thumb { width:56px; height:42px; flex:none; border-radius:7px; overflow:hidden; position:relative; background:#fff; border:1px solid var(--vd-line); }
+  .thumb .bg { position:absolute; inset:0; }
+  .thumb .ln { position:absolute; left:7px; right:7px; height:3px; border-radius:2px; background: var(--vd-line); }
+  .thumb .ln.a { background: var(--vd-accent); }
+  .thumb .ln.xx { background: var(--vd-text-3); opacity:.35; }
+  .t-a { background: radial-gradient(120% 100% at 80% 0%, var(--vd-accent) -40%, transparent 55%); }
+  .t-b { background: radial-gradient(circle at 20% 100%, var(--vd-accent-soft) 0 8%, transparent 9%); }
+  .t-c { background: linear-gradient(140deg, transparent 30%, var(--vd-accent-soft)); }
+  .pg .pg-t { min-width:0; }
+  .pg .pg-t b { display:block; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pg .pg-t span { font-size:10.5px; color:var(--vd-text-3); }
+  .pg .no { margin-left:auto; font-family:var(--vd-font-mono); font-size:11px; color:var(--vd-text-3); }
+
+  /* 中：预览 */
+  .stage-pane { position: relative; }
+  .st-body { padding: 14px 18px 16px; overflow:auto; }
+  .slide-stage { position: relative; aspect-ratio: 16/9; border-radius: 12px; overflow:hidden; background:#fff;
+    border:1px solid var(--vd-hairline); box-shadow: var(--vd-shadow-md); cursor: crosshair; }
+  .ss-title { position:absolute; left:8%; top:12%; font-weight:800; color:#1b2233; font-size: clamp(14px,1.7vw,24px); letter-spacing:-.01em; }
+  .ss-sub { position:absolute; left:8%; top:20%; font-weight:600; color:#6a768c; font-size: clamp(9px,1vw,14px);}
+  .ss-pill { position:absolute; left:8%; top:30%; height:9%; width:40%; border-radius:7px; background:linear-gradient(90deg,#dfe5ef,#eef1f6);}
+  .ss-pill.p2 { left:54%; width:38%; }
+  .ss-line { position:absolute; left:8%; width:46%; height:3px; border-radius:2px; background:#e6ebf2; }
+  .ss-dot { position:absolute; right:8%; top:26%; width:20%; aspect-ratio:1; border-radius:50%;
+    background: radial-gradient(circle at 34% 30%, var(--vd-accent), var(--vd-accent-strong) 80%); }
+  .ss-bars i { position:absolute; left:8%; width:26%; height:6%; border-radius:5px; background:#eef1f6; }
+  .spot { position:absolute; border: 2.5px solid var(--vd-accent); border-radius: 8px; display:none;
+    box-shadow: 0 0 0 4px var(--vd-accent-soft), 0 6px 26px -6px var(--vd-accent); transition: all .25s var(--vd-ease); }
+  .spot.on { display:block; }
+  .spot .tag { position:absolute; top:-25px; left:-2px; background: var(--vd-accent); color:#fff; font-size:11px; font-weight:700;
+    padding:2px 8px; border-radius:999px; }
+  .spot .tag::after { content:""; position:absolute; left:14px; bottom:-5px; border:5px solid transparent; border-top-color:var(--vd-accent); border-bottom:none; }
+  .drag-rect { position:absolute; border:2px dashed var(--vd-accent); border-radius:6px; background: var(--vd-accent-softer); display:none; }
+  .box-tip { position:absolute; left:50%; top:10px; transform:translateX(-50%); z-index:3; background:#242b3c; color:#fff;
+    font-size:12px; padding:6px 13px; border-radius:999px; box-shadow: var(--vd-shadow-md); white-space:nowrap; display:none; }
+  .box-tip.on{ display:block; }
+  /* 页面内字幕预览（与讲演字幕同构） */
+  .preview-shell { position:absolute; left:50%; bottom:3.2%; transform:translateX(-50%); width:86%; text-align:center; pointer-events:none; }
+  .ps-progress { font-size: clamp(8px,.7vw,12px); color:#fff; opacity:.92; letter-spacing:2px;
+    text-shadow:0 0 3px #000,0 0 6px rgba(0,0,0,.9); margin-bottom:3px; }
+  .ps-text { display:inline-block; color:#fff; font-weight:600; line-height:1.4;
+    text-shadow:-1.6px 0 0 #000,1.6px 0 0 #000,0 -1.6px 0 #000,0 1.6px 0 #000,-1.2px -1.2px 0 #000,1.2px 1.2px 0 #000,-1.2px 1.2px 0 #000,1.2px -1.2px 0 #000; }
+  .ps-text.bg { background: rgba(0,0,0,.62); padding: 5px 14px; border-radius:10px; text-shadow:none; }
+  .caret { display:inline-block; width:2px; height:1em; background:var(--vd-accent); vertical-align:-2px; margin-left:3px;
+    animation:blink 1s steps(2) infinite; }
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+  .st-foot { margin-top:10px; display:flex; align-items:center; gap:10px; font-size:12px; color:var(--vd-text-3); }
+  .st-foot .chips{display:flex;gap:6px;}
+
+  /* 右：字幕文本（讲解句） */
+  .sent-wrap { flex:1; overflow:auto; padding: 10px 12px; display:flex; flex-direction:column; gap:7px; }
+  .sent { border:1px solid var(--vd-line-2); border-radius:12px; background: var(--vd-surface-2); padding:9px 10px 6px; }
+  .sent.on { border-color: var(--vd-accent); box-shadow: 0 0 0 2px var(--vd-accent-soft); background: var(--vd-accent-softer); }
+  .sent .s-h { display:flex; align-items:center; gap:7px; margin-bottom:4px; }
+  .sent .no { width:19px;height:19px; flex:none; border-radius:6px; background:var(--vd-surface); border:1px solid var(--vd-line);
+    color:var(--vd-text-3); font-size:10.5px; font-weight:700; display:inline-flex;align-items:center;justify-content:center; }
+  .sent.on .no { background:var(--vd-accent); border-color:var(--vd-accent); color:#fff; }
+  .sent .dur { font-size:10.5px; color:var(--vd-text-3); font-family:var(--vd-font-mono); }
+  .sent textarea { width:100%; background:transparent; border:none; outline:none; resize:none; color:var(--vd-text-1);
+    font-size:13px; line-height:1.65; min-height:38px; }
+  .sent .ops { display:flex; gap:4px; align-items:center; }
+  .ops .mi { flex:none; height:22px; padding:0 8px; font-size:11px; border-radius:7px; border:1px solid var(--vd-line);
+    background:var(--vd-surface); color:var(--vd-text-2); }
+  .ops .mi:hover { color:var(--vd-accent); border-color:var(--vd-accent); }
+  .ops .mi.primary { background:var(--vd-accent); border-color:var(--vd-accent); color:#fff; }
+  .ops .mi.danger { color:var(--vd-danger); }
+  .ops .mi:disabled{opacity:.4;pointer-events:none;}
+  .ops .sp { flex:1; }
+  .sent.add-btn { border-style:dashed; background:transparent; color:var(--vd-text-3); justify-content:center;
+    align-items:center; display:flex; padding:8px; cursor:pointer; border-color:var(--vd-line); }
+  .sent.add-btn:hover { color:var(--vd-accent); border-color:var(--vd-accent); }
+  .empty-tip { text-align:center; color:var(--vd-text-3); font-size:12px; padding:22px 6px; }
+
+  /* 字幕样式抽屉 */
+  .style-drawer { display:none; margin-top:12px; border-radius:16px; background:var(--vd-surface); border:1px solid var(--vd-line);
+    box-shadow: var(--vd-shadow-md); padding: 12px 16px; }
+  .style-drawer.on { display:block; }
+  .sd-h { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .sd-h b { font-size:13px; } .sd-h .scope { font-size:11.5px; color:var(--vd-text-3); flex:1; }
+  .sd-row { display:flex; align-items:center; gap:10px; padding:4px 0; font-size:12.5px; }
+  .sd-row .lbl { width:70px; color:var(--vd-text-2); flex:none; }
+  .sd-row .range { flex:1; }
+  .sd-row .val { width:44px; text-align:right; font-family:var(--vd-font-mono); font-size:11px; color:var(--vd-text-3); }
+  .sd-row .switch { transform:scale(.8); transform-origin:left center; }
+  .sd-row .switch2 { width:34px; height:19px; }
+  .sd-gap { width:26px; }
+  .toast-fix { position: fixed; right: 22px; bottom: 22px; z-index: 90; }
+</style>
+</head>
+<body>
+<div class="toolbar-slot" data-page="讲稿编辑器"></div>
+
+<div class="wb">
+  <!-- 顶栏 -->
+  <div class="ed-top">
+    <a class="back" href="./ppt.html">‹ 返回 PPT 库</a>
+    <h1>开源项目入门讲解</h1>
+    <span class="chip ok">已保存</span>
+    <span class="chip">12 页 · 逐句讲稿</span>
+    <span class="chip">生成方式 · AI</span>
+    <span class="spread"></span>
+    <button class="btn btn-ghost btn-sm" id="btnStyle">字幕样式</button>
+    <button class="btn btn-muted btn-sm">导入讲稿 JSON</button>
+    <button class="btn btn-primary btn-sm">保存讲稿</button>
+  </div>
+
+  <!-- 三栏工作区：左 页面 | 中 预览 | 右 字幕文本 -->
+  <div class="work">
+
+    <!-- 左：页面 -->
+    <div class="pane">
+      <div class="pane-h">页面 <span class="chip acc">12</span></div>
+      <div class="rail" id="pageRail"></div>
+    </div>
+
+    <!-- 中：预览 -->
+    <div class="pane stage-pane">
+      <div class="pane-h">
+        页面预览
+        <span class="sub">点击右侧「框选」后在图上拖拽，为当前句打聚光</span>
+        <span class="spread"></span>
+        <span class="chip" id="pgCap">第 1 / 12 页</span>
+      </div>
+      <div class="st-body">
+        <div class="slide-stage" id="stage">
+          <div class="ss-title" id="ssTitle">演示标题</div>
+          <div class="ss-sub" id="ssSub">副标题 · 开场概览</div>
+          <span class="ss-pill"></span><span class="ss-pill p2"></span>
+          <span class="ss-dot"></span>
+          <span class="ss-line" style="top:52%;"></span>
+          <span class="ss-line" style="top:57%;width:38%;"></span>
+          <div class="ss-bars"><i style="top:74%"></i><i style="top:82%"></i></div>
+          <div class="spot" id="spot"><span class="tag" id="spotTag">1</span></div>
+          <div class="drag-rect" id="dragRect"></div>
+          <div class="box-tip" id="boxTip">拖动鼠标框选第 <b id="boxN">1</b> 句的聚光范围</div>
+          <div class="preview-shell" id="previewShell">
+            <div class="ps-progress" id="psProgress">第 1 / 3 句 · 首页概览</div>
+            <div><span class="ps-text" id="psText">欢迎来到 OpenPPTSpeaker —— 开源语音讲解助手。</span><span class="caret" id="psCaret"></span></div>
+          </div>
+        </div>
+        <div class="st-foot">
+          <span>聚光框 = 讲解时页面压暗后保持高亮的区域；字幕条与讲演 / 导出视频共用同一套样式。</span>
+          <span class="spread"></span>
+          <span class="chips"><span class="chip acc" id="spotState">当前句无聚光</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右：字幕文本 -->
+    <div class="pane">
+      <div class="pane-h">
+        <span>字幕文本</span>
+        <span class="sub" id="sentCap">第 1 页 · 3 句</span>
+        <span class="spread"></span>
+        <button class="btn btn-ghost btn-sm" onclick="toast('已提交 AI 优化（演示）')">AI 优化</button>
+      </div>
+      <div class="sent-wrap" id="sentWrap"></div>
+    </div>
+  </div>
+
+  <!-- 字幕样式抽屉 -->
+  <div class="style-drawer" id="drawer">
+    <div class="sd-h"><b>字幕样式</b><span class="scope">整份讲稿统一 · 同步到讲演字幕与导出视频</span>
+      <button class="btn btn-ghost btn-sm" onclick="resetStyle()">恢复默认</button>
+      <button class="btn btn-muted btn-sm" id="btnStyleClose">关闭</button>
+    </div>
+    <div class="row wrap gap-2">
+      <div class="sd-row"><span class="lbl">字体</span>
+        <select class="select" style="width:150px;height:30px;font-size:12px;" id="selFont">
+          <option>微软雅黑</option><option>黑体</option><option>思源黑体</option><option>Arial</option>
+        </select>
+      </div>
+      <div class="sd-row"><span class="lbl">字号</span><input class="range" type="range" id="rSize" min="14" max="44" value="17"><span class="val" id="vSize">17px</span></div>
+      <div class="sd-row"><span class="lbl">距底</span><input class="range" type="range" id="rBottom" min="1" max="60" value="6"><span class="val" id="vBottom">6%</span></div>
+      <div class="sd-gap"></div>
+      <div class="sd-row"><span class="lbl">背景板</span><span class="switch switch2"><input type="checkbox" id="cBg"><i></i></span></div>
+      <div class="sd-row"><span class="lbl">进度角标</span><span class="switch switch2"><input type="checkbox" id="cProg" checked><i></i></span></div>
+      <div class="sd-row"><span class="lbl">描边</span><span class="switch switch2"><input type="checkbox" id="cStroke" checked><i></i></span></div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/app.js"></script>
+<script>
+  // ===== 数据（示意）=====
+  var PAGES = [
+    { n: 1, title: '首页 · 项目概览', sub: '开场 · 一句话介绍', art: 't-a',
+      speech: ['欢迎来到 OpenPPTSpeaker —— 开源语音讲解助手。', '它能把静态的演示，变成一场可以对话的讲解。', '接下来用一页，介绍它的三个核心能力。'] },
+    { n: 2, title: '核心能力 · 语音讲解', sub: 'AI 讲稿 + 精确字幕 + 可打断', art: 't-b',
+      speech: ['大模型会按页面内容，生成逐句讲稿。', '开讲前把所有句子预合成语音，字幕与声音精确同步。', '听众随时插话，助手会停下并回答问题。'] },
+    { n: 3, title: '字幕与聚光', sub: '所见即所得', art: 't-c',
+      speech: ['字幕使用统一样式，编辑所见就是讲演所得。', '聚光框能精确定位当前讲解的区域。', '你现在看到的，就是第 2 句的聚光效果。'] },
+    { n: 4, title: '手机遥控', sub: '扫码即用', art: 't-a',
+      speech: ['手机扫码即变无线麦克风与遥控器。', '同一 Wi-Fi 下无需安装任何 App。', '讲解中也能随手翻页与暂停，不必回到电脑前。'] }
+  ]
+  var pages = PAGES
+  var cur = 0, sel = 0, boxing = null
+
+  // ===== DOM 引用 =====
+  var stage = document.getElementById('stage')
+  var spot = document.getElementById('spot')
+  var spotTag = document.getElementById('spotTag')
+  var dragRect = document.getElementById('dragRect')
+  var boxTip = document.getElementById('boxTip')
+
+  // ===== 预览字幕 =====
+  var psText = document.getElementById('psText')
+  var psProg = document.getElementById('psProgress')
+  var psShell = document.getElementById('previewShell')
+  function paintPreview() {
+    var p = pages[cur]
+    var s = p.speech[Math.min(sel, p.speech.length - 1)]
+    psText.textContent = s ? s.text : ''
+    psProg.textContent = p.n + ' / ' + PAGES.length + ' 页 · 第 ' + (sel + 1) + ' / ' + p.speech.length + ' 句'
+    document.getElementById('psCaret').style.display = s ? 'inline-block' : 'none'
+    paintSpot()
+  }
+  function paintSpot() {
+    var p = pages[cur]
+    var s = p.speech[Math.min(sel, p.speech.length - 1)]
+    if (s && s.spot) {
+      spot.style.left = s.spot.l + '%'; spot.style.top = s.spot.t + '%'
+      spot.style.width = s.spot.w + '%'; spot.style.height = s.spot.h + '%'
+      spot.classList.add('on'); spotTag.textContent = sel + 1
+      document.getElementById('spotState').textContent = '第 ' + (sel + 1) + ' 句已聚光'
+    } else {
+      spot.classList.remove('on')
+      document.getElementById('spotState').textContent = s ? '当前句无聚光' : ''
+    }
+  }
+  function paintPage() {
+    var p = pages[cur]
+    document.getElementById('pgCap').textContent = '第 ' + p.n + ' / ' + PAGES.length + ' 页'
+    document.getElementById('ssTitle').textContent = p.title
+    document.getElementById('ssSub').textContent = p.sub
+    document.getElementById('sentCap').textContent = '第 ' + p.n + ' 页 · ' + p.speech.length + ' 句'
+    // 预览区字幕跟随
+    paintPreview()
+  }
+
+  // ===== 左栏页面 =====
+  function renderRail() {
+    var rail = document.getElementById('pageRail'); rail.innerHTML = ''
+    pages.forEach(function (p, i) {
+      var d = document.createElement('div')
+      d.className = 'pg' + (i === cur ? ' on' : '')
+      d.innerHTML = '<div class="thumb"><span class="bg ' + p.art + '"></span>' +
+        '<span class="ln a" style="top:22%"></span><span class="ln xx" style="top:44%;width:72%"></span>' +
+        '<span class="ln" style="top:66%;width:60%"></span></div>' +
+        '<div class="pg-t"><b>' + p.title + '</b><span>' + p.speech.length + ' 句</span></div>' +
+        '<span class="no">' + p.n + '</span>'
+      d.addEventListener('click', function () { cur = i; sel = 0; boxing = null; hideBox(); renderRail(); paintPage() })
+      rail.appendChild(d)
+    })
+  }
+
+  // ===== 右栏句子 =====
+  function buildSent() {
+    var wrap = document.getElementById('sentWrap'); wrap.innerHTML = ''
+    var p = pages[cur]
+    if (!p.speech.length) {
+      wrap.innerHTML = '<div class="empty-tip">本页还没有讲解句，点下方「＋ 加一句」开始。</div>'
+    }
+    p.speech.forEach(function (s, i) {
+      var row = document.createElement('div')
+      row.className = 'sent' + (i === sel ? ' on' : '')
+      row.innerHTML =
+        '<div class="s-h"><span class="no">' + (i + 1) + '</span><span class="dur">约 ' + (2 + i * 1.2).toFixed(1) + 's</span>' +
+        '<span class="sp" style="flex:1"></span>' +
+        (s.spot ? '<span class="chip acc" style="font-size:10px;padding:1px 8px;">已聚光</span>' : '') +
+        '</div>' +
+        '<textarea rows="2">' + s.text + '</textarea>' +
+        '<div class="ops">' +
+          '<button class="mi ' + (boxing === i ? 'primary' : '') + '" data-op="box">' +
+            (boxing === i ? '取消框选' : (s.spot ? '重框' : '框选')) + '</button>' +
+          (s.spot ? '<button class="mi" data-op="clear">清框</button>' : '') +
+          '<span class="sp"></span>' +
+          '<button class="mi" data-op="up" ' + (i === 0 ? 'disabled' : '') + '>↑</button>' +
+          '<button class="mi" data-op="down" ' + (i === p.speech.length - 1 ? 'disabled' : '') + '>↓</button>' +
+          '<button class="mi danger" data-op="del">删</button>' +
+        '</div>'
+      row.querySelector('.no').addEventListener('click', function () { setSel(i) })
+      row.addEventListener('click', function (e) {
+        if (e.target.closest('button')) return
+        setSel(i)
+      })
+      var ta = row.querySelector('textarea')
+      ta.addEventListener('focus', function () { setSel(i) })
+      ta.addEventListener('input', function () {
+        s.text = ta.value
+        if (i === sel) { psText.textContent = ta.value || '…' }
+      })
+      ta.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault() }
+      })
+      row.querySelectorAll('button[data-op]').forEach(function (b) {
+        b.addEventListener('click', function (e) {
+          e.stopPropagation()
+          var op = b.dataset.op
+          if (op === 'box') startBox(i)
+          else if (op === 'clear') { s.spot = null; if (i === sel) paintSpot(); buildSent() }
+          else if (op === 'up') { if (i > 0) { var t = p.speech.splice(i, 1)[0]; p.speech.splice(i - 1, 0, t); sel = i - 1; buildSent() } }
+          else if (op === 'down') { if (i < p.speech.length - 1) { var t2 = p.speech.splice(i, 1)[0]; p.speech.splice(i + 1, 0, t2); sel = i + 1; buildSent() } }
+          else if (op === 'del') { p.speech.splice(i, 1); if (sel >= p.speech.length) sel = p.speech.length - 1; if (sel < 0) sel = 0; buildSent(); paintPreview() }
+        })
+      })
+      wrap.appendChild(row)
+    })
+    var add = document.createElement('div')
+    add.className = 'sent add-btn'
+    add.textContent = '＋ 加一句'
+    add.addEventListener('click', function () {
+      p.speech.push({ text: '', spot: null })
+      sel = p.speech.length - 1
+      buildSent(); paintPreview()
+      var rows = wrap.querySelectorAll('textarea')
+      if (rows.length) rows[rows.length - 1].focus()
+    })
+    wrap.appendChild(add)
+  }
+  function setSel(i) {
+    sel = i
+    ;[].forEach.call(document.querySelectorAll('#sentWrap .sent'), function (r, j) {
+      r.classList.toggle('on', j === sel)
+    })
+    paintPreview()
+  }
+  function startBox(i) {
+    if (boxing === i) { boxing = null; boxTip.classList.remove('on'); hideBox() }
+    else {
+      boxing = i; setSel(i)
+      document.getElementById('boxN').textContent = i + 1
+      boxTip.classList.add('on')
+    }
+    buildSent()
+  }
+  function hideBox() { dragRect.style.display = 'none' }
+  function setSelPreview() {}
+
+  // ===== 预览区框选拖拽 =====
+  var drag = null
+  stage.addEventListener('mousedown', function (e) {
+    if (boxing === null) return
+    var r = stage.getBoundingClientRect()
+    drag = { x0: e.clientX - r.left, y0: e.clientY - r.top, x1: e.clientX - r.left, y1: e.clientY - r.top }
+    dragRect.style.display = 'block'
+  })
+  window.addEventListener('mousemove', function (e) {
+    if (!drag) return
+    var r = stage.getBoundingClientRect()
+    drag.x1 = Math.max(0, Math.min(r.width, e.clientX - r.left))
+    drag.y1 = Math.max(0, Math.min(r.height, e.clientY - r.top))
+    drawDrag()
+  })
+  window.addEventListener('mouseup', function () {
+    if (!drag) return
+    var r = stage.getBoundingClientRect()
+    var x = Math.min(drag.x0, drag.x1), y = Math.min(drag.y0, drag.y1)
+    var w = Math.abs(drag.x1 - drag.x0), h = Math.abs(drag.y1 - drag.y0)
+    if (w > 8 && h > 6 && boxing !== null) {
+      pages[cur].speech[boxing].spot = {
+        l: +(x / r.width * 100).toFixed(1), t: +(y / r.height * 100).toFixed(1),
+        w: +(w / r.width * 100).toFixed(1), h: +(h / r.height * 100).toFixed(1)
+      }
+      boxing = null; boxTip.classList.remove('on')
+      hideBox(); buildSent(); paintPreview(); toast('已为第 ' + (sel + 1) + ' 句设置聚光')
+    }
+    drag = null
+  })
+  function drawDrag() {
+    var x = Math.min(drag.x0, drag.x1), y = Math.min(drag.y0, drag.y1)
+    dragRect.style.left = x + 'px'; dragRect.style.top = y + 'px'
+    dragRect.style.width = Math.abs(drag.x1 - drag.x0) + 'px'
+    dragRect.style.height = Math.abs(drag.y1 - drag.y0) + 'px'
+  }
+
+  // ===== 字幕样式 =====
+  function paintStyle() {
+    var size = +document.getElementById('rSize').value
+    var bg = document.getElementById('cBg').checked
+    var stroke = document.getElementById('cStroke').checked
+    psText.style.fontSize = size + 'px'
+    psText.style.fontWeight = 500
+    psText.classList.toggle('bg', bg)
+    if (!bg) psText.style.textShadow = stroke ? '-1.6px 0 0 #000,1.6px 0 0 #000,0 -1.6px 0 #000,0 1.6px 0 #000,-1.2px -1.2px 0 #000,1.2px 1.2px 0 #000,-1.2px 1.2px 0 #000,1.2px -1.2px 0 #000' : 'none'
+    else psText.style.textShadow = 'none'
+    document.getElementById('psProgress').style.display = document.getElementById('cProg').checked ? '' : 'none'
+    psShell.style.bottom = document.getElementById('rBottom').value + '%'
+  }
+  function resetStyle() {
+    document.getElementById('rSize').value = 17
+    document.getElementById('rBottom').value = 3.2
+    document.getElementById('cBg').checked = false
+    document.getElementById('cProg').checked = true
+    document.getElementById('cStroke').checked = true
+    document.getElementById('vSize').textContent = '17px'
+    document.getElementById('vBottom').textContent = '3%'
+    paintStyle()
+  }
+  var drawer = document.getElementById('drawer')
+  document.getElementById('btnStyle').addEventListener('click', function () {
+    drawer.classList.toggle('on')
+  })
+  document.getElementById('btnStyleClose').addEventListener('click', function () { drawer.classList.remove('on') })
+  ;['rSize', 'rBottom'].forEach(function (id) {
+    document.getElementById(id).addEventListener('input', function () {
+      var v = this.value
+      document.getElementById('v' + id.slice(1)).textContent = v + (id === 'rBottom' ? '%' : 'px')
+      paintStyle()
+    })
+  })
+  ;['cBg', 'cProg', 'cStroke'].forEach(function (id) {
+    document.getElementById(id).addEventListener('change', paintStyle)
+  })
+
+  // ===== toast =====
+  function toast(msg) {
+    var t = document.createElement('div')
+    t.className = 'toast ok toast-fix'
+    t.innerHTML = '<span class="pulse-dot on" style="flex:none;"></span>' + msg
+    document.body.appendChild(t)
+    setTimeout(function () { t.remove() }, 2200)
+  }
+
+  // init
+  renderRail(); paintPage(); buildSent(); paintStyle()
+</script>
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OpenPPTSpeaker · UI Design Hub —— 开源语音讲解助手</title>
+<link rel="stylesheet" href="./assets/theme.css" />
+<link rel="stylesheet" href="./assets/ui.css" />
+<style>
+  /* ===== Hub 专属 ===== */
+  .hub { max-width: 1120px; margin: 0 auto; padding: 40px 24px 80px; }
+  .hero { display: flex; gap: 40px; align-items: center; flex-wrap: wrap; padding: 36px 8px 8px; }
+  .brand-mark { width: 108px; height: 108px; flex: none; position: relative; }
+  .brand-core { position: absolute; inset: 26px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--vd-accent), var(--vd-accent-strong) 70%);
+    box-shadow: 0 0 0 8px var(--vd-accent-soft), 0 10px 30px -6px var(--vd-accent); }
+  .brand-orbit { position: absolute; inset: 0; border-radius: 50%; border: 1.5px dashed var(--vd-accent-ring); animation: spin 22s linear infinite; }
+  .brand-orbit b { position: absolute; top: -5px; left: 50%; width: 10px; height: 10px; border-radius: 50%; background: var(--vd-accent); }
+  .brand-orbit-2 { position: absolute; inset: 10px; border-radius: 50%; border: 1px solid var(--vd-hairline); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hero-text h1 { font-size: 44px; font-weight: 800; letter-spacing: -0.02em; }
+  .hero-text .cn { color: var(--vd-text-2); font-weight: 600; margin-top: 6px; font-size: 17px; }
+  .hero .tagline { color: var(--vd-text-2); max-width: 560px; line-height: 1.8; margin-top: 10px; }
+  .sec { margin-top: 56px; }
+  .sec-h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px; }
+  .sec-h small { color: var(--vd-text-3); font-size: var(--vd-fs-sm); }
+
+  .chip-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+  .token-chip { display: flex; align-items: center; gap: 10px; padding: 9px 14px 9px 9px;
+    border-radius: 12px; background: var(--vd-surface); border: 1px solid var(--vd-line); min-width: 190px; }
+  .token-chip .sw { width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--vd-hairline); }
+  .token-chip .k { font-size: 11px; color: var(--vd-text-3); font-family: var(--vd-font-mono); }
+  .token-chip .v { font-size: 12px; font-family: var(--vd-font-mono); color: var(--vd-text-1); margin-top: 1px; }
+
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .demo-pad { padding: 22px; }
+  .demo-sec { font-size: 12px; font-weight: 700; color: var(--vd-text-3); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 14px; }
+
+  .win-card { display: flex; flex-direction: column; gap: 12px; padding: 18px; cursor: pointer; text-decoration: none; color: inherit; }
+  .win-card:hover { text-decoration: none; }
+  .win-art { height: 128px; border-radius: 10px; border: 1px solid var(--vd-line-2);
+    background:
+      radial-gradient(120% 90% at 50% 0%, var(--vd-accent-soft), transparent 60%),
+      var(--vd-surface-2); position: relative; overflow: hidden; }
+  .win-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .win-meta h4 { font-size: 15px; }
+  .win-meta span { font-size: 12px; color: var(--vd-text-3); }
+  .arrow { color: var(--vd-accent); font-weight: 700; }
+
+  /* 迷你窗口缩略画 */
+  .art-orb { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--vd-accent), var(--vd-accent-strong) 75%); transform: translate(-50%,-56%);
+    box-shadow: 0 0 0 10px var(--vd-accent-soft); }
+  .art-orb::after { content:""; position:absolute; inset:-12px; border-radius:50%; border:1px dashed var(--vd-accent-ring); animation: spin 14s linear infinite; }
+  .art-card { position: absolute; left: 16%; right: 16%; top: 66%; height: 30px; border-radius: 8px;
+    background: var(--vd-glass-strong); border: 1px solid var(--vd-hairline); backdrop-filter: blur(6px); }
+  .art-panel { position: absolute; left: 18%; top: 18%; width: 64%; height: 64%; border-radius: 10px;
+    background: var(--vd-glass); border: 1px solid var(--vd-hairline); }
+  .art-panel::before { content:""; position: absolute; left: 14px; top: 14px; width: 34%; height: 8px; border-radius: 6px; background: var(--vd-accent); opacity:.8; }
+  .art-panel::after { content:""; position: absolute; left: 14px; top: 30px; width: 70%; height: 5px; border-radius: 4px; background: var(--vd-line); }
+  .art-bar { position: absolute; left: 10%; top: 20%; width: 80%; height: 8px; border-radius: 6px; background: var(--vd-accent-soft); overflow:hidden; }
+  .art-bar::after { content:""; position:absolute; left:0; top:0; bottom:0; width:38%; border-radius: 6px; background: var(--vd-accent); }
+  .art-rows b { position: absolute; left: 12%; width: 56%; height: 6px; border-radius: 5px; background: var(--vd-line); }
+  .art-sub { position: absolute; left: 22%; right: 22%; bottom: 16%; height: 16px; border-radius: 5px;
+    background: var(--vd-surface); border: 1px solid var(--vd-line-2); }
+  .art-sub::before { content:""; position: absolute; left: 8%; top: 4px; width: 30%; height: 6px; border-radius: 4px; background: var(--vd-text-3); opacity:.5; }
+  .art-phone { position: absolute; left: 50%; top: 50%; width: 58px; height: 104px; transform: translate(-50%,-50%);
+    border-radius: 12px; border: 2px solid var(--vd-line); background: var(--vd-surface-2); }
+  .art-phone::before { content:""; position:absolute; left:10px; top:10px; width:26px; height:7px; border-radius:5px; background: var(--vd-accent); opacity:.85; }
+  .art-overlay { position: absolute; inset: 18px 12px; border: 2px solid var(--vd-accent); border-radius: 8px; box-shadow: 0 0 0 60px var(--vd-accent-softer); }
+  .art-overlay::after { content:""; position: absolute; left: 50%; top: -30px; transform: translateX(-50%);
+    width: 120px; height: 26px; border-radius: 8px; background: var(--vd-surface); border: 1px solid var(--vd-line); }
+  .art-overlay::before { content:""; position: absolute; left: 8px; top: -24px; width: 34px; height: 14px; border-radius: 4px; background: var(--vd-accent); }
+
+  .type-row { display: grid; grid-template-columns: 96px 1fr; align-items: baseline; gap: 18px; padding: 10px 0; border-bottom: 1px dashed var(--vd-line-2); }
+  .type-row .lbl { font-size: 11px; color: var(--vd-text-3); font-family: var(--vd-font-mono); }
+  .note { font-size: 13px; color: var(--vd-text-3); line-height: 1.7; }
+  .brand-table { width: 100%; }
+  .brand-table td { padding: 10px 14px; }
+  footer { margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--vd-line-2); font-size: 12.5px; color: var(--vd-text-3); text-align: center; }
+</style>
+</head>
+<body>
+<div class="toolbar-slot" data-home="1" data-page="视觉规范与窗口索引"></div>
+
+<div class="hub">
+
+  <!-- ================= 品牌区 ================= -->
+  <div class="hero">
+    <div class="brand-mark">
+      <span class="brand-orbit"><b></b></span>
+      <span class="brand-orbit-2"></span>
+      <span class="brand-core"></span>
+    </div>
+    <div class="hero-text">
+      <h1>OpenPPTSpeaker</h1>
+      <div class="cn">开源 PPT 讲演助手 · OpenPPTSpeaker（AI 语音讲解 + 可打断问答 + 手机遥控）</div>
+      <p class="tagline">
+        把 PDF / 图片转成可讲的演示，用语音逐页讲解、实时字幕、随时打断问答；手机扫码变无线遥控，
+        讲解声音与画面同屏、进度可控。本项目为开源 UI 重构原型：<b style="color:var(--vd-text-1)">浅/深双主题 + 强调色可换</b>，
+        已去除全部公司 / 行业相关品牌内容。
+      </p>
+      <div class="row gap-2 wrap" style="margin-top:16px;">
+        <span class="chip acc">开源化</span><span class="chip">去公司化</span><span class="chip">浅深双主题</span>
+        <span class="chip">强调色 6 档</span><span class="chip ok">静态 HTML 视觉稿</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 品牌定稿 ================= -->
+  <section class="sec">
+    <div class="sec-h"><h3 class="h3">品牌已定稿：<b style="color:var(--vd-accent)">OpenPPTSpeaker</b></h3><small>Open + PPT + Speaker = 开源的 AI PPT 讲演助手</small></div>
+    <div class="card card-pad">
+      <div class="row gap-4 wrap" style="align-items:center;">
+        <div style="flex:1;min-width:240px;">
+          <table class="brand-table" style="margin:-4px 0;">
+            <tr><td style="width:150px;"><b>英文名</b></td><td class="muted">OpenPPTSpeaker</td></tr>
+            <tr><td><b>中文名（建议）</b></td><td class="muted">开源 PPT 讲演助手</td></tr>
+            <tr><td><b>界面内品牌词</b></td><td class="muted">OpenPPTSpeaker · 展示随主界面语言调整</td></tr>
+          </table>
+        </div>
+        <div class="inset" style="padding:14px 16px;max-width:380px;">
+          <div class="faint" style="font-size:12px;margin-bottom:6px;">命名说明</div>
+          <div style="font-size:13px;line-height:1.8;color:var(--vd-text-2);">
+            · PPT：核心能力是「把 PPT / PDF 讲出来」<br/>
+            · Speaker：既能主动讲演，也能被提问、可打断，是"会说话的演示"
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 主题与强调色 ================= -->
+  <section class="sec">
+    <div class="sec-h"><h3 class="h3">主题与强调色</h3><small>右上角可随时全局切换：浅 / 深 / 跟随 + 6 档强调色（存于 localStorage，各页联动）</small></div>
+    <div class="grid-2">
+      <div class="card demo-pad">
+        <div class="demo-sec">中性底 / 语义色板（实时读取）</div>
+        <div class="chip-grid" id="tokens"></div>
+      </div>
+      <div class="card demo-pad">
+        <div class="demo-sec">强调色档位</div>
+        <div class="swatches" style="margin-bottom:18px;"></div>
+        <div class="row gap-2" style="margin-bottom:14px;">
+          <button class="btn btn-primary btn-sm">主要按钮</button>
+          <button class="btn btn-soft btn-sm">次要按钮</button>
+          <button class="btn btn-muted btn-sm">中性按钮</button>
+          <button class="btn btn-danger btn-sm">危险按钮</button>
+        </div>
+        <div class="progress" style="margin-bottom:6px;"><i style="width:64%"></i></div>
+        <div class="faint" style="font-size:12px;">强调色用于状态光、主按钮、进度与语音能量，中性色承载信息层级。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 排版 ================= -->
+  <section class="sec">
+    <div class="sec-h"><h3 class="h3">字体层级</h3><small>系统无衬线栈（Segoe UI / PingFang / 微软雅黑），数字与代码用等宽</small></div>
+    <div class="card demo-pad">
+      <div class="type-row"><span class="lbl">3xl / 34 · 800</span><span style="font-size:34px;font-weight:800;letter-spacing:-.02em;">讲解，让演示被听见</span></div>
+      <div class="type-row"><span class="lbl">2xl / 26 · 720</span><span style="font-size:26px;font-weight:720;">导入 PPT · 生成讲稿</span></div>
+      <div class="type-row"><span class="lbl">xl / 20 · 650</span><span style="font-size:20px;font-weight:650;">语音唤醒、可打断问答、手机遥控</span></div>
+      <div class="type-row"><span class="lbl">md / 14 · 400</span><span style="font-size:14px;">正文正文正文 · 中文行高 1.55，正文宽度不宜超过 60 字符。</span></div>
+      <div class="type-row"><span class="lbl">xs / 11 · 600 大写</span><span style="font-size:11px;font-weight:650;letter-spacing:.08em;color:var(--vd-text-3);">SECTION LABEL · 分区标题</span></div>
+    </div>
+  </section>
+
+  <!-- ================= 组件 ================= -->
+  <section class="sec">
+    <div class="sec-h"><h3 class="h3">基础组件</h3><small>用于各窗口的一致性样板</small></div>
+    <div class="grid-2">
+      <div class="card demo-pad">
+        <div class="demo-sec">按钮 / 开关 / 分段</div>
+        <div class="col gap-3">
+          <div class="row gap-2 wrap">
+            <button class="btn btn-primary">开始讲解</button>
+            <button class="btn btn-soft">生成讲稿</button>
+            <button class="btn btn-muted">导入 PDF</button>
+            <button class="btn btn-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4v16h16v-7"/><path d="M18.5 2.5 22 6 11 17l-4 1 1-4Z"/></svg>编辑</button>
+          </div>
+          <div class="row gap-3 wrap">
+            <span class="row gap-2"><span class="switch"><input type="checkbox" checked><i></i></span><span class="muted" style="font-size:13px;">语音唤醒</span></span>
+            <span class="row gap-2"><span class="switch"><input type="checkbox"><i></i></span><span class="muted" style="font-size:13px;">允许打断</span></span>
+            <span class="row gap-2"><span class="switch"><input type="checkbox" checked><i></i></span><span class="muted" style="font-size:13px;">手机桥接</span></span>
+          </div>
+          <div class="row gap-2 wrap"><span class="seg"><button>演示</button><button class="on">PDF</button><button>图片</button></span></div>
+        </div>
+      </div>
+      <div class="card demo-pad">
+        <div class="demo-sec">输入 / 选择 / 标签 / 空态</div>
+        <div class="col gap-3">
+          <input class="input" placeholder="DashScope API Key（仅保存在本机）" />
+          <div class="row gap-2 wrap">
+            <span class="chip acc">华舜 → 已清理</span>
+            <span class="chip ok">已预合成 12 页</span>
+            <span class="chip warn">3 页合成失败</span>
+            <span class="chip">第 5 / 12 页</span>
+          </div>
+          <div class="empty" style="padding:22px;"><div class="big-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></div>还没有任何演示，点「导入 PPT」开始</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 窗口索引 ================= -->
+  <section class="sec">
+    <div class="sec-h"><h3 class="h3">全套窗口原型索引</h3><small>点击卡片进入对应静态页（纯 HTML，可直接浏览器打开）</small></div>
+    <div class="grid-3">
+      <a class="card card-hover win-card" href="./windows/orb.html">
+        <div class="win-art"><span class="art-orb"></span><span class="art-card"></span></div>
+        <div class="win-meta"><h4>悬浮球 · 主界面</h4><span>orb.html</span></div>
+        <span class="faint" style="font-size:13px;">桌面语音挂件：状态能量球 + 玻璃控制台（待机 / 讲解中 / 迷你）</span>
+        <span class="arrow">进入预览 →</span>
+      </a>
+      <a class="card card-hover win-card" href="./windows/settings.html">
+        <div class="win-art"><span class="art-panel"></span></div>
+        <div class="win-meta"><h4>设置</h4><span>settings.html</span></div>
+        <span class="faint" style="font-size:13px;">模型 / TTS / 唤醒 / 手机桥接 / 外观（含主题强调色实时预览）</span>
+        <span class="arrow">进入预览 →</span>
+      </a>
+      <a class="card card-hover win-card" href="./windows/ppt.html">
+        <div class="win-art"><span class="art-bar" style="left:15%;top:24%;width:70%;"></span><span class="art-rows"><b style="top:58%;"></b><b style="top:72%;"></b><b style="top:86%;"></b></span></div>
+        <div class="win-meta"><h4>PPT 库管理</h4><span>ppt.html</span></div>
+        <span class="faint" style="font-size:13px;">导入 PDF / 图片为演示，生成讲稿，管理活动演示与导出视频</span>
+        <span class="arrow">进入预览 →</span>
+      </a>
+      <a class="card card-hover win-card" href="./windows/editor.html">
+        <div class="win-art"><span class="art-rows"><b style="top:16%;width:70%;"></b><b style="top:30%;width:82%;"></b><b style="top:44%;width:66%;"></b><b style="top:58%;width:76%;"></b><b style="top:72%;width:52%;"></b></span><span class="art-sub"></span></div>
+        <div class="win-meta"><h4>讲稿编辑器</h4><span>editor.html</span></div>
+        <span class="faint" style="font-size:13px;">逐句讲稿 + 聚光框选 + 字幕样式，编辑所见 = 讲演所得</span>
+        <span class="arrow">进入预览 →</span>
+      </a>
+      <a class="card card-hover win-card" href="./windows/subtitle.html">
+        <div class="win-art"><span class="art-bar"></span></div>
+        <div class="win-meta"><h4>字幕条</h4><span>subtitle.html</span></div>
+        <span class="faint" style="font-size:13px;">透明悬浮字幕：讲解词实时同步、进度角标、样式面板</span>
+        <span class="arrow">进入预览 →</span>
+      </a>
+      <a class="card card-hover win-card" href="./windows/phone.html">
+        <div class="win-art"><span class="art-phone"></span></div>
+        <div class="win-meta"><h4>手机遥控端</h4><span>phone.html</span></div>
+        <span class="faint" style="font-size:13px;">扫码即连：无线麦克风 / 遥控讲解 / 翻页暂停</span>
+        <span class="arrow">进入预览 →</span>
+      </a>
+      <a class="card card-hover win-card" href="./windows/overlay.html">
+        <div class="win-art"><span class="art-rows"><b style="top:12%;width:64%;"></b><b style="top:24%;width:80%;"></b><b style="top:36%;width:58%;"></b></span><span class="art-sub"></span></div>
+        <div class="win-meta"><h4>讲解演示外壳</h4><span>overlay.html</span></div>
+        <span class="faint" style="font-size:13px;">讲解 PPT 的大屏画面：页图 + 聚光定位 + 字幕同屏（DeckHtmlGen）</span>
+        <span class="arrow">进入预览 →</span>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    本目录为 <b>ui/</b> —— 静态视觉稿原型，尚未接入 Electron。<br/>
+    落地目标：orb · subtitle · audio · settings · ppt（含 ScriptEditor）· phone 页面 · 讲解演示外壳。
+  </footer>
+</div>
+
+<script src="./assets/app.js"></script>
+<script>
+  // 语义色板实时读取 + 强调色 swatches 联动（本地）
+  function refreshTokens() {
+    var box = document.getElementById('tokens')
+    var defs = [
+      ['--vd-bg', '应用底'], ['--vd-surface', '卡片面'], ['--vd-text-1', '主文字'], ['--vd-text-2', '次要文字'],
+      ['--vd-text-3', '弱化文字'], ['--vd-line', '分隔线'], ['--vd-accent', '强调色'], ['--vd-accent-soft', '强调弱底'],
+      ['--vd-success', '成功'], ['--vd-warning', '警告'], ['--vd-danger', '危险']
+    ]
+    box.innerHTML = ''
+    var cs = getComputedStyle(document.documentElement)
+    defs.forEach(function (d) {
+      var val = cs.getPropertyValue(d[0]).trim()
+      var chip = document.createElement('div')
+      chip.className = 'token-chip'
+      chip.innerHTML = '<span class="sw" style="background:' + val + '"></span>' +
+        '<span><div class="k">' + d[0] + ' · ' + d[1] + '</div><div class="v">' + (val || '—') + '</div></span>'
+      box.appendChild(chip)
+    })
+  }
+  function syncSwatches() {
+    var c = document.querySelector('.swatches')
+    c.innerHTML = ''
+    window.VoxUI.accentList.forEach(function (a) {
+      var b = document.createElement('button')
+      b.className = 'swatch'
+      b.title = a.label
+      b.setAttribute('data-accent', a.id)
+      b.innerHTML = '<span class="inner" style="--s:' + a.css + '"></span>'
+      b.addEventListener('click', function () { window.VoxUI.setAccent(a.id) })
+      c.appendChild(b)
+    })
+    // 同步 on 态
+    if (window.VoxUI) {
+      var cur = localStorage.getItem('vd.accent') || 'ocean'
+      ;[].forEach.call(c.children, function (s) {
+        s.classList.toggle('on', (s.getAttribute('data-accent') || 'ocean') === cur)
+      })
+    }
+  }
+  var obs = new MutationObserver(function () { refreshTokens(); syncSwatches() })
+  obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-accent'] })
+  refreshTokens()
+  syncSwatches()
+</script>
+</body>
+</html>

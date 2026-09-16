@@ -1,0 +1,36 @@
+{
+  "appId": "org.openpptspeaker.app",
+  "productName": "OpenPPTSpeaker",
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "out/**/*",
+    "assets/**/*",
+    "resources/**/*",
+    "package.json"
+  ],
+  "asarUnpack": [
+    "node_modules/ffmpeg-static/**"
+  ],
+  "extraResources": [
+    {
+      "from": "introduceProduction",
+      "to": "introduceProduction",
+      "filter": ["**/*", "!**/*.bak*"]
+    },
+    {
+      "from": "data/tts-cache",
+      "to": "tts-cache-seed"
+    }
+  ],
+  "win": {
+    "target": ["nsis"],
+    "icon": "assets/icon.ico"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true
+  }
+}

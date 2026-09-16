@@ -1,0 +1,359 @@
+/* ============================================================
+   OpenPPTSpeaker 全局样式：基础层 + 通用组件 + 字幕窗口
+   ============================================================ */
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  -webkit-font-smoothing: antialiased;
+  font-family: var(--vd-font);
+  font-size: var(--vd-fs-md);
+  color: var(--vd-text-1);
+  overflow: hidden;
+  user-select: none;
+}
+
+a {
+  color: var(--vd-accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+::selection {
+  background: var(--vd-accent-soft);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--vd-scrollbar);
+  border-radius: 8px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------- 布局工具 ---------- */
+.row {
+  display: flex;
+  align-items: center;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+}
+.wrap {
+  flex-wrap: wrap;
+}
+.gap-1 { gap: var(--vd-space-1); }
+.gap-2 { gap: var(--vd-space-2); }
+.gap-3 { gap: var(--vd-space-3); }
+.gap-4 { gap: var(--vd-space-4); }
+.gap-5 { gap: var(--vd-space-5); }
+.between { justify-content: space-between; }
+.spread { flex: 1; min-width: 0; }
+.muted { color: var(--vd-text-2); }
+.faint { color: var(--vd-text-3); }
+.mono { font-family: var(--vd-font-mono); }
+
+/* ---------- 卡片 ---------- */
+.card {
+  background: var(--vd-surface);
+  border: 1px solid var(--vd-line);
+  border-radius: var(--vd-r-lg);
+  box-shadow: var(--vd-shadow-sm);
+}
+.card-pad { padding: var(--vd-space-5); }
+.inset {
+  background: var(--vd-surface-2);
+  border: 1px solid var(--vd-line-2);
+  border-radius: var(--vd-r-md);
+}
+
+/* ---------- 按钮 ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 15px;
+  font-size: var(--vd-fs-md);
+  font-weight: 570;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  transition: all var(--vd-motion) var(--vd-ease);
+  white-space: nowrap;
+}
+.btn:active { transform: translateY(1px) scale(0.99); }
+.btn:disabled { opacity: 0.45; pointer-events: none; }
+.btn svg { width: 16px; height: 16px; flex: none; }
+
+.btn-primary {
+  background: var(--vd-accent);
+  color: var(--vd-accent-ink);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06), 0 6px 16px -8px var(--vd-accent);
+}
+.btn-primary:hover { background: var(--vd-accent-strong); }
+.btn-soft { background: var(--vd-accent-soft); color: var(--vd-accent); }
+.btn-soft:hover { background: var(--vd-accent-softer); }
+.btn-ghost {
+  background: transparent;
+  color: var(--vd-text-1);
+  border-color: var(--vd-line);
+}
+.btn-ghost:hover { background: var(--vd-surface-2); border-color: var(--vd-text-3); }
+.btn-muted {
+  background: var(--vd-surface-2);
+  color: var(--vd-text-2);
+  border-color: var(--vd-line);
+}
+.btn-muted:hover { color: var(--vd-text-1); }
+.btn-danger { background: var(--vd-danger-soft); color: var(--vd-danger); }
+.btn-danger:hover { background: var(--vd-danger); color: #fff; }
+.btn-sm { height: 28px; padding: 0 10px; font-size: var(--vd-fs-sm); border-radius: 8px; }
+.btn-lg { height: 44px; padding: 0 22px; font-size: var(--vd-fs-lg); border-radius: 12px; }
+.btn-icon { width: 36px; padding: 0; }
+.btn-icon.btn-sm { width: 28px; }
+
+/* ---------- 分段控件 / 开关 / chip ---------- */
+.seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--vd-surface-2);
+  border: 1px solid var(--vd-line);
+  padding: 3px;
+  border-radius: 11px;
+}
+.seg button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 11px;
+  font-size: var(--vd-fs-sm);
+  font-weight: 560;
+  color: var(--vd-text-2);
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  transition: all var(--vd-motion) var(--vd-ease);
+}
+.seg button:hover { color: var(--vd-text-1); }
+.seg button.on {
+  background: var(--vd-surface);
+  color: var(--vd-text-1);
+  box-shadow: var(--vd-shadow-sm);
+}
+
+.switch { position: relative; width: 40px; height: 22px; flex: none; }
+.switch input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.switch i {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--vd-r-full);
+  background: var(--vd-line);
+  border: 1px solid var(--vd-hairline);
+  transition: background var(--vd-motion) var(--vd-ease);
+}
+.switch i::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--vd-shadow-sm);
+  transition: transform 0.18s var(--vd-ease);
+}
+.switch input:checked + i { background: var(--vd-accent); }
+.switch input:checked + i::after { transform: translateX(18px); }
+.switch input:disabled + i { opacity: 0.5; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px;
+  font-size: var(--vd-fs-xs);
+  font-weight: 570;
+  border-radius: var(--vd-r-full);
+  background: var(--vd-surface-2);
+  border: 1px solid var(--vd-line);
+  color: var(--vd-text-2);
+}
+.chip.acc { background: var(--vd-accent-soft); color: var(--vd-accent); border-color: transparent; }
+.chip.ok { background: var(--vd-success-soft); color: var(--vd-success); }
+.chip.warn { background: var(--vd-warning-soft); color: var(--vd-warning); }
+.chip.danger { background: var(--vd-danger-soft); color: var(--vd-danger); }
+
+/* ---------- 表单 ---------- */
+.field { display: flex; flex-direction: column; gap: 7px; }
+.field > label,
+.f-label {
+  font-size: var(--vd-fs-sm);
+  font-weight: 600;
+  color: var(--vd-text-2);
+}
+.input,
+.select,
+.textarea {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  font-size: var(--vd-fs-md);
+  color: var(--vd-text-1);
+  background: var(--vd-surface-2);
+  border: 1px solid var(--vd-line);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color var(--vd-motion) var(--vd-ease), box-shadow var(--vd-motion) var(--vd-ease);
+}
+.textarea { height: auto; padding: 10px 12px; resize: vertical; min-height: 84px; line-height: 1.6; }
+.input:hover,
+.select:hover,
+.textarea:hover { border-color: var(--vd-text-3); }
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: var(--vd-accent);
+  box-shadow: 0 0 0 3px var(--vd-accent-soft);
+  background: var(--vd-surface);
+}
+.input::placeholder,
+.textarea::placeholder { color: var(--vd-text-3); }
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 34px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--vd-text-3) 50%),
+    linear-gradient(135deg, var(--vd-text-3) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 55%, calc(100% - 13px) 55%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+}
+.range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--vd-line);
+  outline: none;
+  cursor: pointer;
+}
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--vd-surface);
+  border: 2px solid var(--vd-accent);
+  box-shadow: var(--vd-shadow-sm);
+}
+
+/* ---------- 列表 / 进度 ---------- */
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--vd-space-4);
+  padding: 12px 14px;
+  border-radius: 12px;
+  transition: background var(--vd-motion) var(--vd-ease);
+}
+.list-row:hover { background: var(--vd-surface-2); }
+
+.progress { height: 6px; border-radius: 6px; background: var(--vd-line); overflow: hidden; }
+.progress > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--vd-accent), var(--vd-accent-strong));
+  transition: width 0.3s var(--vd-ease);
+}
+
+/* ---------- 状态指示 ---------- */
+.pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--vd-accent); }
+.pulse-dot.on { animation: vd-pulse 1.4s ease-in-out infinite; }
+@keyframes vd-pulse {
+  0% { box-shadow: 0 0 0 0 var(--vd-accent); opacity: 1; }
+  70% { box-shadow: 0 0 0 7px transparent; opacity: 0.75; }
+  100% { box-shadow: 0 0 0 0 transparent; opacity: 1; }
+}
+
+/* 微型语音能量条 */
+.wave { display: inline-flex; align-items: center; gap: 2.5px; height: 18px; }
+.wave i { width: 3px; border-radius: 2px; background: var(--vd-accent); height: 4px; }
+.wave.play i { animation: vd-wave 0.9s var(--vd-ease) infinite; }
+.wave.play i:nth-child(1) { animation-delay: 0s; }
+.wave.play i:nth-child(2) { animation-delay: 0.12s; }
+.wave.play i:nth-child(3) { animation-delay: 0.24s; }
+.wave.play i:nth-child(4) { animation-delay: 0.36s; }
+.wave.play i:nth-child(5) { animation-delay: 0.48s; }
+@keyframes vd-wave { 0%, 100% { height: 4px; } 50% { height: 17px; } }
+
+/* ---------- 空态 ---------- */
+.empty { text-align: center; padding: 42px 20px; color: var(--vd-text-3); }
+.empty .big-ic {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 14px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vd-surface-2);
+  border: 1px dashed var(--vd-line);
+}
+
+/* ============================================================
+   字幕窗口（透明悬浮条）
+   ============================================================ */
+.subtitle-shell {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+}
+.subtitle-shell.is-user .subtitle-text { color: #2563eb; }
+.subtitle-progress {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.65);
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+  text-shadow: 0 0 3px #fff, 0 0 6px #fff;
+}
+.subtitle-text {
+  color: #ffffff;
+  font-size: 34px;
+  font-weight: 500;
+  text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000,
+    -2px 0 0 #000, 2px 0 0 #000, 0 -2px 0 #000, 0 2px 0 #000;
+}

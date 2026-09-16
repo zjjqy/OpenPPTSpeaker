@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>手机遥控端 · OpenPPTSpeaker UI</title>
+<link rel="stylesheet" href="../assets/theme.css" />
+<link rel="stylesheet" href="../assets/ui.css" />
+<style>
+  body { background: var(--vd-bg); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 20px 20px 60px; display:flex; gap: 26px; align-items: flex-start; justify-content: center; }
+  .aside-info { width: 300px; position: sticky; top: 76px; }
+  .aside-info h3 { font-size:16px; }
+  .steps { display:flex; flex-direction:column; gap:12px; margin:16px 0; }
+  .step { display:flex; gap:12px; }
+  .step .no { width:22px; height:22px; flex:none; border-radius:50%; background:var(--vd-accent-soft);
+    color:var(--vd-accent); font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; }
+  .step b { font-size:13px; display:block; }
+  .step p { font-size:12.5px; color:var(--vd-text-3); line-height:1.6; }
+  .qr-mini { display:inline-flex; gap:12px; align-items:center; margin-top:6px; padding:10px; border-radius:14px; border:1px solid var(--vd-line); background:#fff; }
+  .qr-mini .qr { width:64px; height:64px; }
+  .qr-mini .qr svg { width:100%; height:100%; }
+  .qr-mini .t { font-size:12.5px; color:#222; }
+  .qr-mini .t b { font-size:13px; color:#111; }
+
+  /* 手机壳 */
+  .phone-zone { display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .phone { width: 376px; height: 800px; border-radius: 48px; background: #0b0d12; padding: 12px;
+    box-shadow: 0 40px 90px -30px rgba(0,0,0,.55), inset 0 0 0 2px rgba(255,255,255,.05); }
+  .phone .p-scr { position:relative; width:100%; height:100%; border-radius: 38px; overflow:hidden;
+    background: var(--vd-bg); }
+  .p-notch { position:absolute; top:10px; left:50%; transform:translateX(-50%); width:110px; height:26px;
+    background:#0b0d12; border-radius:999px; z-index:5; }
+  .p-app { position:absolute; inset:0; padding: 46px 16px 18px; display:flex; flex-direction:column; gap:10px; overflow-y:auto; }
+  .p-top { display:flex; align-items:center; justify-content:space-between; }
+  .p-title { font-weight:750; font-size:17px; display:flex; align-items:center; gap:8px; }
+  .p-title .lg { width:22px; height:22px; border-radius:50%; background:radial-gradient(circle at 34% 30%,#fff,var(--vd-accent) 45%,var(--vd-accent-strong) 80%); }
+  .conn { display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--vd-success); font-weight:600;
+    background:var(--vd-success-soft); padding:3px 10px; border-radius:999px; }
+  .conn::before { content:""; width:6px;height:6px;border-radius:50%;background:var(--vd-success); }
+  .p-scroll-area { flex:1; display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding-right:2px; }
+
+  .web-sc { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; }
+  .wchip { flex:none; display:inline-flex; align-items:center; gap:5px; font-size:12px; color:var(--vd-text-2);
+    background:var(--vd-surface); border:1px solid var(--vd-line); border-radius:999px; padding:6px 12px; font-weight:600;}
+  .wchip svg{width:13px;height:13px;}
+  .wchip:first-child{ color:var(--vd-accent); border-color:var(--vd-accent-ring); background:var(--vd-accent-soft);}
+
+  .now-card { border-radius:18px; background:var(--vd-surface); border:1px solid var(--vd-line);
+    padding:12px 14px; box-shadow:var(--vd-shadow-sm); }
+  .now-card .lab { font-size:10.5px; letter-spacing:.07em; color:var(--vd-text-3); font-weight:700; display:flex; justify-content:space-between; }
+  .now-card .nm { font-size:14.5px; font-weight:750; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .now-card .pg-line { display:flex; align-items:center; gap:8px; margin-top:9px; }
+  .now-card .pg-line .progress { flex:1; }
+  .now-card .pg-line .mono { font-size:10.5px; }
+  .now-card .acts { display:flex; gap:6px; margin-top:11px; }
+  .now-card .acts .btn { height:34px; flex:1; font-size:12.5px; }
+  .talker { position:relative; border-radius:22px; padding: 16px 12px 14px; text-align:center; overflow:hidden; }
+  .talker::before { content:""; position:absolute; inset:0;
+    background: radial-gradient(90% 120% at 50% 0%, var(--vd-accent-soft), transparent 70%); }
+  .talker .mic { position:relative; width:64px; height:64px; margin: 0 auto 10px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background: var(--vd-accent); color:#fff; box-shadow: 0 0 0 10px var(--vd-accent-soft), 0 8px 22px -6px var(--vd-accent); }
+  .talker .mic svg { width:26px; height:26px; }
+  .talker .mic.live { animation: mPulse 1.6s ease-in-out infinite; }
+  @keyframes mPulse { 0%,100%{ box-shadow:0 0 0 10px var(--vd-accent-soft),0 8px 22px -6px var(--vd-accent);} 50%{ box-shadow:0 0 0 20px transparent,0 8px 22px -6px var(--vd-accent);} }
+  .talker .hint { position:relative; font-size:13px; font-weight:700; }
+  .talker .hint2 { position:relative; font-size:11.5px; color:var(--vd-text-3); margin-top:2px; }
+  .talker .cap { position:relative; margin-top:10px; font-size:12px; color:var(--vd-text-2); min-height:16px; }
+
+  .ctl-seg { display:flex; gap:0; border-radius:12px; padding:3px; background:var(--vd-bg-2); border:1px solid var(--vd-line);}
+  .ctl-seg button { flex:1; height:30px; border:none; background:transparent; border-radius:9px; font-size:12.5px;
+    font-weight:600; color:var(--vd-text-2); }
+  .ctl-seg button.on { background:var(--vd-surface); color:var(--vd-accent); box-shadow:var(--vd-shadow-sm); }
+  .vol { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--vd-text-2); }
+  .vol .switch{transform:scale(.72); transform-origin:left center;}
+  .hist { display:flex; flex-direction:column; gap:6px; }
+  .hmsg { font-size:12px; line-height:1.55; padding:8px 11px; border-radius:12px; }
+  .hmsg.u { background:var(--vd-accent-soft); align-self:flex-end; max-width:88%; }
+  .hmsg.a { background:var(--vd-surface); border:1px solid var(--vd-line-2); align-self:flex-start; max-width:92%; }
+</style>
+</head>
+<body>
+<div class="toolbar-slot" data-page="手机遥控端"></div>
+
+<div class="wrap">
+  <aside class="aside-info card" style="padding:20px;">
+    <h3>手机遥控端</h3>
+    <div class="steps">
+      <div class="step"><span class="no">1</span><div><b>电脑开启桥接</b><p>在「设置 → 手机遥控」开启服务</p></div></div>
+      <div class="step"><span class="no">2</span><div><b>手机扫码打开</b><p>同一 Wi-Fi，首次需信任自签证书（内容本地 HTTPS）</p></div></div>
+      <div class="step"><span class="no">3</span><div><b>当无线麦克风 / 遥控器</b><p>按下说话、松开结束；还能翻页与暂停讲解</p></div></div>
+    </div>
+    <div class="qr-mini">
+      <div class="qr"><svg viewBox="0 0 29 29"><path fill="#161a22" d="M0 0h7v7H0zm9 0h4v4H9zm7 0h7v7h-7zm-9 6h1v7H7zm7 0h1v3h3v1h-4zM0 9h4v1H0zm0 3h2v3H0zm4 0h1v6H4zm4 1h3v1H8zm5 1h1v3h-1zm2 3h6v1h-6zm1 2h1v6h-1zm4-3h1v1h-1zm0 3h6v6h-6zm2 1h3v2h-3zm0 3h1v2h-1zm3-8h1v3h-1zm-9 0h2v1h-2zm3 0h1v1h-1zm-4 7h4v1H9z"/></svg></div>
+      <div class="t"><b>192.168.1.24:8123</b><br/>讲解中会话 · 1 台在线</div>
+    </div>
+    <div style="font-size:12px;color:var(--vd-text-3);margin-top:12px;">
+      注：讲解中按下面说话会触发「打断 → 问答」，松开即恢复讲解。
+    </div>
+  </aside>
+
+  <div class="phone-zone">
+    <div class="phone">
+      <div class="p-scr">
+        <div class="p-notch"></div>
+        <div class="p-app">
+          <div class="p-top">
+            <div class="p-title"><span class="lg"></span>OpenPPTSpeaker</div>
+            <span class="conn">已连接 · 讲解中</span>
+          </div>
+
+          <div class="p-scroll-area">
+            <!-- 当前讲解卡片 -->
+            <div class="now-card">
+              <div class="lab"><span>正在讲解</span><span>第 5 / 12 页</span></div>
+              <div class="nm">开源项目入门讲解</div>
+              <div class="pg-line">
+                <div class="progress"><i style="width:41%"></i></div>
+                <span class="mono" style="color:var(--vd-text-3)">5/12</span>
+              </div>
+              <div class="acts">
+                <button class="btn btn-muted">‹ 上一页</button>
+                <button class="btn btn-soft">⏸ 暂停</button>
+                <button class="btn btn-primary">下一页 ›</button>
+              </div>
+            </div>
+
+            <!-- 麦克风 talk -->
+            <div class="talker">
+              <div class="ctl-seg">
+                <button class="on">讲解遥控</button>
+                <button>随问随答</button>
+              </div>
+              <div style="margin-top:12px;">
+                <div class="mic" id="micBtn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg>
+                </div>
+                <div class="hint">按住说话</div>
+                <div class="hint2">说完松开 · 或点一下快速打断提问</div>
+              </div>
+            </div>
+
+            <!-- 最近话语 -->
+            <div style="font-size:11px;font-weight:700;color:var(--vd-text-3);letter-spacing:.06em;">最近话语</div>
+            <div class="hist">
+              <div class="hmsg a">…好，我们继续看下一页：核心能力。上一页的概念，有需要我再展开？</div>
+              <div class="hmsg u">那打断一下，刚才说的「预合成」是什么意思？</div>
+            </div>
+
+            <div class="vol">
+              <span style="flex:1;">手机播放助手语音</span>
+              <span class="switch"><input type="checkbox" checked><i></i></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="faint" style="font-size:12px;">手机浏览器打开 · 376 × 800 演示视口 · 真实版本为自适应布局</div>
+  </div>
+</div>
+<script src="../assets/app.js"></script>
+<script>
+  var mic = document.getElementById('micBtn')
+  var down = false
+  mic.addEventListener('mousedown', function () { down = true; mic.classList.add('live') })
+  window.addEventListener('mouseup', function () { if (down) { mic.classList.remove('live'); down = false } })
+</script>
+</body>
+</html>

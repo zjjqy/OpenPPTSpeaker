@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>悬浮球主界面 · OpenPPTSpeaker UI</title>
+<link rel="stylesheet" href="../assets/theme.css" />
+<link rel="stylesheet" href="../assets/ui.css" />
+<style>
+  /* ===== 悬浮球页 ===== */
+  .orb-page { position: relative; z-index: 1; width: 100%; max-width: 1080px; display: grid;
+    grid-template-columns: 320px 1fr; gap: 26px; align-items: start; }
+  .demo-controls { padding: 20px; position: sticky; top: 78px; }
+  .demo-controls h4 { font-size: 14px; margin-bottom: 14px; display:flex; align-items:center; justify-content:space-between;}
+  .ctl-block { margin-bottom: 18px; }
+  .ctl-block .t { font-size: 11px; font-weight: 700; color: var(--vd-text-3); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; }
+  .ctl-block .seg { width: 100%; }
+  .ctl-block .seg button { flex: 1; justify-content: center; }
+  .ctl-desc { margin-top: 8px; font-size: 12.5px; color: var(--vd-text-3); line-height: 1.7; min-height: 66px; }
+  .ctl-links { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+  .ctl-links a { display:flex; align-items:center; gap:8px; font-size:13px; padding: 6px 8px; border-radius:8px; color:var(--vd-text-2); }
+  .ctl-links a:hover { background: var(--vd-surface-2); color: var(--vd-accent); text-decoration:none; }
+
+  /* ===== 悬浮球主视觉（模拟透明桌面挂件） ===== */
+  .orb-canvas { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .orb-shell { position: relative; min-height: 560px; display: flex; align-items: center; justify-content: center; }
+  .stage-cap { font-size: 12px; color: var(--vd-text-3); display: flex; gap: 10px; align-items: center; }
+  .stage-cap .dim { display:flex; align-items:center; gap:4px; font-family: var(--vd-font-mono); font-size: 11px; }
+
+  .orb-panel { width: 356px; border-radius: 26px; position: relative;
+    background: var(--vd-glass); backdrop-filter: blur(22px) saturate(1.5); -webkit-backdrop-filter: blur(22px) saturate(1.5);
+    border: 1px solid var(--vd-hairline); box-shadow: var(--vd-shadow-lg); overflow: hidden; }
+
+  /* 顶部条 */
+  .orb-head { display: flex; align-items: center; gap: 10px; padding: 16px 18px 6px; }
+  .orb-head .lg { width: 26px; height: 26px; flex: none; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--vd-accent), var(--vd-accent-strong) 75%); position: relative; }
+  .orb-head .lg::after { content:""; position:absolute; inset:-6px; border-radius:50%; border:1px dashed var(--vd-accent-ring); }
+  .orb-head .tt { font-weight: 750; font-size: 14.5px; }
+  .orb-head .spread { flex: 1; }
+  .orb-head .ic-btn { width: 28px; height: 28px; border-radius: 9px; border: none; background: transparent;
+    color: var(--vd-text-2); display:flex; align-items:center; justify-content:center; transition: all .15s; }
+  .orb-head .ic-btn:hover { background: var(--vd-accent-soft); color: var(--vd-accent); }
+  .orb-head .ic-btn svg { width: 15px; height: 15px; }
+
+  /* 能量球区域 */
+  .orb-body { padding: 10px 26px 26px; display: flex; flex-direction: column; align-items: center; }
+  .energy { position: relative; width: 150px; height: 150px; margin: 12px auto 4px; }
+  .energy .core { position: absolute; inset: 40px; border-radius: 50%;
+    background: radial-gradient(circle at 34% 30%, #fff, var(--vd-accent) 45%, var(--vd-accent-strong) 80%);
+    box-shadow: 0 6px 26px -6px var(--vd-accent), 0 0 0 6px var(--vd-accent-soft); }
+  .energy .ring { position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid var(--vd-accent-ring); }
+  .energy .ring.r2 { inset: 12px; border-style: dashed; animation: spin 16s linear infinite; }
+  .energy .ring.r3 { inset: 24px; border-color: var(--vd-hairline); }
+  .energy .r-bump { position: absolute; inset: -8px; border-radius: 50%; opacity: 0; }
+  .energy .b1, .energy .b2, .energy .b3 { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--vd-accent); opacity: 0; }
+  .energy .b1 { animation: bump 2.2s var(--vd-ease) infinite; }
+  .energy .b2 { animation: bump 2.2s var(--vd-ease) .55s infinite; }
+  .energy .b3 { animation: bump 2.2s var(--vd-ease) 1.1s infinite; }
+  @keyframes bump { 0% { transform: scale(.8); opacity: .55; } 100% { transform: scale(1.25); opacity: 0; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .energy .pulse-ring { position:absolute; inset:0; border-radius:50%; opacity:0; }
+
+  /* 各状态差异：倾听 / 讲解 / 问答 */
+  .energy.listening .b1, .energy.listening .b2, .energy.listening .b3 { animation-duration: 1.1s; }
+  .energy.quiet { filter: saturate(.25); opacity: .85; }
+  .energy.answering { animation: sway 2.4s ease-in-out infinite; }
+  @keyframes sway { 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-7px);} }
+
+  .orb-status { margin-top: 10px; text-align: center; }
+  .orb-status .st-line { display:flex; align-items:center; justify-content:center; gap:8px;
+    font-size: 13px; color: var(--vd-text-2); margin-bottom: 8px; }
+  .orb-status .say { font-size: 15.5px; font-weight: 600; min-height: 24px; }
+  .orb-status .cap { font-size: 12px; color: var(--vd-text-3); margin-top: 4px; }
+  .mic-lv { width: 168px; margin: 10px auto 2px; display:flex; align-items:center; justify-content:center; gap: 3px; height: 24px; }
+  .mic-lv i { width: 4px; border-radius: 3px; background: var(--vd-accent); height: 6px; opacity: .9; }
+  .mic-lv.play i { animation: lv .8s ease-in-out infinite; }
+  .mic-lv.play i:nth-child(1){animation-delay:.0s;height:10px} .mic-lv.play i:nth-child(2){animation-delay:.1s;height:20px}
+  .mic-lv.play i:nth-child(3){animation-delay:.2s;height:13px} .mic-lv.play i:nth-child(4){animation-delay:.05s;height:22px}
+  .mic-lv.play i:nth-child(5){animation-delay:.25s;height:8px} .mic-lv.play i:nth-child(6){animation-delay:.15s;height:17px}
+  .mic-lv.play i:nth-child(7){animation-delay:.3s;height:11px} .mic-lv.play i:nth-child(8){animation-delay:.08s;height:19px}
+  .mic-lv.play i:nth-child(9){animation-delay:.2s;height:9px}
+  @keyframes lv { 0%,100% { transform: scaleY(.5);} 50% { transform: scaleY(1.25);} }
+
+  /* 讲解进度信息 */
+  .now-saying { width: 100%; margin-top: 6px; padding: 10px 12px; border-radius: 12px;
+    background: var(--vd-surface-2); border: 1px solid var(--vd-line-2); text-align: left; }
+  .now-saying .ns-tag { font-size: 10.5px; font-weight: 700; color: var(--vd-accent); letter-spacing: .05em; margin-bottom: 3px; display:flex; align-items:center; justify-content:space-between;}
+  .now-saying .ns-text { font-size: 13px; color: var(--vd-text-1); line-height: 1.65; }
+
+  /* 操作区 */
+  .orb-actions { margin-top: 18px; width: 100%; display: flex; flex-direction: column; gap: 10px; }
+  .orb-actions .btn { width: 100%; }
+  .orb-actions .row2 { display: flex; gap: 8px; }
+  .orb-actions .row2 .btn { flex: 1; }
+  .orb-mini { display: none; }
+
+  /* 迷你形态 */
+  .orb-mini { width: 340px; border-radius: 999px; display: none; align-items: center; gap: 12px;
+    padding: 9px 12px 9px 10px; background: var(--vd-glass-strong);
+    backdrop-filter: blur(18px); border: 1px solid var(--vd-hairline); box-shadow: var(--vd-shadow-lg); }
+  .orb-mini .core { width: 34px; height: 34px; flex: none; border-radius: 50%; position: relative;
+    background: radial-gradient(circle at 34% 30%, #fff, var(--vd-accent) 45%, var(--vd-accent-strong) 80%); }
+  .orb-mini .core::after { content:""; position: absolute; inset: -5px; border-radius: 50%; border: 1px dashed var(--vd-accent-ring); animation: spin 8s linear infinite; }
+  .orb-mini .mi-body { flex: 1; min-width: 0; }
+  .orb-mini .mi-title { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .orb-mini .mi-sub { display: flex; align-items:center; gap: 8px; margin-top: 3px; }
+  .orb-mini .mi-sub .progress { flex: 1; }
+  .orb-mini .mi-sub span { font-size: 10.5px; color: var(--vd-text-3); font-family: var(--vd-font-mono); }
+
+  /* 状态显隐控制 */
+  .orb-state { display: none; width: 100%; flex-direction: column; align-items: center; }
+  .orb-shell[data-view="full"][data-state="idle"] .orb-state[data-for="idle"],
+  .orb-shell[data-view="full"][data-state="wake"] .orb-state[data-for="wake"],
+  .orb-shell[data-view="full"][data-state="listen"] .orb-state[data-for="listen"],
+  .orb-shell[data-view="full"][data-state="present"] .orb-state[data-for="present"],
+  .orb-shell[data-view="full"][data-state="pause"] .orb-state[data-for="pause"] { display: flex; }
+  .orb-shell[data-view="mini"] .orb-panel { display: none; }
+  .orb-shell[data-view="mini"] .orb-mini { display: flex; }
+</style>
+</head>
+<body>
+<div class="toolbar-slot" data-page="悬浮球 · 主界面"></div>
+
+<div class="stage stage-dots stage-blobs">
+  <div class="orb-page">
+
+    <!-- 左侧：演示控制 -->
+    <aside class="demo-controls card">
+      <h4>演示控制 <span class="chip acc">静态稿</span></h4>
+      <div class="ctl-block">
+        <div class="t">场景</div>
+        <div class="seg" id="sceneSeg"></div>
+        <div class="ctl-desc" id="sceneDesc">待机：后台监听唤醒词，说「你好，小译」或点开始讲解。</div>
+      </div>
+      <div class="ctl-block">
+        <div class="t">形态</div>
+        <div class="seg" id="modeSeg">
+          <button data-view="full">完整面板</button>
+          <button data-view="mini">迷你胶囊（讲解中）</button>
+        </div>
+        <div class="ctl-desc">讲解中自动收起为迷你胶囊，停靠屏幕右下角，可拖动、可隐藏。</div>
+      </div>
+      <div class="ctl-block ctl-links">
+        <a href="./settings.html">▸ 唤醒词 / 外观在「设置」中调整</a>
+        <a href="./ppt.html">▸ 讲解内容来自「PPT 库」</a>
+        <a href="../index.html">▸ 返回设计首页</a>
+      </div>
+    </aside>
+
+    <!-- 右侧：悬浮球窗口模拟 -->
+    <div class="orb-canvas">
+      <div class="orb-shell" data-view="full" data-state="idle" id="orbShell">
+
+        <!-- ========== 完整面板 ========== -->
+        <div class="orb-panel">
+          <div class="orb-head">
+            <span class="lg"></span>
+            <span class="tt">OpenPPTSpeaker 语音讲解</span>
+            <span class="spread"></span>
+            <button class="ic-btn" title="PPT 库">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>
+            </button>
+            <button class="ic-btn" title="设置">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+            <button class="ic-btn" title="收起到托盘">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+
+          <!-- 待机 idle -->
+          <div class="orb-state" data-for="idle">
+            <div class="orb-body">
+              <div class="energy"><span class="core"></span><span class="ring r3"></span><span class="ring r2"></span><span class="ring"></span></div>
+              <div class="orb-status">
+                <div class="st-line"><span class="pulse-dot"></span>待机 · 正在聆听唤醒词</div>
+                <div class="say">说「你好，小译」开始</div>
+                <div class="cap">或直接点击下方按钮 · 30 秒无对话自动回到聆听</div>
+              </div>
+              <div class="orb-actions">
+                <button class="btn btn-primary btn-lg"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5z"/></svg>开始讲解</button>
+                <div class="row2">
+                  <button class="btn btn-ghost">PPT 库</button>
+                  <button class="btn btn-ghost">设置</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 唤醒问候 wake -->
+          <div class="orb-state" data-for="wake">
+            <div class="orb-body">
+              <div class="energy"><span class="core"></span><span class="ring r2"></span><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
+              <div class="orb-status">
+                <div class="st-line"><span class="chip acc">已唤醒</span>您好，我是 OpenPPTSpeaker</div>
+                <div class="say">请问需要讲解哪份演示？</div>
+                <div class="cap">语音说出名称，或从列表选择</div>
+              </div>
+              <div class="orb-actions">
+                <button class="btn btn-soft btn-lg" onclick="location.href='./ppt.html'">从 PPT 库选择一份</button>
+                <button class="btn btn-muted">直接讲解当前演示</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 倾听中 listen -->
+          <div class="orb-state" data-for="listen">
+            <div class="orb-body">
+              <div class="energy listening"><span class="core"></span><span class="ring r2"></span><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
+              <div class="orb-status">
+                <div class="st-line"><span class="chip acc">倾听中</span>请讲</div>
+                <div class="mic-lv play"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                <div class="say">“智能消防平台的门户…</div>
+                <div class="cap">正在识别 · 说完停顿片刻即开始讲解</div>
+              </div>
+              <div class="orb-actions">
+                <button class="btn btn-muted btn-lg">松手完成</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 讲解中 present -->
+          <div class="orb-state" data-for="present">
+            <div class="orb-body">
+              <div class="energy"><span class="core"></span><span class="ring r3"></span><span class="ring r2"></span><span class="ring"></span></div>
+              <div class="orb-status" style="width:100%;">
+                <div class="row between" style="width:100%;">
+                  <span class="chip acc">讲解中</span>
+                  <span class="mono" style="font-size:12px;color:var(--vd-text-3);">05 / 12</span>
+                </div>
+                <div class="say" style="margin:10px 0 4px;">演示概览 · 三分钟看懂平台</div>
+                <div class="progress" style="width:100%;"><i style="width:41%"></i></div>
+              </div>
+              <div class="now-saying">
+                <div class="ns-tag"><span>正在讲解</span><span class="wave play"><i></i><i></i><i></i><i></i><i></i></span></div>
+                <div class="ns-text">平台将企业消防管理从“人工盯守”升级为“数据驱动”，实现隐患闭环整改…</div>
+              </div>
+              <div class="orb-actions">
+                <div class="row2">
+                  <button class="btn btn-ghost" title="上一页">‹</button>
+                  <button class="btn btn-soft" title="暂停/继续">⏸</button>
+                  <button class="btn btn-primary" title="下一页">›</button>
+                </div>
+                <div class="row2">
+                  <button class="btn btn-ghost">打断提问</button>
+                  <button class="btn btn-danger" style="color:inherit;" disabled>结束</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 暂停/回答 pause -->
+          <div class="orb-state" data-for="pause">
+            <div class="orb-body">
+              <div class="energy answering"><span class="core"></span><span class="ring r3"></span><span class="ring r2"></span><span class="ring"></span></div>
+              <div class="orb-status">
+                <div class="st-line"><span class="chip warn">回答中</span>已暂停讲解</div>
+                <div class="say">“演示用的是本地示例吗？”</div>
+                <div class="cap">听众问题已识别，正在生成回答…</div>
+              </div>
+              <div class="now-saying">
+                <div class="ns-tag"><span>AI 回答</span><span class="wave play"><i></i><i></i><i></i><i></i><i></i></span></div>
+                <div class="ns-text">是的。原型自带一份「开源示例」演示用于跑通链路，你可以随时导入自己的 PDF…</div>
+              </div>
+              <div class="orb-actions">
+                <button class="btn btn-primary btn-lg">好，继续讲解</button>
+                <button class="btn btn-ghost">仍有疑问，继续提问</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ========== 迷你胶囊 ========== -->
+        <div class="orb-mini">
+          <span class="core"></span>
+          <div class="mi-body">
+            <div class="mi-title">演示概览 · 三分钟看懂平台</div>
+            <div class="mi-sub">
+              <span class="mono">5/12</span>
+              <div class="progress"><i style="width:41%"></i></div>
+              <span class="pulse-dot on"></span>
+            </div>
+          </div>
+          <button class="btn btn-icon btn-ghost" title="暂停" style="height:30px;width:30px;">
+            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+          </button>
+        </div>
+
+      </div>
+      <div class="stage-cap">
+        <span>透明置顶悬浮窗 · 365 × 600 演示</span>
+        <span class="dim">讲解中 → 右下角迷你胶囊</span>
+        <span class="dim">⌘/Ctrl 拖动</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/app.js"></script>
+<script>
+  var SCENES = {
+    idle:   ['空闲（待唤醒）', '待机：后台监听唤醒词，说「你好，小译」或点击开始讲解。', 'quiet'],
+    wake:   ['唤醒问候', '识别到唤醒词：唤出面板并语音问候，等待你指定讲解内容。', ''],
+    listen: ['倾听中', '按下或说出指令后进入倾听：录音中，实时显示识别文本与声浪。', 'listening'],
+    present:['讲解中', '逐页讲解：能量球随语音波动，同步字幕与页码，随时可打断提问。', ''],
+    pause:  ['暂停 · 回答中', '听众插话打断 → 暂停讲解进入问答，可继续补充或回到讲解。', 'answering']
+  }
+  var sceneKeys = Object.keys(SCENES)
+  var shell = document.getElementById('orbShell')
+  var segBox = document.getElementById('sceneSeg')
+  var descBox = document.getElementById('sceneDesc')
+  sceneKeys.forEach(function (k, i) {
+    var b = document.createElement('button')
+    b.textContent = SCENES[k][0]
+    b.addEventListener('click', function () { setScene(k) })
+    segBox.appendChild(b)
+  })
+  function setScene(k) {
+    shell.dataset.state = k
+    ;[].forEach.call(segBox.children, function (b, i) { b.classList.toggle('on', sceneKeys[i] === k) })
+    descBox.textContent = SCENES[k][1]
+    // 能量球状态
+    var core = shell.querySelector('.orb-state[data-for="' + (k==='listen'?'listen':k==='present'?'present':k==='pause'?'pause':'idle') + '"] .energy')
+    ;[].forEach.call(shell.querySelectorAll('.energy'), function (e) {
+      e.classList.remove('quiet','listening','answering')
+      if (SCENES[k][2]) e.classList.add(SCENES[k][2])
+    })
+    ;[].forEach.call(shell.querySelectorAll('.orb-panel'), function () {})
+  }
+  var modeBox = document.getElementById('modeSeg')
+  ;[].forEach.call(modeBox.children, function (b) {
+    b.addEventListener('click', function () {
+      shell.dataset.view = b.dataset.view
+      ;[].forEach.call(modeBox.children, function (x) { x.classList.toggle('on', x === b) })
+    })
+  })
+  setScene('idle'); modeBox.children[0].classList.add('on')
+</script>
+</body>
+</html>

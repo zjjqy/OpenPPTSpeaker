@@ -1,0 +1,57 @@
+{
+  "version": "1.0",
+  "meta": {
+    "title": "OpenPPTSpeaker 入门示例",
+    "description": "内置示例演示：用于快速体验语音讲解的完整链路"
+  },
+  "slides": [
+    {
+      "slide": 1,
+      "id": "page-1",
+      "title": "封面 · 一句话介绍",
+      "speech": [
+        { "text": "欢迎使用 OpenPPTSpeaker，一个开源的 AI 讲演助手。", "highlightId": "sp1_1" },
+        { "text": "它把静态的演示，变成一场可以对话的讲解。", "highlightId": "sp1_2" },
+        { "text": "先记住三个关键词：导入、讲解、互动。", "highlightId": "sp1_3" }
+      ]
+    },
+    {
+      "slide": 2,
+      "id": "page-2",
+      "title": "核心能力",
+      "speech": [
+        { "text": "这一页介绍它的三大核心能力。", "highlightId": "sp2_1" },
+        { "text": "第一，按页面内容自动生成逐句讲解词，也可以手动修改每一句。", "highlightId": "sp2_2" },
+        { "text": "第三，讲解时听众可以随时插话提问，助手作答后从断点继续。", "highlightId": "sp2_3" }
+      ]
+    },
+    {
+      "slide": 3,
+      "id": "page-3",
+      "title": "聚光与字幕",
+      "speech": [
+        { "text": "讲到哪一句，页面上就聚光到对应区域，其余部分自动压暗。", "highlightId": "sp3_1" },
+        { "text": "字幕样式在讲稿里统一配置，编辑所见就是讲演所得。", "highlightId": "sp3_2" },
+        { "text": "这样观众既能看清重点，也能听清内容。", "highlightId": "sp3_3" }
+      ]
+    },
+    {
+      "slide": 4,
+      "id": "page-4",
+      "title": "手机遥控",
+      "speech": [
+        { "text": "手机扫码就能变成无线麦克风和遥控器，不需要安装任何应用。", "highlightId": "sp4_1" },
+        { "text": "按住说话即可收音并打断讲解，松开结束，非常自然。", "highlightId": "sp4_2" }
+      ]
+    },
+    {
+      "slide": 5,
+      "id": "page-5",
+      "title": "开始使用",
+      "speech": [
+        { "text": "上手只需三步：导入演示、生成讲稿、开始讲解。", "highlightId": "sp5_1" },
+        { "text": "需要留存时，还可以把讲解连同画面与字幕导出成视频。", "highlightId": "sp5_2" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+node_modules/
+out/
+dist/
+release/
+
+# 本地调试截图（含第三方系统界面，禁止提交）
+screenshots/
+
+*.log
+.DS_Store
+.env
+.env.local
+
+# 运行时数据（演示库 / 讲稿 / 语音缓存，本地生成，不随仓库分发）
+data/
+
+# TypeScript 增量构建缓存
+*.tsbuildinfo
+
+# IDE / 编辑器
+.idea/
+.vscode/
+.codebuddy/
