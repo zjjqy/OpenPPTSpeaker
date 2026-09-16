@@ -9,6 +9,12 @@
 
 把静态的演示，变成一场可以被听见、也能被追问的讲解。
 
+## 下载
+
+**[⬇ 下载最新版本](https://github.com/zjjqy/OpenPPTSpeaker/releases/latest)** — Windows 安装包（x64），约 112 MB。
+
+安装包未做代码签名，Windows 会弹出 SmartScreen 提示，选择**更多信息 → 仍要运行**即可；详细说明见[版本说明](./RELEASE_NOTES_v1.0.0.md)。想自行编译？见[快速开始](#快速开始)。
+
 ## 特性
 
 - **导入演示**：支持 PDF（逐页转幻灯片）或逐页图片。

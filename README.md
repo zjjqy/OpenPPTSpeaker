@@ -9,6 +9,12 @@
 
 Turn a static deck into a talk that can be listened to and talked back to.
 
+## Download
+
+**[⬇ Download the latest release](https://github.com/zjjqy/OpenPPTSpeaker/releases/latest)** — Windows installer (x64), ~112 MB.
+
+The installer is not code-signed, so Windows SmartScreen will warn you. Choose **More info → Run anyway**; the full explanation is in the [release notes](./RELEASE_NOTES_v1.0.0.md). Prefer to build it yourself? See [Getting started](#getting-started).
+
 ## Features
 
 - **Import slides** — bring in a PDF (each page becomes a slide) or a set of page images.
