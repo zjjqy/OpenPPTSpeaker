@@ -18,6 +18,7 @@ import { WebSocketServer, WebSocket } from 'ws'
 import { generate as generateCert } from 'selfsigned'
 import QRCode from 'qrcode'
 import { configStore } from '../config/ConfigStore'
+import { getLang, t } from '@shared/i18n'
 import { speechSession } from '../speech/SpeechSession'
 import { tourEngine } from '../tour/TourEngine'
 import { windowManager } from '../windows/WindowManager'
@@ -160,7 +161,9 @@ export class PhoneBridgeServer {
           'Pragma': 'no-cache',
           'Expires': '0'
         })
-        res.end(pageHtml)
+        // 语言在每次请求时注入（而不是启动时写死）：切换语言后手机刷新页面即可生效，
+        // 无需重启桥接服务
+        res.end(pageHtml.replace('__OPS_LANG__', getLang()))
       } else {
         res.writeHead(404)
         res.end()
@@ -507,7 +510,7 @@ export class PhoneBridgeServer {
     if (urls.length <= 1 && detectedIps.length === 0) {
       // 只有 127.0.0.1 时，提示用户
       error =
-        '未检测到真实局域网 IPv4（仅看到 127.0.0.1）。请在"电脑 IP"中手动填入 Wi-Fi/有线网卡的 IP。'
+        t('phone.noLanIp')
       this.lastQrError = error
     } else {
       // 用第一个"真"IP（不是 127.0.0.1）做二维码

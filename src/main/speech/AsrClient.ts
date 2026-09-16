@@ -4,6 +4,7 @@ import WebSocket from 'ws'
 import { randomUUID } from 'node:crypto'
 import { configStore } from '../config/ConfigStore'
 import type { AsrEvent } from '@shared/speech'
+import { t } from '@shared/i18n'
 
 const WS_URL = 'wss://dashscope.aliyuncs.com/api-ws/v1/inference'
 
@@ -25,7 +26,7 @@ export class AsrClient {
     return new Promise((resolve, reject) => {
       const apiKey = configStore.get('apiKey')
       if (!apiKey) {
-        reject(new Error('未配置 DashScope API Key'))
+        reject(new Error(t('tts.noApiKey')))
         return
       }
       this.taskId = randomUUID()

@@ -1,6 +1,7 @@
 /** 应用配置结构定义 */
 
 import type { TtsEngineKind } from '@shared/speech'
+import { DEFAULT_LANG, type DictKey, type Lang } from '@shared/i18n'
 
 /**
  * 讲解期间悬浮球的停靠位置。
@@ -9,28 +10,30 @@ import type { TtsEngineKind } from '@shared/speech'
 export type OrbPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'none'
 
 /** 悬浮球位置可选项（顺序即设置页下拉顺序） */
-export const ORB_POSITIONS: ReadonlyArray<{ value: OrbPosition; label: string }> = [
-  { value: 'top-left', label: '左上' },
-  { value: 'top-right', label: '右上' },
-  { value: 'bottom-left', label: '左下' },
-  { value: 'bottom-right', label: '右下（默认）' },
-  { value: 'none', label: '不显示' }
+export const ORB_POSITIONS: ReadonlyArray<{ value: OrbPosition; labelKey: DictKey }> = [
+  { value: 'top-left', labelKey: 'orb.topLeft' },
+  { value: 'top-right', labelKey: 'orb.topRight' },
+  { value: 'bottom-left', labelKey: 'orb.bottomLeft' },
+  { value: 'bottom-right', labelKey: 'orb.bottomRight' },
+  { value: 'none', labelKey: 'orb.none' }
 ]
 
 /** 界面主题模式：跟随系统 / 浅色 / 深色 */
 export type ThemeMode = 'auto' | 'light' | 'dark'
 
 /** 强调色档位（key 即 CSS data-accent 值；'' 表示默认海蓝） */
-export const ACCENTS: ReadonlyArray<{ value: string; label: string; css: string }> = [
-  { value: 'ocean', label: '海蓝（默认）', css: '#3d7eff' },
-  { value: 'sky', label: '晴蓝', css: '#22a9e0' },
-  { value: 'violet', label: '星紫', css: '#8b5cf6' },
-  { value: 'emerald', label: '松绿', css: '#10b981' },
-  { value: 'amber', label: '日橙', css: '#f5a623' },
-  { value: 'rose', label: '玫红', css: '#f4537a' }
+export const ACCENTS: ReadonlyArray<{ value: string; labelKey: DictKey; css: string }> = [
+  { value: 'ocean', labelKey: 'accent.ocean', css: '#3d7eff' },
+  { value: 'sky', labelKey: 'accent.sky', css: '#22a9e0' },
+  { value: 'violet', labelKey: 'accent.violet', css: '#8b5cf6' },
+  { value: 'emerald', labelKey: 'accent.emerald', css: '#10b981' },
+  { value: 'amber', labelKey: 'accent.amber', css: '#f5a623' },
+  { value: 'rose', labelKey: 'accent.rose', css: '#f4537a' }
 ]
 
 export interface AppConfig {
+  /** 界面语言；同时决定助手讲解与问答所用语言 */
+  language: Lang
   /** DashScope API Key */
   apiKey: string
   /** 大模型（讲解/问答） */
@@ -74,6 +77,7 @@ export interface AppConfig {
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
+  language: DEFAULT_LANG,
   apiKey: '',
   llmModel: 'qwen3.8-flash',
   asrModel: 'paraformer-realtime-v2',
@@ -97,35 +101,74 @@ export const DEFAULT_CONFIG: AppConfig = {
   accent: 'ocean'
 }
 
-export const LLM_MODELS = [
-  { value: 'qwen3.8-flash', label: '通义千问 3.8 Flash（推荐 · 快而省）' },
-  { value: 'qwen-turbo', label: '通义千问 Turbo（更快更省）' },
-  { value: 'qwen-max', label: '通义千问 Max（最强）' }
+export const LLM_MODELS: ReadonlyArray<{ value: string; labelKey: DictKey }> = [
+  { value: 'qwen3.8-flash', labelKey: 'llm.qwen38flash' },
+  { value: 'qwen-turbo', labelKey: 'llm.qwenTurbo' },
+  { value: 'qwen-max', labelKey: 'llm.qwenMax' }
 ]
 
 /** qwen-audio-3.0-tts-flash 系统音色（中文，适合讲解场景；音色与模型必须匹配，不可混用其他模型的音色） */
-export const QWEN_TTS_VOICES = [
-  { value: 'longanfengyue', label: '龙安风悦（女·自然亲切）' },
-  { value: 'longanhuan_v3.6', label: '龙安欢（女·自然）' },
-  { value: 'longanxiaoxin', label: '龙安小昕（女·亲切活泼）' },
-  { value: 'longanlingxi', label: '龙安灵希（女·甜美）' },
-  { value: 'longchuanshu_v3.6', label: '龙川叔（男·沉稳大叔）' }
+export const QWEN_TTS_VOICES: ReadonlyArray<{ value: string; labelKey: DictKey }> = [
+  { value: 'longanfengyue', labelKey: 'voice.qwen.longanfengyue' },
+  { value: 'longanhuan_v3.6', labelKey: 'voice.qwen.longanhuan' },
+  { value: 'longanxiaoxin', labelKey: 'voice.qwen.longanxiaoxin' },
+  { value: 'longanlingxi', labelKey: 'voice.qwen.longanlingxi' },
+  { value: 'longchuanshu_v3.6', labelKey: 'voice.qwen.longchuanshu' }
 ]
 
-export const SAMBERT_VOICES = [
-  { value: 'sambert-zhichu-v1', label: '知厨（男）' },
-  { value: 'sambert-zhiwei-v1', label: '知薇（女）' },
-  { value: 'sambert-zhiyue-v1', label: '知玥（女·播音）' },
-  { value: 'sambert-zhibei-v1', label: '知贝（女·童声）' }
+export const SAMBERT_VOICES: ReadonlyArray<{ value: string; labelKey: DictKey }> = [
+  { value: 'sambert-zhichu-v1', labelKey: 'voice.sambert.zhichu' },
+  { value: 'sambert-zhiwei-v1', labelKey: 'voice.sambert.zhiwei' },
+  { value: 'sambert-zhiyue-v1', labelKey: 'voice.sambert.zhiyue' },
+  { value: 'sambert-zhibei-v1', labelKey: 'voice.sambert.zhibei' }
 ]
 
-/** Edge TTS（微软）中文 Neural 音色（适合讲解场景） */
-export const EDGE_VOICES = [
-  { value: 'zh-CN-XiaoxiaoNeural', label: '晓晓（女·活泼自然）' },
-  { value: 'zh-CN-XiaoyiNeural', label: '晓伊（女·温柔亲切）' },
-  { value: 'zh-CN-XiaohanNeural', label: '晓涵（女·温暖知性）' },
-  { value: 'zh-CN-XiaoruiNeural', label: '晓睿（女·知性成熟）' },
-  { value: 'zh-CN-YunjianNeural', label: '云健（男·稳重有力）' },
-  { value: 'zh-CN-YunxiNeural', label: '云希（男·清亮阳光）' },
-  { value: 'zh-CN-YunyangNeural', label: '云扬（男·新闻播报）' }
+/** 音色语言归属：决定设置页展示哪一组 Edge 音色 */
+export type VoiceLang = 'zh' | 'en'
+
+/**
+ * Edge TTS（微软）Neural 音色。
+ * lang 用于按界面语言过滤：英文界面下只列出英文音色，避免选出「能听懂但不能读英文」的组合。
+ */
+export const EDGE_VOICES: ReadonlyArray<{ value: string; labelKey: DictKey; lang: VoiceLang }> = [
+  { value: 'zh-CN-XiaoxiaoNeural', labelKey: 'voice.edge.xiaoxiao', lang: 'zh' },
+  { value: 'zh-CN-XiaoyiNeural', labelKey: 'voice.edge.xiaoyi', lang: 'zh' },
+  { value: 'zh-CN-XiaohanNeural', labelKey: 'voice.edge.xiaohan', lang: 'zh' },
+  { value: 'zh-CN-XiaoruiNeural', labelKey: 'voice.edge.xiaorui', lang: 'zh' },
+  { value: 'zh-CN-YunjianNeural', labelKey: 'voice.edge.yunjian', lang: 'zh' },
+  { value: 'zh-CN-YunxiNeural', labelKey: 'voice.edge.yunxi', lang: 'zh' },
+  { value: 'zh-CN-YunyangNeural', labelKey: 'voice.edge.yunyang', lang: 'zh' },
+  { value: 'en-US-AriaNeural', labelKey: 'voice.edge.enUSAria', lang: 'en' },
+  { value: 'en-US-JennyNeural', labelKey: 'voice.edge.enUSJenny', lang: 'en' },
+  { value: 'en-US-GuyNeural', labelKey: 'voice.edge.enUSGuy', lang: 'en' },
+  { value: 'en-US-AndrewNeural', labelKey: 'voice.edge.enUSAndrew', lang: 'en' },
+  { value: 'en-US-MichelleNeural', labelKey: 'voice.edge.enUSMichelle', lang: 'en' }
 ]
+
+/** 界面语言 → 语音语言（中/英界面各自对应一组音色） */
+export const LANG_TO_VOICE_LANG: Record<Lang, VoiceLang> = {
+  'zh-CN': 'zh',
+  'en-US': 'en'
+}
+
+/** 各语言默认 Edge 音色（切换语言且当前音色不属于该语言时自动切到它） */
+export const DEFAULT_EDGE_VOICE: Record<VoiceLang, string> = {
+  zh: 'zh-CN-XiaoxiaoNeural',
+  en: 'en-US-AriaNeural'
+}
+
+/** 音色所属语言；未知音色按中文处理（历史上只提供过中文音色） */
+export function edgeVoiceLang(voice: string): VoiceLang {
+  return EDGE_VOICES.find((v) => v.value === voice)?.lang ?? 'zh'
+}
+
+/** 设置页当前应展示的 Edge 音色列表 */
+export function edgeVoicesFor(lang: Lang): ReadonlyArray<{ value: string; labelKey: DictKey }> {
+  const target = LANG_TO_VOICE_LANG[normalizeLangSafe(lang)]
+  return EDGE_VOICES.filter((v) => v.lang === target)
+}
+
+/** 本地兜底的语言校验（避免 schema 依赖 i18n 运行时函数过多） */
+function normalizeLangSafe(lang: unknown): Lang {
+  return lang === 'en-US' ? 'en-US' : 'zh-CN'
+}

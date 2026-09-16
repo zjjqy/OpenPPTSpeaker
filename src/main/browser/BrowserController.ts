@@ -3,6 +3,7 @@
 import { windowManager } from '../windows/WindowManager'
 import type { BrowserWindow } from 'electron'
 import type { SpotlightRect } from '@shared/ppt'
+import { t } from '@shared/i18n'
 
 export interface SpotlightResult {
   success: boolean
@@ -49,7 +50,7 @@ export class BrowserController {
             if (!document.body) return false;
             var btn = document.createElement('div');
             btn.setAttribute('data-ops', 'exit-talk');
-            btn.title = '退出演讲';
+            btn.title = ${JSON.stringify(t('browser.exitPresenting'))};
             // 与客户端 UI 一致：深色玻璃胶囊 + 品牌强调蓝（#3d7eff）
             btn.style.cssText = 'position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-6px);z-index:2147483647;'
               + 'display:flex;align-items:center;gap:8px;padding:8px 16px 8px 13px;border-radius:999px;'
@@ -61,7 +62,7 @@ export class BrowserController {
               + 'transition:opacity .18s cubic-bezier(.25,.6,.3,1),transform .18s cubic-bezier(.25,.6,.3,1),background .18s ease,border-color .18s ease;';
             btn.innerHTML = '<span style="display:inline-flex;width:18px;height:18px;align-items:center;justify-content:center;'
               + 'border-radius:50%;background:rgba(61,126,255,.22);color:#8fb6ff;font-size:11px;line-height:1">\\u2715</span>'
-              + '<span>退出演讲</span>';
+              + '<span>' + ${JSON.stringify(t('browser.exitPresenting'))} + '</span>';
             var hover = false;
             var hideTimer = 0;
             var show = function (on) {
@@ -134,13 +135,13 @@ export class BrowserController {
   /** 聚光灯：聚焦目标元素，其余区域变暗（SVG mask 挖空 + 白色描边，600ms 收敛动画） */
   async spotlight(selector: string, color = '#FFFFFF', dimOpacity = 0.5): Promise<SpotlightResult> {
     const win = this.win
-    if (!win) return { success: false, error: '讲解窗口不存在' }
+    if (!win) return { success: false, error: t('browser.noWindow') }
     try {
       const result = await win.webContents.executeJavaScript(
         `(() => {
           document.querySelectorAll('.ops-spot').forEach(el => el.remove());
           const el = document.querySelector(${JSON.stringify(selector)});
-          if (!el) return { success: false, error: '未找到元素' };
+          if (!el) return { success: false, error: ${JSON.stringify(t('browser.noElement'))} };
           const r = el.getBoundingClientRect();
           const x = r.left + window.scrollX, y = r.top + window.scrollY, w = r.width, h = r.height;
           const ov = document.createElement('div');
@@ -283,10 +284,10 @@ export class BrowserController {
       )
       const parsed = JSON.parse(String(summary))
       return [
-        `页面标题: ${parsed.title}`,
-        parsed.h1s.length ? `主要标题: ${parsed.h1s.join('；')}` : '',
-        parsed.h2s.length ? `子标题: ${parsed.h2s.join('；')}` : '',
-        parsed.nav ? `导航/页头: ${parsed.nav}` : ''
+        t('browser.pageTitle', { v: parsed.title }),
+        parsed.h1s.length ? t('browser.h1s', { v: parsed.h1s.join(t('list.semi')) }) : '',
+        parsed.h2s.length ? t('browser.h2s', { v: parsed.h2s.join(t('list.semi')) }) : '',
+        parsed.nav ? t('browser.nav', { v: parsed.nav }) : ''
       ]
         .filter(Boolean)
         .join('\n')

@@ -8,96 +8,110 @@
           <span class="faint">v{{ appVersion }}</span>
         </div>
       </div>
-      <div class="nav-group">偏好</div>
-      <div class="nav-item" :class="{ on: sec === 'general' }" @click="sec = 'general'">通用</div>
-      <div class="nav-item" :class="{ on: sec === 'wake' }" @click="sec = 'wake'">语音与打断</div>
+      <div class="nav-group">{{ t('settings.group.preferences') }}</div>
+      <div class="nav-item" :class="{ on: sec === 'general' }" @click="sec = 'general'">
+        {{ t('settings.nav.general') }}
+      </div>
+      <div class="nav-item" :class="{ on: sec === 'wake' }" @click="sec = 'wake'">
+        {{ t('settings.nav.wake') }}
+      </div>
 
-      <div class="nav-group">模型与声音</div>
-      <div class="nav-item" :class="{ on: sec === 'model' }" @click="sec = 'model'">模型与语音</div>
+      <div class="nav-group">{{ t('settings.group.model') }}</div>
+      <div class="nav-item" :class="{ on: sec === 'model' }" @click="sec = 'model'">
+        {{ t('settings.nav.model') }}
+      </div>
 
-      <div class="nav-group">连接</div>
-      <div class="nav-item" :class="{ on: sec === 'phone' }" @click="sec = 'phone'">手机遥控</div>
+      <div class="nav-group">{{ t('settings.group.connection') }}</div>
+      <div class="nav-item" :class="{ on: sec === 'phone' }" @click="sec = 'phone'">
+        {{ t('settings.nav.phone') }}
+      </div>
 
-      <div class="nav-group">个性化</div>
-      <div class="nav-item" :class="{ on: sec === 'appearance' }" @click="sec = 'appearance'">外观</div>
+      <div class="nav-group">{{ t('settings.group.personalize') }}</div>
+      <div class="nav-item" :class="{ on: sec === 'appearance' }" @click="sec = 'appearance'">
+        {{ t('settings.nav.appearance') }}
+      </div>
 
       <div class="spread"></div>
-      <button class="btn btn-primary" :disabled="!dirty" @click="save">保存配置</button>
-      <span v-if="saved" class="ok-tip">已保存</span>
+      <button class="btn btn-primary" :disabled="!dirty" @click="save">{{ t('action.save') }}</button>
+      <span v-if="saved" class="ok-tip">{{ t('tip.saved') }}</span>
     </nav>
 
     <main class="side-main">
       <!-- 通用 -->
       <section v-if="sec === 'general'" class="sect">
-        <h2>通用</h2>
-        <p class="desc">关于助手的基础行为与窗口形态。</p>
+        <h2>{{ t('settings.general.title') }}</h2>
+        <p class="desc">{{ t('settings.general.desc') }}</p>
         <div class="card form-card">
           <div class="setting-row">
             <div class="sr-body">
-              <div class="sr-title">界面语言</div>
-              <div class="sr-desc">界面与讲解语言暂以界面语言为准</div>
+              <div class="sr-title">{{ t('settings.language.title') }}</div>
+              <div class="sr-desc">{{ t('settings.language.desc') }}</div>
             </div>
-            <select class="select" style="width: 170px"><option>简体中文</option><option>English</option></select>
-          </div>
-          <div class="setting-row">
-            <div class="sr-body">
-              <div class="sr-title">讲解时悬浮球停靠位置</div>
-              <div class="sr-desc">常态居中展示；讲解中收缩为迷你胶囊停靠此处</div>
-            </div>
-            <select v-model="form.orbPosition" class="select" style="width: 170px" @change="dirty = true">
-              <option v-for="p in ORB_POSITIONS" :key="p.value" :value="p.value">{{ p.label }}</option>
+            <select v-model="form.language" class="select" style="width: 170px" @change="onLanguageChange">
+              <option v-for="l in LANGS" :key="l.value" :value="l.value">{{ l.label }}</option>
             </select>
           </div>
           <div class="setting-row">
             <div class="sr-body">
-              <div class="sr-title">关闭悬浮球面板</div>
-              <div class="sr-desc">点击收起到系统托盘，后台继续聆听唤醒词</div>
+              <div class="sr-title">{{ t('settings.orbPosition.title') }}</div>
+              <div class="sr-desc">{{ t('settings.orbPosition.desc') }}</div>
             </div>
-            <span class="chip acc">托盘常驻</span>
+            <select v-model="form.orbPosition" class="select" style="width: 170px" @change="dirty = true">
+              <option v-for="p in ORB_POSITIONS" :key="p.value" :value="p.value">{{ t(p.labelKey) }}</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <div class="sr-body">
+              <div class="sr-title">{{ t('settings.closeOrb.title') }}</div>
+              <div class="sr-desc">{{ t('settings.closeOrb.desc') }}</div>
+            </div>
+            <span class="chip acc">{{ t('settings.closeOrb.chip') }}</span>
           </div>
         </div>
       </section>
 
       <!-- 语音与打断 -->
       <section v-if="sec === 'wake'" class="sect">
-        <h2>语音与打断</h2>
-        <p class="desc">唤醒词、打断与收音来源。</p>
+        <h2>{{ t('settings.wake.title') }}</h2>
+        <p class="desc">{{ t('settings.wake.desc') }}</p>
         <div class="card form-card">
           <div class="setting-row">
             <div class="sr-body">
-              <div class="sr-title">启用语音唤醒</div>
-              <div class="sr-desc">应用常驻后，说出唤醒词即可唤起助手</div>
+              <div class="sr-title">{{ t('settings.enableWake.title') }}</div>
+              <div class="sr-desc">{{ t('settings.enableWake.desc') }}</div>
             </div>
             <span class="switch"><input v-model="form.enableWake" type="checkbox" @change="dirty = true" /><i></i></span>
           </div>
           <div class="setting-row">
             <div class="sr-body">
-              <div class="sr-title">唤醒词</div>
-              <div class="sr-desc">逗号分隔；建议 2~4 字，支持容错匹配</div>
+              <div class="sr-title">{{ t('settings.wakeWords.title') }}</div>
+              <div class="sr-desc">{{ t('settings.wakeWords.desc') }}</div>
             </div>
             <input v-model="wakeText" class="input" style="width: 220px" @change="dirty = true" />
           </div>
           <div class="setting-row">
             <div class="sr-body">
-              <div class="sr-title">允许讲解中打断</div>
-              <div class="sr-desc">听众可随时插话提问，助手暂停讲解进入问答</div>
+              <div class="sr-title">{{ t('settings.bargeIn.title') }}</div>
+              <div class="sr-desc">{{ t('settings.bargeIn.desc') }}</div>
             </div>
             <span class="switch"><input v-model="form.enableBargeIn" type="checkbox" @change="dirty = true" /><i></i></span>
           </div>
           <div class="setting-row">
             <div class="sr-body">
-              <div class="sr-title">电脑麦克风参与收音</div>
-              <div class="sr-desc">默认关闭：讲解时声音只从手机遥控端采集，避免回声</div>
+              <div class="sr-title">{{ t('settings.pcMic.title') }}</div>
+              <div class="sr-desc">{{ t('settings.pcMic.desc') }}</div>
             </div>
             <span class="switch"><input v-model="form.pcMicEnabled" type="checkbox" @change="dirty = true" /><i></i></span>
           </div>
           <div class="setting-row">
             <div class="sr-body">
-              <div class="sr-title">保留对话历史轮数</div>
-              <div class="sr-desc">供问答联想上下文，越多越费 token</div>
+              <div class="sr-title">{{ t('settings.history.title') }}</div>
+              <div class="sr-desc">{{ t('settings.history.desc') }}</div>
             </div>
             <select v-model.number="form.maxHistory" class="select" style="width: 120px" @change="dirty = true">
-              <option :value="6">6 轮</option><option :value="12">12 轮</option><option :value="24">24 轮</option>
+              <option :value="6">{{ t('settings.history.rounds', { n: 6 }) }}</option>
+              <option :value="12">{{ t('settings.history.rounds', { n: 12 }) }}</option>
+              <option :value="24">{{ t('settings.history.rounds', { n: 24 }) }}</option>
             </select>
           </div>
         </div>
@@ -105,29 +119,29 @@
 
       <!-- 模型与语音 -->
       <section v-if="sec === 'model'" class="sect">
-        <h2>模型与语音</h2>
-        <p class="desc">讲解引擎背后的 LLM / 识别 / 合成。Key 仅保存在本机，通过主进程直连云端。</p>
+        <h2>{{ t('settings.model.title') }}</h2>
+        <p class="desc">{{ t('settings.model.desc') }}</p>
         <div class="card form-card">
           <div class="setting-row">
             <div class="sr-body">
-              <div class="sr-title">DashScope API Key</div>
-              <div class="sr-desc">用于大模型 / 语音识别 / 语音合成</div>
+              <div class="sr-title">{{ t('settings.apiKey.title') }}</div>
+              <div class="sr-desc">{{ t('settings.apiKey.desc') }}</div>
             </div>
             <input v-model="form.apiKey" class="input" style="width: 300px" type="password" placeholder="sk-xxxxxxxx" @change="dirty = true" />
           </div>
           <div class="setting-row">
             <div class="sr-body">
-              <div class="sr-title">对话模型</div>
-              <div class="sr-desc">生成讲解词与回答听众提问</div>
+              <div class="sr-title">{{ t('settings.llm.title') }}</div>
+              <div class="sr-desc">{{ t('settings.llm.desc') }}</div>
             </div>
             <select v-model="form.llmModel" class="select" style="width: 230px" @change="dirty = true">
-              <option v-for="m in LLM_MODELS" :key="m.value" :value="m.value">{{ m.label }}</option>
+              <option v-for="m in LLM_MODELS" :key="m.value" :value="m.value">{{ t(m.labelKey) }}</option>
             </select>
           </div>
           <div class="setting-row">
             <div class="sr-body">
-              <div class="sr-title">语音识别模型</div>
-              <div class="sr-desc">实时流式识别</div>
+              <div class="sr-title">{{ t('settings.asr.title') }}</div>
+              <div class="sr-desc">{{ t('settings.asr.desc') }}</div>
             </div>
             <select v-model="form.asrModel" class="select" style="width: 230px" @change="dirty = true">
               <option value="paraformer-realtime-v2">paraformer-realtime-v2</option>
@@ -135,19 +149,19 @@
           </div>
           <div class="setting-row">
             <div class="sr-body">
-              <div class="sr-title">合成引擎</div>
-              <div class="sr-desc">Edge 免费无需 Key（默认）；CosyVoice 音质好；Sambert 可选</div>
+              <div class="sr-title">{{ t('settings.tts.title') }}</div>
+              <div class="sr-desc">{{ t('settings.tts.desc') }}</div>
             </div>
             <select v-model="form.ttsEngine" class="select" style="width: 230px" @change="dirty = true">
-              <option value="edge">Edge · 微软免费（推荐）</option>
-              <option value="cosyvoice">CosyVoice · 云端</option>
-              <option value="sambert">Sambert · 云端</option>
+              <option value="edge">{{ t('settings.tts.edge') }}</option>
+              <option value="cosyvoice">{{ t('settings.tts.cosyvoice') }}</option>
+              <option value="sambert">{{ t('settings.tts.sambert') }}</option>
             </select>
           </div>
           <div class="setting-row">
             <div class="sr-body">
-              <div class="sr-title">音色</div>
-              <div class="sr-desc">适合讲解场景的中文音色</div>
+              <div class="sr-title">{{ t('settings.voice.title') }}</div>
+              <div class="sr-desc">{{ t('settings.voice.desc') }}</div>
             </div>
             <select
               v-if="form.ttsEngine === 'cosyvoice'"
@@ -156,7 +170,7 @@
               style="width: 230px"
               @change="dirty = true"
             >
-              <option v-for="v in QWEN_TTS_VOICES" :key="v.value" :value="v.value">{{ v.label }}</option>
+              <option v-for="v in QWEN_TTS_VOICES" :key="v.value" :value="v.value">{{ t(v.labelKey) }}</option>
             </select>
             <select
               v-else-if="form.ttsEngine === 'sambert'"
@@ -165,18 +179,18 @@
               style="width: 230px"
               @change="dirty = true"
             >
-              <option v-for="v in SAMBERT_VOICES" :key="v.value" :value="v.value">{{ v.label }}</option>
+              <option v-for="v in SAMBERT_VOICES" :key="v.value" :value="v.value">{{ t(v.labelKey) }}</option>
             </select>
             <select v-else v-model="form.edgeVoice" class="select" style="width: 230px" @change="dirty = true">
-              <option v-for="v in EDGE_VOICES" :key="v.value" :value="v.value">{{ v.label }}</option>
+              <option v-for="v in edgeVoices" :key="v.value" :value="v.value">{{ t(v.labelKey) }}</option>
             </select>
           </div>
           <div v-if="supportsPron" class="setting-row" style="align-items: flex-start">
             <div class="sr-body">
-              <div class="sr-title">多音字标注</div>
+              <div class="sr-title">{{ t('settings.pron.title') }}</div>
               <div class="sr-desc">
-                每行一条：词=拼音（声调用数字 1~5，拼音个数须与字数一致）<br />
-                {{ form.ttsEngine === 'edge' ? 'Edge 使用微软音素（sapi 拼音），如：重音=chong2 yin1' : 'CosyVoice 使用拼音音素（py），如：重音=chong2 yin1' }}
+                {{ t('settings.pron.desc') }}<br />
+                {{ form.ttsEngine === 'edge' ? t('settings.pron.edge') : t('settings.pron.cosyvoice') }}
               </div>
             </div>
             <textarea
@@ -193,50 +207,55 @@
 
       <!-- 手机遥控 -->
       <section v-if="sec === 'phone'" class="sect">
-        <h2>手机遥控</h2>
-        <p class="desc">同一局域网内，手机扫码即可作为无线麦克风与遥控器，无需安装 App。</p>
+        <h2>{{ t('settings.phone.title') }}</h2>
+        <p class="desc">{{ t('settings.phone.desc') }}</p>
         <div class="phone-grid">
           <div class="card form-card">
             <div class="setting-row">
               <div class="sr-body">
-                <div class="sr-title">启用手机桥接服务</div>
-                <div class="sr-desc">启动本机 HTTPS + WebSocket 服务（自签证书，扫码一次信任即可）</div>
+                <div class="sr-title">{{ t('settings.phone.enable.title') }}</div>
+                <div class="sr-desc">{{ t('settings.phone.enable.desc') }}</div>
               </div>
               <span class="switch"><input :checked="phoneInfo.enabled" type="checkbox" @change="onTogglePhone" /><i></i></span>
             </div>
             <div class="setting-row">
-              <div class="sr-body"><div class="sr-title">服务端口</div><div class="sr-desc">默认 8123</div></div>
+              <div class="sr-body">
+                <div class="sr-title">{{ t('settings.phone.port.title') }}</div>
+                <div class="sr-desc">{{ t('settings.phone.port.desc') }}</div>
+              </div>
               <input v-model.number="form.phonePort" class="input" style="width: 120px" @change="dirty = true" />
             </div>
             <div class="setting-row">
               <div class="sr-body">
-                <div class="sr-title">手机播放助手语音</div>
-                <div class="sr-desc">关闭后手机仅作为麦克风，声音仍从电脑扬声器输出</div>
+                <div class="sr-title">{{ t('settings.phone.audio.title') }}</div>
+                <div class="sr-desc">{{ t('settings.phone.audio.desc') }}</div>
               </div>
               <span class="switch"><input :checked="phoneInfo.audioOutput" type="checkbox" @change="onTogglePhoneAudioOutput" /><i></i></span>
             </div>
             <div class="setting-row">
               <div class="sr-body">
-                <div class="sr-title">已连接设备</div>
-                <div class="sr-desc">当前会话在线设备数</div>
+                <div class="sr-title">{{ t('settings.phone.devices.title') }}</div>
+                <div class="sr-desc">{{ t('settings.phone.devices.desc') }}</div>
               </div>
-              <span class="chip ok">{{ phoneInfo.connected }} 台在线</span>
+              <span class="chip ok">{{ t('settings.phone.devices.online', { n: phoneInfo.connected }) }}</span>
             </div>
           </div>
           <div class="card qr-card">
-            <div class="qr-title">扫码连接</div>
+            <div class="qr-title">{{ t('settings.phone.qr.title') }}</div>
             <div class="qr">
-              <img v-if="phoneInfo.qrDataUrl" :src="phoneInfo.qrDataUrl" alt="扫码连接" @error="onQrError" />
-              <div v-else class="qr-empty"><span>{{ phoneInfo.error ?? '二维码生成中…' }}</span></div>
+              <img v-if="phoneInfo.qrDataUrl" :src="phoneInfo.qrDataUrl" :alt="t('settings.phone.qr.title')" @error="onQrError" />
+              <div v-else class="qr-empty">
+                <span>{{ phoneInfo.error ?? t('settings.phone.qr.generating') }}</span>
+              </div>
             </div>
             <div class="qr-urls">
               <div v-for="u in phoneInfo.urls" :key="u" class="url">
                 <code>{{ u }}</code>
-                <button class="btn btn-ghost btn-sm" @click="copyText(u)">复制</button>
+                <button class="btn btn-ghost btn-sm" @click="copyText(u)">{{ t('action.copy') }}</button>
               </div>
             </div>
             <p v-if="phoneInfo.detectedIps.length" class="faint" style="font-size: 11.5px">
-              已检测到网卡：{{ phoneInfo.detectedIps.join('，') }}
+              {{ t('settings.phone.detected', { list: phoneInfo.detectedIps.join(ipSeparator) }) }}
             </p>
           </div>
         </div>
@@ -244,26 +263,38 @@
 
       <!-- 外观 -->
       <section v-if="sec === 'appearance'" class="sect">
-        <h2>外观</h2>
-        <p class="desc">主题与强调色即时生效，同样作用于字幕条与演示外壳。</p>
+        <h2>{{ t('settings.appearance.title') }}</h2>
+        <p class="desc">{{ t('settings.appearance.desc') }}</p>
         <div class="card form-card">
           <div class="setting-row">
-            <div class="sr-body"><div class="sr-title">主题模式</div><div class="sr-desc">跟随系统 / 浅色 / 深色</div></div>
+            <div class="sr-body">
+              <div class="sr-title">{{ t('settings.theme.title') }}</div>
+              <div class="sr-desc">{{ t('settings.theme.desc') }}</div>
+            </div>
             <div class="seg">
-              <button :class="{ on: form.theme === 'light' }" @click="setTheme('light')">浅色</button>
-              <button :class="{ on: form.theme === 'dark' }" @click="setTheme('dark')">深色</button>
-              <button :class="{ on: form.theme === 'auto' }" @click="setTheme('auto')">跟随</button>
+              <button :class="{ on: form.theme === 'light' }" @click="setTheme('light')">
+                {{ t('settings.theme.light') }}
+              </button>
+              <button :class="{ on: form.theme === 'dark' }" @click="setTheme('dark')">
+                {{ t('settings.theme.dark') }}
+              </button>
+              <button :class="{ on: form.theme === 'auto' }" @click="setTheme('auto')">
+                {{ t('settings.theme.auto') }}
+              </button>
             </div>
           </div>
           <div class="setting-row">
-            <div class="sr-body"><div class="sr-title">强调色</div><div class="sr-desc">状态光、主按钮与进度使用强调色</div></div>
+            <div class="sr-body">
+              <div class="sr-title">{{ t('settings.accent.title') }}</div>
+              <div class="sr-desc">{{ t('settings.accent.desc') }}</div>
+            </div>
             <div class="swatches">
               <button
                 v-for="a in ACCENTS"
                 :key="a.value"
                 class="swatch"
                 :class="{ on: form.accent === a.value }"
-                :title="a.label"
+                :title="t(a.labelKey)"
                 @click="setAccent(a.value)"
               >
                 <span class="inner" :style="{ '--s': a.css }"></span>
@@ -282,17 +313,23 @@ import {
   QWEN_TTS_VOICES,
   LLM_MODELS,
   SAMBERT_VOICES,
-  EDGE_VOICES,
   ORB_POSITIONS,
   ACCENTS,
+  edgeVoicesFor,
   type AppConfig,
   type ThemeMode
 } from '../../main/config/schema'
+import { LANGS } from '@shared/i18n'
+import { initI18n, lang, t } from './i18n'
+
+// 在 setup 阶段同步应用启动语言，保证首帧就是正确语言（不闪中文）
+initI18n()
 
 const appVersion = window.ops.appVersion
 const sec = ref('general')
 
 const form = reactive<AppConfig>({
+  language: 'zh-CN',
   apiKey: '',
   llmModel: 'qwen3.8-flash',
   asrModel: 'paraformer-realtime-v2',
@@ -314,6 +351,11 @@ const form = reactive<AppConfig>({
   theme: 'auto',
   accent: 'ocean'
 })
+
+/** 当前语言下可选的 Edge 音色：英文界面只列英文音色，避免选出「念不出英文」的组合 */
+const edgeVoices = computed(() => edgeVoicesFor(form.language))
+/** 网卡地址分隔符：中文用全角逗号，英文用半角 */
+const ipSeparator = computed(() => (lang.value === 'zh-CN' ? '，' : ', '))
 /** 多音字标注仅对支持 phoneme 的引擎开放（Qwen=py / Edge=sapi） */
 const supportsPron = computed(
   () => form.ttsEngine === 'cosyvoice' || form.ttsEngine === 'edge'
@@ -384,6 +426,16 @@ async function setAccent(value: string): Promise<void> {
   await window.ops.config.set('accent', value)
 }
 
+/**
+ * 语言切换即时生效（不必等保存）：主进程据此重刷托盘与窗口标题，
+ * 并会把 Edge 音色切到新语言的默认音色，这里把结果同步回表单。
+ */
+async function onLanguageChange(): Promise<void> {
+  const cfg = await window.ops.config.set('language', form.language)
+  form.language = cfg.language
+  form.edgeVoice = cfg.edgeVoice
+}
+
 function onTogglePhoneAudioOutput(e: Event): void {
   const on = (e.target as HTMLInputElement).checked
   void window.ops.config.set('phoneAudioOutput', on).then(() => refreshPhoneInfo())
@@ -411,7 +463,7 @@ function copyText(text: string): void {
 }
 
 function onQrError(): void {
-  phoneInfo.error = '二维码图片加载失败，请尝试复制上方地址手动访问'
+  phoneInfo.error = t('settings.phone.qr.failed')
 }
 
 function save(): void {

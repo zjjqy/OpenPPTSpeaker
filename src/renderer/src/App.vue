@@ -4,15 +4,20 @@
     <div v-if="!mini" class="orb-panel">
       <div class="orb-head">
         <span class="lg"></span>
-        <span class="tt">OpenPPTSpeaker 语音讲解</span>
+        <span class="tt">{{ t('orb.header') }}</span>
         <span class="spread"></span>
-        <button class="ic-btn" title="PPT 库 / 讲稿编辑" @click="openPpt">
+        <button class="ic-btn" :title="t('orb.tipPpt')" @click="openPpt">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>
         </button>
-        <button class="ic-btn" title="设置" @click="openSettings">
+        <button class="ic-btn" :title="t('orb.tipSettings')" @click="openSettings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
-        <button class="ic-btn" :disabled="tourActive" :title="tourActive ? '讲解中，暂不能收起' : '收起到托盘'" @click="minimize">
+        <button
+          class="ic-btn"
+          :disabled="tourActive"
+          :title="tourActive ? t('orb.tipMinimizeDisabled') : t('orb.tipMinimize')"
+          @click="minimize"
+        >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </button>
       </div>
@@ -44,26 +49,34 @@
         <div class="orb-actions">
           <button v-if="!tourActive" class="btn btn-primary btn-lg" @click="toggleMenu">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5z"/></svg>
-            开始讲解
+            {{ t('orb.start') }}
           </button>
           <div v-else class="row gap-2" style="width: 100%">
-            <button class="btn btn-ghost" style="flex: 1" @click="prev">‹ 上一页</button>
-            <button class="btn btn-soft" style="flex: 1" @click="togglePause">{{ store.tourState === 'paused' ? '继续' : '暂停' }}</button>
-            <button class="btn btn-primary" style="flex: 1" @click="next">下一页 ›</button>
+            <button class="btn btn-ghost" style="flex: 1" @click="prev">{{ t('orb.prev') }}</button>
+            <button class="btn btn-soft" style="flex: 1" @click="togglePause">
+              {{ store.tourState === 'paused' ? t('orb.resume') : t('orb.pause') }}
+            </button>
+            <button class="btn btn-primary" style="flex: 1" @click="next">{{ t('orb.next') }}</button>
           </div>
           <div class="row gap-2" style="width: 100%">
-            <button v-if="tourActive" class="btn btn-ghost" style="flex: 1" @click="endTour">结束讲解</button>
-            <button v-if="!tourActive" class="btn btn-ghost" style="flex: 1" @click="openPpt">PPT 库</button>
+            <button v-if="tourActive" class="btn btn-ghost" style="flex: 1" @click="endTour">
+              {{ t('orb.end') }}
+            </button>
+            <button v-if="!tourActive" class="btn btn-ghost" style="flex: 1" @click="openPpt">
+              {{ t('orb.pptLibrary') }}
+            </button>
           </div>
         </div>
 
-        <div v-if="!store.apiReady && !menuOpen" class="key-tip" @click="openSettings">未配置 API Key，点击设置</div>
+        <div v-if="!store.apiReady && !menuOpen" class="key-tip" @click="openSettings">
+          {{ t('orb.noApiKey') }}
+        </div>
       </div>
 
       <!-- 讲解内容菜单 -->
       <transition name="fade">
         <div v-if="menuOpen" class="menu">
-          <div class="menu-title">选择讲解内容</div>
+          <div class="menu-title">{{ t('orb.chooseDeck') }}</div>
           <div class="deck-scroll">
             <button
               v-for="d in decks"
@@ -73,13 +86,15 @@
               @click="startDeckTour(d.id)"
             >
               <div class="mi-name">
-                {{ d.name }}<span v-if="d.id === activeDeckId" class="mi-cur"> · 当前</span>
+                {{ d.name }}<span v-if="d.id === activeDeckId" class="mi-cur">{{ t('orb.current') }}</span>
               </div>
               <div class="mi-desc">
-                {{ d.source === 'builtin' ? '内置演示' : `${d.slideCount} 页` }}{{ d.hasScript ? '' : ' · 无讲稿（将实时生成）' }}
+                {{ d.source === 'builtin' ? t('orb.builtin') : t('orb.slides', { n: d.slideCount }) }}{{ d.hasScript ? '' : t('orb.noScript') }}
               </div>
             </button>
-            <p v-if="decks.length <= 1" class="deck-empty">还没有导入的 PPT<br />点击「PPT 库」按钮导入</p>
+            <p v-if="decks.length <= 1" class="deck-empty">
+              {{ t('orb.emptyDecks') }}<br />{{ t('orb.emptyDecksHint') }}
+            </p>
           </div>
           <button class="menu-close" @click="menuOpen = false">✕</button>
         </div>
@@ -97,7 +112,7 @@
           <span class="pulse-dot" :class="{ on: store.speaking }"></span>
         </div>
       </div>
-      <button class="btn btn-icon btn-ghost btn-sm" title="暂停/继续" @click="togglePause">
+      <button class="btn btn-icon btn-ghost btn-sm" :title="t('orb.tipPauseResume')" @click="togglePause">
         <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
       </button>
     </div>
@@ -107,6 +122,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useSessionStore } from './stores/session'
+import { initI18n, t } from './i18n'
+
+// 在 setup 阶段同步应用启动语言，保证首帧语言正确（不闪中文）
+initI18n()
 
 const store = useSessionStore()
 const menuOpen = ref(false)
@@ -118,26 +137,27 @@ const tourActive = computed(
 const statusLabel = computed(() => {
   switch (store.tourState) {
     case 'opening':
-      return store.tourMessage || '正在准备…'
+      // tourMessage 由主进程给出，主进程已按语言取词，为空时才回退本地文案
+      return store.tourMessage || t('status.preparing')
     case 'presenting':
-      return '讲解中'
+      return t('status.presenting')
     case 'listening':
-      return '倾听中'
+      return t('status.listening')
     case 'paused':
-      return '已暂停'
+      return t('status.paused')
     case 'answering':
-      return '回答中'
+      return t('status.answering')
     case 'resuming':
-      return '继续讲解'
+      return t('status.resuming')
     case 'ended':
-      return '讲解结束'
+      return t('status.ended')
     default:
-      return store.listening ? '倾听中' : store.wakeup ? '已唤醒' : '待命中'
+      return store.listening ? t('status.listening') : store.wakeup ? t('status.wakeup') : t('status.idle')
   }
 })
 const caption = computed(() => {
   if (store.tourState === 'idle' || store.tourState === 'ended') {
-    return '说出唤醒词，或点击「开始讲解」'
+    return t('orb.captionIdle')
   }
   return store.tourMessage || store.currentTitle || ''
 })

@@ -72,6 +72,11 @@ export const IPC = {
     SetMany: 'config:set-many',
     /** 配置变更事件 */
     Changed: 'config:changed',
+    /**
+     * 同步取当前界面语言（preload 启动时调用一次）。
+     * 渲染层首帧就要用对语言，异步取会在英文模式下先闪一下中文界面，故走 sendSync。
+     */
+    GetLangSync: 'config:get-lang-sync',
   },
   Ppt: {
     Open: 'ppt:open',

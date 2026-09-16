@@ -9,6 +9,7 @@ import { tourEngine } from './tour/TourEngine'
 import { configStore } from './config/ConfigStore'
 import { pptLibrary } from './ppt/PptLibrary'
 import { IPC } from '@shared/ipc'
+import { t } from '@shared/i18n'
 
 /** 应用版本号：构建时由 electron-vite 从 package.json 注入（见 electron.vite.config.ts） */
 declare const __APP_VERSION__: string
@@ -74,7 +75,7 @@ function wireEvents(): void {
     windowManager.showOrb()
     speechSession.setWakeMode(false)
     clearWakeTimer()
-    await speechSession.speak('您好，我是 OpenPPTSpeaker 讲演助手。请问需要我讲解哪份演示？')
+    await speechSession.speak(t('assistant.greeting'))
     // 30 秒无话语自动回到唤醒监听
     wakeIdleTimer = setTimeout(() => {
       if (tourEngine.state === 'idle') {
@@ -91,7 +92,7 @@ function wireEvents(): void {
       // 语音里带 PPT 名称（如"讲解产品介绍"）→ 直接讲对应 deck；否则讲当前活动 deck
       const target = pptLibrary
         .list()
-        .find((d) => d.source !== 'builtin' && d.name && d.name !== '未命名演示' && text.includes(d.name))
+        .find((d) => d.source !== 'builtin' && d.name && d.name !== t('ppt.untitledDeck') && text.includes(d.name))
       console.log(`[语音命令] 识别到讲解指令: "${text}"，启动 PPT 讲演${target ? `（匹配到「${target.name}」）` : ''}`)
       void tourEngine.startDeck(target ? { deckId: target.id } : {})
       return

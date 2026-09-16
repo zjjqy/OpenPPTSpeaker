@@ -5,13 +5,13 @@
         <span class="lg"></span>
         <div>
           <h1>OpenPPTSpeaker</h1>
-          <span class="faint">PPT 库 · 讲稿编辑</span>
+          <span class="faint">{{ t('ppt.subtitle') }}</span>
         </div>
       </div>
       <span class="spread"></span>
       <nav class="tabs">
-        <button :class="{ on: tab === 'ppt' }" @click="tab = 'ppt'">PPT 管理</button>
-        <button :class="{ on: tab === 'editor' }" @click="tab = 'editor'">讲稿编辑</button>
+        <button :class="{ on: tab === 'ppt' }" @click="tab = 'ppt'">{{ t('ppt.tabDecks') }}</button>
+        <button :class="{ on: tab === 'editor' }" @click="tab = 'editor'">{{ t('ppt.tabEditor') }}</button>
       </nav>
     </header>
 
@@ -28,6 +28,10 @@
 import { ref } from 'vue'
 import PptManager from './components/PptManager.vue'
 import ScriptEditor from './components/ScriptEditor.vue'
+import { initI18n, t } from './i18n'
+
+// 在 setup 阶段同步应用启动语言，保证首帧语言正确（不闪中文）
+initI18n()
 
 const tab = ref<'ppt' | 'editor'>('ppt')
 /** PPT 管理页点击"编辑讲稿"跳转过来的目标 deck */

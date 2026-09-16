@@ -13,6 +13,11 @@ declare const __APP_VERSION__: string
 const api = {
   /** 应用版本号（与 package.json 同步，构建时注入，无需手动维护） */
   appVersion: __APP_VERSION__,
+  /**
+   * 启动时的界面语言。同步取（sendSync）而非等 config.get() 的 Promise：
+   * 页面脚本需要首帧就渲染正确语言，异步拿到会让英文模式先闪一下中文。
+   */
+  initialLang: ipcRenderer.sendSync(IPC.Config.GetLangSync) as string,
   window: {
     minimize: (): void => ipcRenderer.send(IPC.Window.OrbMinimize),
     restore: (): void => ipcRenderer.send(IPC.Window.OrbRestore),
@@ -112,7 +117,8 @@ const api = {
       ipcRenderer.invoke(IPC.PptLib.List),
     setActive: (deckId: string): Promise<{ ok: boolean; error?: string }> =>
       ipcRenderer.invoke(IPC.PptLib.SetActive, deckId),
-    importDeck: (args: { kind: 'pdf' | 'images'; name?: string; genScript?: boolean; prompt?: string }): Promise<{ ok: boolean; deck?: PptDeckMeta; error?: string }> =>
+    /** cancelled = 用户在文件对话框点了取消，调用方应静默忽略而非报错 */
+    importDeck: (args: { kind: 'pdf' | 'images'; name?: string; genScript?: boolean; prompt?: string }): Promise<{ ok: boolean; deck?: PptDeckMeta; cancelled?: boolean; error?: string }> =>
       ipcRenderer.invoke(IPC.PptLib.Import, args),
     remove: (deckId: string): Promise<{ ok: boolean; error?: string }> =>
       ipcRenderer.invoke(IPC.PptLib.Delete, deckId),
@@ -124,11 +130,11 @@ const api = {
       ipcRenderer.invoke(IPC.PptLib.GetScript, deckId),
     saveScript: (deckId: string, script: DeckScriptV2): Promise<{ ok: boolean; error?: string }> =>
       ipcRenderer.invoke(IPC.PptLib.SaveScript, deckId, script),
-    importScript: (deckId: string): Promise<{ ok: boolean; script?: DeckScriptV2 | null; error?: string }> =>
+    importScript: (deckId: string): Promise<{ ok: boolean; script?: DeckScriptV2 | null; cancelled?: boolean; error?: string }> =>
       ipcRenderer.invoke(IPC.PptLib.ImportScript, deckId),
     slideImage: (args: { deckId: string; slide: number; thumb?: boolean }): Promise<string> =>
       ipcRenderer.invoke(IPC.PptLib.SlideImage, args),
-    exportVideo: (deckId: string): Promise<{ ok: boolean; path?: string; error?: string }> =>
+    exportVideo: (deckId: string): Promise<{ ok: boolean; path?: string; cancelled?: boolean; error?: string }> =>
       ipcRenderer.invoke(IPC.PptLib.ExportVideo, deckId),
     onProgress: (cb: (ev: PptProgressEvent) => void): void => {
       ipcRenderer.on(IPC.PptLib.Progress, (_e, ev: PptProgressEvent) => cb(ev))

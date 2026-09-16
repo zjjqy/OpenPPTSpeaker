@@ -5,6 +5,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { DEFAULT_CONFIG, QWEN_TTS_VOICES, type AppConfig } from './schema'
 import { IPC } from '@shared/ipc'
+import { normalizeLang, setLang } from '@shared/i18n'
 
 class ConfigStore {
   private config: AppConfig
@@ -35,6 +36,10 @@ class ConfigStore {
       console.error('[Config] 读取配置失败，使用默认值:', e)
     }
     if (!cfg) cfg = { ...DEFAULT_CONFIG }
+    // 语言字段兜底：旧配置文件没有该字段（或被人手改成非法值）时回退默认语言
+    cfg.language = normalizeLang(cfg.language)
+    // 主进程文案在窗口创建前就要用对语言，故此处先同步 i18n（渲染层由 preload 拿到配置后自行同步）
+    setLang(cfg.language)
     // 模型升级/品牌更名迁移：旧值换新（幂等；迁移后立即写回磁盘）
     if (this.migrateLegacy(cfg)) {
       try {

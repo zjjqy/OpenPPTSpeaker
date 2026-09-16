@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>OpenPPTSpeaker · 手机遥控</title>
+  <title>OpenPPTSpeaker</title>
   <style>
     :root {
       --bg: #0f1216;
@@ -85,29 +85,29 @@
     <span class="lg"></span>
     <div class="t">
       <b>OpenPPTSpeaker</b>
-      <span>手机遥控 · 无线麦克风</span>
+      <span id="headSub"></span>
     </div>
     <span class="spread"></span>
-    <span id="conn" class="conn"><i></i><span id="connText">连接中…</span></span>
+    <span id="conn" class="conn"><i></i><span id="connText"></span></span>
   </div>
 
   <div class="card">
-    <div class="now-lab"><span>正在讲解</span><span id="stateText">—</span></div>
-    <div class="now-name" id="deckName">未开始讲解</div>
+    <div class="now-lab"><span id="nowLab"></span><span id="stateText">—</span></div>
+    <div class="now-name" id="deckName"></div>
     <div class="pg">
       <span class="mono" id="pgText">0 / 0</span>
       <div class="bar"><i id="pgBar"></i></div>
       <span id="db" class="mono">0</span>
     </div>
     <div class="acts">
-      <button id="btnPrev" class="mini" disabled>上一页</button>
-      <button id="btnPause" class="mini" disabled>暂停</button>
-      <button id="btnPlay" class="mini play" disabled>开始讲解</button>
-      <button id="btnNext" class="mini" disabled>下一页</button>
+      <button id="btnPrev" class="mini" disabled></button>
+      <button id="btnPause" class="mini" disabled></button>
+      <button id="btnPlay" class="mini play" disabled></button>
+      <button id="btnNext" class="mini" disabled></button>
     </div>
     <div class="acts" style="margin-top: 6px">
-      <button id="btnEnd" class="mini end" disabled>结束讲解</button>
-      <button id="btnTray" class="mini">隐藏到托盘</button>
+      <button id="btnEnd" class="mini end" disabled></button>
+      <button id="btnTray" class="mini"></button>
     </div>
   </div>
 
@@ -115,15 +115,110 @@
     <button id="btn" class="mic">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg>
     </button>
-    <div class="mic-hint" id="micHint">按住说话</div>
-    <div class="mic-sub">按住即打断讲解并收音，松开结束</div>
+    <div class="mic-hint" id="micHint"></div>
+    <div class="mic-sub" id="micSub"></div>
     <div class="meter"><i id="meter"></i></div>
-    <p class="tip">此页面把手机变成电脑的<b>无线麦克风</b>：按住按钮再讲，松开即停止收音，避免长时间占用麦克风；同时可播放电脑讲解的语音回复。</p>
+    <p class="tip" id="tip"></p>
   </div>
 
   <div class="logs" id="logs"></div>
 
   <script>
+    // ============ 文案（服务端按当前界面语言注入 __OPS_LANG__） ============
+    var LANG = '__OPS_LANG__'
+    var IS_ZH = LANG.indexOf('zh') === 0
+    var STR = IS_ZH
+      ? {
+          title: 'OpenPPTSpeaker · 手机遥控',
+          headSub: '手机遥控 · 无线麦克风',
+          connecting: '连接中…',
+          nowLabel: '正在讲解',
+          notStarted: '未开始讲解',
+          prev: '上一页',
+          pause: '暂停',
+          start: '开始讲解',
+          next: '下一页',
+          end: '结束讲解',
+          hideTray: '隐藏到托盘',
+          showMain: '显示主界面',
+          holdToTalk: '按住说话',
+          release: '松开结束',
+          micSub: '按住即打断讲解并收音，松开结束',
+          tip: '此页面把手机变成电脑的<b>无线麦克风</b>：按住按钮再讲，松开即停止收音，避免长时间占用麦克风；同时可播放电脑讲解的语音回复。',
+          connected: '已连接',
+          disconnected: '连接断开，重连中…',
+          connError: '连接出错',
+          stateIdle: '未开始',
+          stateOpening: '准备中',
+          statePresenting: '讲解中',
+          stateListening: '倾听中',
+          statePaused: '已暂停',
+          stateAnswering: '回答中',
+          stateResuming: '继续讲解',
+          stateEnded: '已结束',
+          preparing: '准备中…',
+          resumePlay: '继续播放',
+          micReady: '麦克风已接入',
+          peerBusy: '发言权被占用：另一台设备正在说话',
+          peerFree: '另一台设备发言结束，现在可以说话了',
+          waitConn: '等待连接电脑…',
+          needHttps: '请使用 HTTPS 访问（iOS Safari / Chrome）'
+        }
+      : {
+          title: 'OpenPPTSpeaker · Phone remote',
+          headSub: 'Phone remote · Wireless microphone',
+          connecting: 'Connecting…',
+          nowLabel: 'Now presenting',
+          notStarted: 'Not presenting',
+          prev: 'Previous',
+          pause: 'Pause',
+          start: 'Start presenting',
+          next: 'Next',
+          end: 'End presentation',
+          hideTray: 'Hide to tray',
+          showMain: 'Show the app',
+          holdToTalk: 'Hold to talk',
+          release: 'Release to stop',
+          micSub: 'Hold to interrupt and record; release to stop',
+          tip: 'This page turns your phone into the computer’s <b>wireless microphone</b>: press and hold to talk, release to stop recording so the mic is not held open, and hear the assistant’s spoken replies.',
+          connected: 'Connected',
+          disconnected: 'Disconnected — reconnecting…',
+          connError: 'Connection error',
+          stateIdle: 'Idle',
+          stateOpening: 'Getting ready',
+          statePresenting: 'Presenting',
+          stateListening: 'Listening',
+          statePaused: 'Paused',
+          stateAnswering: 'Answering',
+          stateResuming: 'Resuming',
+          stateEnded: 'Ended',
+          preparing: 'Getting ready…',
+          resumePlay: 'Resume',
+          micReady: 'Microphone ready',
+          peerBusy: 'Someone else is talking on another device right now',
+          peerFree: 'The other device stopped talking — you can speak now',
+          waitConn: 'Waiting for the computer…',
+          needHttps: 'Please open this page over HTTPS (iOS Safari / Chrome)'
+        }
+
+    /** 静态文案写进 DOM（动态文案直接用 STR.xxx） */
+    function applyI18n() {
+      document.title = STR.title
+      document.getElementById('headSub').textContent = STR.headSub
+      document.getElementById('connText').textContent = STR.connecting
+      document.getElementById('nowLab').textContent = STR.nowLabel
+      document.getElementById('deckName').textContent = STR.notStarted
+      document.getElementById('btnPrev').textContent = STR.prev
+      document.getElementById('btnPause').textContent = STR.pause
+      document.getElementById('btnPlay').textContent = STR.start
+      document.getElementById('btnNext').textContent = STR.next
+      document.getElementById('btnEnd').textContent = STR.end
+      document.getElementById('btnTray').textContent = STR.hideTray
+      document.getElementById('micHint').textContent = STR.holdToTalk
+      document.getElementById('micSub').textContent = STR.micSub
+      document.getElementById('tip').innerHTML = STR.tip
+    }
+    applyI18n()
     // ============ 禁止页面缩放 ============
     document.addEventListener('gesturestart', function (e) { e.preventDefault() })
     document.addEventListener('gesturechange', function (e) { e.preventDefault() })
@@ -175,18 +270,18 @@
 
       ws.onopen = function () {
         wsAlive = true
-        setConn('已连接', 'ok')
-        log('已连接 ' + location.host)
+        setConn(STR.connected, 'ok')
+        log(STR.connected + ' ' + location.host)
         if (collecting) ensureMic()
       }
       ws.onclose = function () {
         wsAlive = false
-        setConn('连接断开，重连中…', 'err')
+        setConn(STR.disconnected, 'err')
         setTimeout(connect, 2000)
       }
       ws.onerror = function () {
         wsAlive = false
-        setConn('连接出错', 'err')
+        setConn(STR.connError, 'err')
       }
 
       ws.onmessage = function (e) {
@@ -207,7 +302,7 @@
           } else if (msg.type === 'busy') {
             handleBusy()
           } else if (msg.type === 'free') {
-            log('另一台设备发言结束，现在可以说话了')
+            log(STR.peerFree)
           }
         } else {
           pushPcm(new Float32Array(e.data.byteLength / 2), new Int16Array(e.data))
@@ -240,13 +335,14 @@
     function refreshTrayBtn() { btnTray.disabled = !tourIdleNow && orbVisibleNow }
     function applyOrbVisible(visible) {
       orbVisibleNow = visible
-      btnTray.textContent = visible ? '隐藏到托盘' : '显示主界面'
+      btnTray.textContent = visible ? STR.hideTray : STR.showMain
       refreshTrayBtn()
     }
 
     var STATE_LABEL = {
-      idle: '未开始', opening: '准备中', presenting: '讲解中', listening: '倾听中',
-      paused: '已暂停', answering: '回答中', resuming: '继续讲解', ended: '已结束'
+      idle: STR.stateIdle, opening: STR.stateOpening, presenting: STR.statePresenting,
+      listening: STR.stateListening, paused: STR.statePaused, answering: STR.stateAnswering,
+      resuming: STR.stateResuming, ended: STR.stateEnded
     }
     function applyTourState(s, message) {
       var idle = (s === 'idle' || s === 'ended' || !s)
@@ -256,10 +352,10 @@
       btnPause.disabled = (s !== 'presenting')
       if (s === 'opening') {
         btnPlay.disabled = true
-        btnPlay.textContent = message || '准备中…'
+        btnPlay.textContent = message || STR.preparing
       } else {
         btnPlay.disabled = (s !== 'paused' && !idle)
-        btnPlay.textContent = idle ? '开始讲解' : '继续播放'
+        btnPlay.textContent = idle ? STR.start : STR.resumePlay
       }
       var nav = (s === 'presenting' || s === 'paused')
       btnPrev.disabled = !nav
@@ -332,7 +428,7 @@
       source = micCtx.createMediaStreamSource(stream)
       source.connect(input)
       input.connect(micCtx.destination)
-      log('麦克风已接入，' + micCtx.sampleRate + 'Hz → ' + TARGET_RATE + 'Hz')
+      log(STR.micReady + ', ' + micCtx.sampleRate + 'Hz → ' + TARGET_RATE + 'Hz')
     }
     function downsample(input, inRate, outRate) {
       if (inRate === outRate) return input
@@ -353,11 +449,11 @@
     function handleBusy() {
       pressed = false
       if (collecting) stopMic()
-      log('发言权被占用：另一台设备正在说话')
+      log(STR.peerBusy)
     }
     function stopMic() {
       collecting = false
-      micHint.textContent = '按住说话'
+      micHint.textContent = STR.holdToTalk
       btnEl.classList.remove('hold')
       if (source) { try { source.disconnect() } catch (e) {} source = null }
       if (micCtx) { try { micCtx.close() } catch (e) {} micCtx = null }
@@ -367,9 +463,9 @@
     }
     function startListen() {
       if (collecting) return
-      if (!wsAlive) { log('等待连接电脑…'); return }
+      if (!wsAlive) { log(STR.waitConn); return }
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        log('请使用 HTTPS 访问（iOS Safari / Chrome）')
+        log(STR.needHttps)
         return
       }
       navigator.mediaDevices
@@ -378,7 +474,7 @@
           if (!pressed) { s.getTracks().forEach(function (t) { t.stop() }); return }
           stream = s
           collecting = true
-          micHint.textContent = '松开结束'
+          micHint.textContent = STR.release
           btnEl.classList.add('hold')
           ensureMic()
           if (navigator.wakeLock && navigator.wakeLock.request) {

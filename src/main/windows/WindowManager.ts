@@ -3,6 +3,7 @@
 import { BrowserWindow, screen, nativeImage, Tray, Menu, app, shell } from 'electron'
 import { join } from 'node:path'
 import { IPC } from '@shared/ipc'
+import { t } from '@shared/i18n'
 import { configStore } from '../config/ConfigStore'
 import type { OrbPosition } from '../config/schema'
 
@@ -303,7 +304,7 @@ export class WindowManager {
       resizable: true,
       // 深色底：避免启动瞬间白闪（页面 CSS 生效前的兜底）
       backgroundColor: '#0f1216',
-      title: 'OpenPPTSpeaker - 设置',
+      title: t('window.settings'),
       webPreferences: {
         preload: this.preloadPath,
         nodeIntegration: false,
@@ -332,7 +333,7 @@ export class WindowManager {
       resizable: true,
       // 深色底：避免启动瞬间白闪（页面 CSS 生效前的兜底）
       backgroundColor: '#14081a',
-      title: 'OpenPPTSpeaker - PPT 管理',
+      title: t('window.ppt'),
       webPreferences: {
         preload: this.preloadPath,
         nodeIntegration: false,
@@ -526,31 +527,41 @@ export class WindowManager {
 
     this.tray = new Tray(icon)
     this.tray.setToolTip('OpenPPTSpeaker')
+    this.tray.setContextMenu(Menu.buildFromTemplate(this.trayTemplate()))
+    this.tray.on('double-click', () => this.toggleOrbVisible())
+  }
 
-    const menu = Menu.buildFromTemplate([
-      {
-        label: '显示/隐藏悬浮球',
-        click: () => this.toggleOrbVisible()
-      },
-      {
-        label: '设置',
-        click: () => this.openSettings()
-      },
-      {
-        label: 'PPT 管理',
-        click: () => this.openPptWindow()
-      },
+  /** 托盘菜单模板：文案随语言变化，故每次重建而不是复用同一个 Menu 实例 */
+  private trayTemplate(): Electron.MenuItemConstructorOptions[] {
+    return [
+      { label: t('tray.toggleOrb'), click: () => this.toggleOrbVisible() },
+      { label: t('tray.settings'), click: () => this.openSettings() },
+      { label: t('tray.ppt'), click: () => this.openPptWindow() },
       { type: 'separator' },
       {
-        label: '退出应用',
+        label: t('tray.quit'),
         click: () => {
           this.isQuitting = true
           app.quit()
         }
       }
-    ])
-    this.tray.setContextMenu(menu)
-    this.tray.on('double-click', () => this.toggleOrbVisible())
+    ]
+  }
+
+  /**
+   * 语言切换后刷新主进程持有的文案：托盘菜单与窗口标题。
+   * 窗口内的文案由渲染层响应 config.onChange 自行刷新。
+   */
+  refreshLocale(): void {
+    if (this.tray && !this.tray.isDestroyed()) {
+      this.tray.setContextMenu(Menu.buildFromTemplate(this.trayTemplate()))
+    }
+    if (this.settingsWindow && !this.settingsWindow.isDestroyed()) {
+      this.settingsWindow.setTitle(t('window.settings'))
+    }
+    if (this.pptWindow && !this.pptWindow.isDestroyed()) {
+      this.pptWindow.setTitle(t('window.ppt'))
+    }
   }
 
   private toggleOrbVisible(): void {

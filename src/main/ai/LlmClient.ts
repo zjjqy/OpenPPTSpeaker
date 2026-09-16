@@ -1,6 +1,7 @@
 /** 千问 LLM 客户端（DashScope OpenAI 兼容模式，SSE 流式） */
 
 import { configStore } from '../config/ConfigStore'
+import { t } from '@shared/i18n'
 
 const BASE_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions'
 
@@ -58,7 +59,7 @@ export class LlmClient {
   async chat(opts: LlmStreamOptions): Promise<LlmResponse> {
     const apiKey = configStore.get('apiKey')
     if (!apiKey) {
-      throw new Error('未配置 DashScope API Key，请在设置中填写')
+      throw new Error(t('tour.noApiKey'))
     }
 
     const messages: ChatMessage[] = []
@@ -92,7 +93,7 @@ export class LlmClient {
 
     if (!resp.ok || !resp.body) {
       const errText = await resp.text().catch(() => '')
-      throw new Error(`LLM 请求失败 (${resp.status}): ${errText.slice(0, 200)}`)
+      throw new Error(t('llm.requestFailed', { status: resp.status, msg: errText.slice(0, 200) }))
     }
 
     let text = ''

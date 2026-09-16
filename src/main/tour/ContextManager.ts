@@ -1,6 +1,7 @@
 /** 讲解上下文管理：断点 / 历史 / 页面素材 / 用户关注点 */
 
 import type { TourContext, TourDeck } from '@shared/tour'
+import { t } from '@shared/i18n'
 import { configStore } from '../config/ConfigStore'
 
 export interface ContextMessage {
@@ -66,7 +67,7 @@ export class ContextManager {
       parts.push(`【当前区段内容】\n${ctx?.sectionText || section?.content || ''}`)
     }
     if (!ctx?.sectionText && !section?.content) {
-      parts.push('【当前区段内容】无')
+      parts.push(t('ctx.noSection'))
     }
     if (section?.prompt) parts.push(`【讲解要求】${section.prompt}`)
     parts.push(
@@ -86,7 +87,7 @@ export class ContextManager {
       messages.push({
         role: 'system',
         content: `【与本区段相关的近期问答】\n${history
-          .map((h) => `${h.role === 'user' ? '听众' : '助手'}: ${h.content}`)
+          .map((h) => `${h.role === 'user' ? t('ctx.roleUser') : t('ctx.roleAssistant')}: ${h.content}`)
           .join('\n')}`
       })
     }

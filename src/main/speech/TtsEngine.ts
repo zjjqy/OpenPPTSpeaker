@@ -4,6 +4,7 @@ import WebSocket from 'ws'
 import { randomUUID, createHash } from 'node:crypto'
 import { configStore } from '../config/ConfigStore'
 import type { TtsEngineKind } from '@shared/speech'
+import { t } from '@shared/i18n'
 
 export interface TtsChunk {
   /** PCM 音频字节（16bit 单声道） */
@@ -88,7 +89,7 @@ class CosyVoiceAdapter implements TtsEngine {
 
   async *synthesize(text: string): AsyncGenerator<TtsChunk> {
     const apiKey = configStore.get('apiKey')
-    if (!apiKey) throw new Error('未配置 DashScope API Key')
+    if (!apiKey) throw new Error(t('tts.noApiKey'))
     this.abortFlag = false
 
     const voice = configStore.get('ttsVoice')
@@ -161,7 +162,7 @@ class CosyVoiceAdapter implements TtsEngine {
         })
       }),
       new Promise<never>((_resolve, reject) =>
-        setTimeout(() => reject(new Error('CosyVoice 连接超时（10s）')), 10000)
+        setTimeout(() => reject(new Error(t('tts.cosyvoiceTimeout'))), 10000)
       )
     ])
 
@@ -303,7 +304,7 @@ class SambertAdapter implements TtsEngine {
 
   async *synthesize(text: string): AsyncGenerator<TtsChunk> {
     const apiKey = configStore.get('apiKey')
-    if (!apiKey) throw new Error('未配置 DashScope API Key')
+    if (!apiKey) throw new Error(t('tts.noApiKey'))
     this.aborted = false
 
     const resp = await fetch(SAMBERT_URL, {
@@ -320,7 +321,7 @@ class SambertAdapter implements TtsEngine {
 
     if (!resp.ok) {
       const errText = await resp.text().catch(() => '')
-      throw new Error(`Sambert 合成失败 (${resp.status}): ${errText.slice(0, 200)}`)
+      throw new Error(t('tts.sambertFailed', { status: resp.status, msg: errText.slice(0, 200) }))
     }
 
     const buf = Buffer.from(await resp.arrayBuffer())

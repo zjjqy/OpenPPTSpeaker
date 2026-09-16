@@ -17,6 +17,7 @@ import { loadLibrarySlideDeck } from '../tour/deckLoader'
 import { SpeechCache } from '../tour/SpeechCache'
 import { hiddenRenderer } from './HiddenRenderer'
 import { DEFAULT_SUBTITLE_STYLE } from '@shared/ppt'
+import { t } from '@shared/i18n'
 
 const VIDEO_W = 1920
 const VIDEO_H = 1080
@@ -38,7 +39,7 @@ function dataUrlToBuffer(dataUrl: string): Buffer {
 function runFfmpeg(args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
     execFile(resolveFfmpeg(), args, { maxBuffer: 16 * 1024 * 1024 }, (err, _stdout, stderr) => {
-      if (err) reject(new Error(`ffmpeg 失败: ${stderr?.slice(-500) || err.message}`))
+      if (err) reject(new Error(t('video.ffmpegFailed', { msg: stderr?.slice(-500) || err.message })))
       else resolve()
     })
   })
@@ -54,11 +55,11 @@ export interface ExportVideoOptions {
  */
 export async function exportVideo(deckId: string, outPath: string, opts: ExportVideoOptions = {}): Promise<string> {
   const meta = pptLibrary.get(deckId)
-  if (!meta) throw new Error(`PPT 不存在: ${deckId}`)
-  if (meta.source === 'builtin') throw new Error('内置演示暂不支持视频导出')
+  if (!meta) throw new Error(t('ppt.deckNotFound', { id: deckId }))
+  if (meta.source === 'builtin') throw new Error(t('ppt.builtinNoExport'))
   const script = pptLibrary.readScript(deckId)
-  if (!script) throw new Error('请先生成或导入演讲稿')
-  if (!script.slides.some((s) => s.speech.length > 0)) throw new Error('演讲稿没有任何讲解句')
+  if (!script) throw new Error(t('video.needScript'))
+  if (!script.slides.some((s) => s.speech.length > 0)) throw new Error(t('video.emptyScript'))
   // 字幕样式：整份讲稿统一（缺省用默认），导出视频与讲演字幕保持一致
   const subStyle = script.subtitleStyle ?? DEFAULT_SUBTITLE_STYLE
 
@@ -74,7 +75,7 @@ export async function exportVideo(deckId: string, outPath: string, opts: ExportV
     for (const section of spoken) {
       await cache.ensure(section)
       step++
-      opts.onProgress?.(step, spoken.length, `准备音频 ${step}/${spoken.length}…`)
+      opts.onProgress?.(step, spoken.length, t('video.progressAudio', { done: step, total: spoken.length }))
     }
 
     // 收集逐句素材
@@ -101,7 +102,7 @@ export async function exportVideo(deckId: string, outPath: string, opts: ExportV
         })
       })
     }
-    if (sents.length === 0) throw new Error('没有可用的讲解音频（合成失败）')
+    if (sents.length === 0) throw new Error(t('video.noAudio'))
     const sampleRate = sents[0].sampleRate
 
     // ---------- 2. 逐句合成帧 ----------
@@ -123,7 +124,7 @@ export async function exportVideo(deckId: string, outPath: string, opts: ExportV
       writeFileSync(frameFile, dataUrlToBuffer(frame))
       listLines.push(`file '${frameFile.replace(/\\/g, '/')}'`, `duration ${(s.durationMs / 1000).toFixed(3)}`)
       audioChunks.push(s.pcm)
-      opts.onProgress?.(i + 1, sents.length, `合成画面 ${i + 1}/${sents.length}…`)
+      opts.onProgress?.(i + 1, sents.length, t('video.progressFrame', { done: i + 1, total: sents.length }))
     }
     // concat demuxer 要求最后一帧重复一次（否则末帧时长被忽略）
     listLines.push(`file '${join(tmpDir, `f${String(sents.length - 1).padStart(5, '0')}.png`).replace(/\\/g, '/')}'`)
@@ -133,7 +134,7 @@ export async function exportVideo(deckId: string, outPath: string, opts: ExportV
     writeFileSync(pcmFile, Buffer.concat(audioChunks))
 
     // ---------- 3. ffmpeg 合成 ----------
-    opts.onProgress?.(0, 1, '正在合成视频…')
+    opts.onProgress?.(0, 1, t('video.progressEncode'))
     await runFfmpeg([
       '-y',
       '-f', 'concat', '-safe', '0', '-i', listFile,
@@ -144,7 +145,7 @@ export async function exportVideo(deckId: string, outPath: string, opts: ExportV
       '-shortest',
       outPath
     ])
-    opts.onProgress?.(1, 1, '完成')
+    opts.onProgress?.(1, 1, t('video.progressDone'))
     return outPath
   } finally {
     rmSync(tmpDir, { recursive: true, force: true })

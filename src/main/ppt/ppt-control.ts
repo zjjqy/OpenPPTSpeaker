@@ -2,6 +2,7 @@
 
 import { execSync } from 'node:child_process'
 import { resolve } from 'node:path'
+import { t } from '@shared/i18n'
 
 export interface PptResult {
   success: boolean
@@ -64,12 +65,12 @@ export function goToSlide(slideNum: number): PptResult {
 }
 
 export function prevSlide(): PptResult {
-  if (currentSlide <= 1) return { success: false, error: '已是第一页' }
+  if (currentSlide <= 1) return { success: false, error: t('ctrl.firstSlide') }
   return goToSlide(currentSlide - 1)
 }
 
 export function nextSlide(): PptResult {
-  if (currentSlide >= slideCount) return { success: false, error: '已是最后一页' }
+  if (currentSlide >= slideCount) return { success: false, error: t('ctrl.lastSlide') }
   return goToSlide(currentSlide + 1)
 }
 
@@ -86,9 +87,9 @@ export function getSlideTitle(slideNum: number): { success: boolean; title?: str
       }
     `
     const result = run(script, 8000).trim()
-    return { success: true, title: result || `第 ${slideNum} 页` }
+    return { success: true, title: result || t('deck.slideTitle', { n: slideNum }) }
   } catch {
-    return { success: true, title: `第 ${slideNum} 页` }
+    return { success: true, title: t('deck.slideTitle', { n: slideNum }) }
   }
 }
 

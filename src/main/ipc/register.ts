@@ -3,6 +3,7 @@
 import { ipcMain, app, clipboard, dialog, nativeImage, BrowserWindow } from 'electron'
 import { existsSync, readFileSync } from 'fs'
 import { IPC } from '@shared/ipc'
+import { setLang, t } from '@shared/i18n'
 import { configStore, notifyConfigChanged } from '../config/ConfigStore'
 import { speechSession } from '../speech/SpeechSession'
 import { phoneBridgeServer } from '../phone/PhoneBridgeServer'
@@ -11,12 +12,17 @@ import { windowManager } from '../windows/WindowManager'
 import { llmClient } from '../ai/LlmClient'
 import * as pptCtrl from '../ppt/ppt-control'
 import { loadSlideDeck } from '../tour/deckLoader'
-import { APP_PROFILE } from '../tour/assistantProfile'
+import { appProfile } from '../tour/assistantProfile'
 import { pptLibrary } from '../ppt/PptLibrary'
 import { importPdf, importImages } from '../ppt/PptImporter'
 import { generateScript } from '../ppt/ScriptGenerator'
 import { exportVideo } from '../ppt/VideoExporter'
 import type { DeckScriptV2, PptProgressEvent } from '@shared/ppt'
+import {
+  DEFAULT_EDGE_VOICE,
+  LANG_TO_VOICE_LANG,
+  edgeVoiceLang
+} from '../config/schema'
 
 /** 广播 PPT 相关进度到所有窗口 */
 function broadcastPptProgress(ev: PptProgressEvent): void {
@@ -25,19 +31,45 @@ function broadcastPptProgress(ev: PptProgressEvent): void {
   }
 }
 
+/**
+ * 语言切换的连带处理。
+ *
+ * 1. 同步主进程 i18n（托盘菜单、窗口标题、文件对话框标题都在主进程取词）
+ * 2. Edge 音色跟随语言：当前音色不属于新语言时切到该语言的默认音色。
+ *    否则会出现「英文界面 + 中文音色」这种念不出英文的组合。
+ * 3. 重刷主进程持有的文案
+ *
+ * 必须在 notifyConfigChanged() 之前调用，保证渲染层收到的是最终配置。
+ */
+function applyLanguageChange(): void {
+  const lang = configStore.get('language')
+  setLang(lang)
+  const target = LANG_TO_VOICE_LANG[lang]
+  if (configStore.get('ttsEngine') === 'edge' && edgeVoiceLang(configStore.get('edgeVoice')) !== target) {
+    configStore.set('edgeVoice', DEFAULT_EDGE_VOICE[target])
+  }
+  windowManager.refreshLocale()
+}
+
 export function registerIpc(): void {
   // ==================== 配置 ====================
   ipcMain.handle(IPC.Config.Get, () => configStore.getAll())
+  // 同步返回语言：preload 在页面脚本执行前调用，保证渲染层首帧语言正确
+  ipcMain.on(IPC.Config.GetLangSync, (e) => {
+    e.returnValue = configStore.get('language')
+  })
   ipcMain.handle(IPC.Config.Set, (_e, key: string, value: unknown) => {
     configStore.set(key as never, value as never)
     // 讲解中改悬浮球位置即时生效（仅需重新停放，不必等下次讲解）
     if (key === 'orbPosition') windowManager.applyOrbDock()
+    if (key === 'language') applyLanguageChange()
     notifyConfigChanged()
     return configStore.getAll()
   })
   ipcMain.handle(IPC.Config.SetMany, (_e, partial: Record<string, unknown>) => {
     configStore.setMany(partial as never)
     if ('orbPosition' in partial) windowManager.applyOrbDock()
+    if ('language' in partial) applyLanguageChange()
     notifyConfigChanged()
     return configStore.getAll()
   })
@@ -58,7 +90,7 @@ export function registerIpc(): void {
   ipcMain.handle(IPC.Speech.Ask, async (_e, text: string) => {
     // 空闲状态下的直接提问
     if (tourEngine.state === 'idle') {
-      const reply = await llmClient.ask(text, '', '你是 OpenPPTSpeaker，一位友好的开源讲演助手。\n\n' + APP_PROFILE)
+      const reply = await llmClient.ask(text, '', t('assistant.persona') + '\n\n' + appProfile())
       await speechSession.speak(reply)
       return reply
     }
@@ -192,25 +224,39 @@ export function registerIpc(): void {
       const picked =
         args.kind === 'pdf'
           ? await dialog.showOpenDialog(win!, {
-              title: '选择 PDF 文件',
-              filters: [{ name: 'PDF 文档', extensions: ['pdf'] }],
+              title: t('dlg.choosePdf'),
+              filters: [{ name: t('dlg.pdfDocs'), extensions: ['pdf'] }],
               properties: ['openFile']
             })
           : await dialog.showOpenDialog(win!, {
-              title: '选择页面图片（多选，按文件名排序）',
-              filters: [{ name: '图片', extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp'] }],
+              title: t('dlg.chooseImages'),
+              filters: [{ name: t('dlg.images'), extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp'] }],
               properties: ['openFile', 'multiSelections']
             })
-      if (picked.canceled || picked.filePaths.length === 0) return { ok: false as const, error: '已取消' }
+      if (picked.canceled || picked.filePaths.length === 0) {
+        return { ok: false as const, cancelled: true, error: t('tip.cancelled') }
+      }
 
       try {
         const result =
           args.kind === 'pdf'
             ? await importPdf(picked.filePaths[0], args.name ?? '', (done, total) =>
-                broadcastPptProgress({ deckId: '', stage: 'convert', done, total, message: `转换页面 ${done}/${total}…` })
+                broadcastPptProgress({
+                  deckId: '',
+                  stage: 'convert',
+                  done,
+                  total,
+                  message: t('progress.convert', { done, total })
+                })
               )
             : await importImages(picked.filePaths, args.name ?? '', (done, total) =>
-                broadcastPptProgress({ deckId: '', stage: 'convert', done, total, message: `导入图片 ${done}/${total}…` })
+                broadcastPptProgress({
+                  deckId: '',
+                  stage: 'convert',
+                  done,
+                  total,
+                  message: t('progress.importImages', { done, total })
+                })
               )
         const deckId = result.deck.id
 
@@ -270,7 +316,7 @@ export function registerIpc(): void {
   ipcMain.handle(IPC.PptLib.SaveScript, (_e, deckId: string, script: DeckScriptV2) => {
     try {
       if (!script || script.version !== 2 || !Array.isArray(script.slides)) {
-        throw new Error('演讲稿格式不正确（需要 version: 2）')
+        throw new Error(t('err.scriptFormat'))
       }
       pptLibrary.writeScript(deckId, script)
       return { ok: true as const }
@@ -284,7 +330,7 @@ export function registerIpc(): void {
     const win =
         BrowserWindow.getFocusedWindow() ?? windowManager.pptWindow ?? windowManager.settingsWindow ?? undefined
     const picked = await dialog.showOpenDialog(win!, {
-      title: '选择演讲稿 JSON',
+      title: t('dlg.chooseScript'),
       filters: [{ name: 'JSON', extensions: ['json'] }],
       properties: ['openFile']
     })
@@ -292,7 +338,7 @@ export function registerIpc(): void {
     try {
       const raw = JSON.parse(readFileSync(picked.filePaths[0], 'utf-8').replace(/^﻿/, '')) as DeckScriptV2
       if (raw?.version !== 2 || !Array.isArray(raw.slides)) {
-        throw new Error('演讲稿格式不正确（需要 version: 2 的新格式，含 slides 数组）')
+        throw new Error(t('err.scriptFormatFull'))
       }
       pptLibrary.writeScript(deckId, raw)
       return { ok: true as const, script: pptLibrary.readScript(deckId) }
@@ -317,15 +363,17 @@ export function registerIpc(): void {
 
   ipcMain.handle(IPC.PptLib.ExportVideo, async (_e, deckId: string) => {
     const meta = pptLibrary.get(deckId)
-    if (!meta) return { ok: false as const, error: 'PPT 不存在' }
+    if (!meta) return { ok: false as const, error: t('err.deckMissing') }
     const win =
         BrowserWindow.getFocusedWindow() ?? windowManager.pptWindow ?? windowManager.settingsWindow ?? undefined
     const picked = await dialog.showSaveDialog(win!, {
-      title: '导出讲解视频',
+      title: t('dlg.exportVideo'),
       defaultPath: `${meta.name}.mp4`,
-      filters: [{ name: 'MP4 视频', extensions: ['mp4'] }]
+      filters: [{ name: t('dlg.mp4'), extensions: ['mp4'] }]
     })
-    if (picked.canceled || !picked.filePath) return { ok: false as const, error: '已取消' }
+    if (picked.canceled || !picked.filePath) {
+      return { ok: false as const, cancelled: true, error: t('tip.cancelled') }
+    }
     try {
       const out = await exportVideo(deckId, picked.filePath, {
         onProgress: (done, total, message) =>

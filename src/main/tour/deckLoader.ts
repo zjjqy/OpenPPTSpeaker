@@ -6,6 +6,7 @@ import { resourcesRoot } from '../paths'
 import { pptLibrary } from '../ppt/PptLibrary'
 import type { TourDeck, TourSection } from '@shared/tour'
 import type { SubtitleStyle } from '@shared/ppt'
+import { t } from '@shared/i18n'
 
 interface SpeechScriptData {
   meta?: Record<string, unknown>
@@ -44,13 +45,13 @@ export function loadSlideDeck(scriptFile?: string): TourDeck {
     : join(resourcesRoot(), 'introduceProduction', '演讲稿.json')
 
   if (!existsSync(scriptPath)) {
-    throw new Error(`未找到讲稿文件: ${scriptPath}`)
+    throw new Error(t('deck.scriptNotFound', { path: scriptPath }))
   }
 
   const raw = readFileSync(scriptPath, 'utf-8').replace(/^\uFEFF/, '')
   const data = JSON.parse(raw) as SpeechScriptData
   const slides = data.slides ?? []
-  if (slides.length === 0) throw new Error('演讲稿.json 中没有幻灯片数据')
+  if (slides.length === 0) throw new Error(t('deck.noSlides'))
 
   const htmlFile = join(dirname(scriptPath), 'index.html')
 
@@ -87,8 +88,8 @@ export function loadSlideDeck(scriptFile?: string): TourDeck {
   return {
     type: 'slide',
     id: 'ppt-deck',
-    title: (data.meta?.title as string | undefined) || '产品介绍',
-    description: (data.meta?.description as string | undefined) ?? 'PPT 讲演',
+    title: (data.meta?.title as string | undefined) || t('deck.defaultTitle'),
+    description: (data.meta?.description as string | undefined) ?? t('deck.defaultDesc'),
     file: htmlFile,
     scriptFile: scriptPath,
     startSlide: 1,
@@ -103,9 +104,9 @@ export function loadSlideDeck(scriptFile?: string): TourDeck {
  */
 export function loadLibrarySlideDeck(deckId: string): TourDeck {
   const meta = pptLibrary.get(deckId)
-  if (!meta) throw new Error(`PPT 不存在: ${deckId}`)
-  if (meta.source === 'builtin') throw new Error('内置演示请走默认加载路径')
-  if (meta.slideCount === 0) throw new Error('该 PPT 没有页面图片')
+  if (!meta) throw new Error(t('ppt.deckNotFound', { id: deckId }))
+  if (meta.source === 'builtin') throw new Error(t('deck.builtinPathOnly'))
+  if (meta.slideCount === 0) throw new Error(t('deck.noSlideImages'))
 
   const script = pptLibrary.readScript(deckId)
   const texts = pptLibrary.readPageTexts(deckId)

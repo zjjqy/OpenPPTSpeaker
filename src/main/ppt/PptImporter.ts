@@ -9,6 +9,7 @@ import { pptLibrary } from './PptLibrary'
 import { generateDeckHtml } from './DeckHtmlGen'
 import { hiddenRenderer } from './HiddenRenderer'
 import type { PptDeckMeta } from '@shared/ppt'
+import { t } from '@shared/i18n'
 
 /** 页面图输出宽度（px），16:9 时高度 1080，满足 1080p 视频导出 */
 const RENDER_WIDTH = 1920
@@ -65,7 +66,7 @@ export async function importImages(
   name: string,
   onProgress?: (done: number, total: number) => void
 ): Promise<ImportResult> {
-  const meta = pptLibrary.create(name || '图片演示', 'images')
+  const meta = pptLibrary.create(name || t('ppt.imageDeck'), 'images')
   try {
     const sorted = [...filePaths].sort((a, b) => a.localeCompare(b, 'zh-CN', { numeric: true }))
     pptLibrary.importImages(meta.id, sorted)

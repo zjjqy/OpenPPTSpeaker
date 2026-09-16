@@ -15,6 +15,7 @@ import { app } from 'electron'
 import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, readdirSync, copyFileSync } from 'fs'
 import { join, basename } from 'path'
 import type { PptDeckMeta, PptLibraryFile, DeckScriptV2 } from '@shared/ppt'
+import { t } from '@shared/i18n'
 
 /** 内置演示（introduceProduction）在列表中的固定 id */
 export const BUILTIN_DECK_ID = 'builtin'
@@ -38,7 +39,7 @@ class PptLibrary {
     if (!this.data.decks.some((d) => d.id === BUILTIN_DECK_ID)) {
       this.data.decks.unshift({
         id: BUILTIN_DECK_ID,
-        name: '内置演示（产品介绍）',
+        name: t('ppt.builtinDemoName'),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         slideCount: 0,
@@ -57,7 +58,11 @@ class PptLibrary {
   list(): PptDeckMeta[] {
     // 动态刷新 hasScript（外部可能直接改了文件）
     for (const d of this.data.decks) {
-      if (d.source === 'builtin') continue
+      if (d.source === 'builtin') {
+        // 名称随界面语言实时给出，不落盘：decks.json 里可能存的是切换语言前的旧名字
+        d.name = t('ppt.builtinDemoName')
+        continue
+      }
       d.hasScript = existsSync(this.scriptPath(d.id))
       d.slideCount = this.countSlides(d.id)
     }
@@ -73,7 +78,7 @@ class PptLibrary {
   }
 
   setActive(id: string): void {
-    if (!this.get(id)) throw new Error(`PPT 不存在: ${id}`)
+    if (!this.get(id)) throw new Error(t('ppt.deckNotFound', { id }))
     this.data.activeDeckId = id
     this.persist()
   }
@@ -84,7 +89,7 @@ class PptLibrary {
     mkdirSync(this.slidesDir(id), { recursive: true })
     const meta: PptDeckMeta = {
       id,
-      name: name || '未命名演示',
+      name: name || t('ppt.untitledDeck'),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       slideCount: 0,
@@ -98,8 +103,8 @@ class PptLibrary {
 
   rename(id: string, name: string): void {
     const d = this.get(id)
-    if (!d) throw new Error(`PPT 不存在: ${id}`)
-    if (d.source === 'builtin') throw new Error('内置演示不可重命名')
+    if (!d) throw new Error(t('ppt.deckNotFound', { id }))
+    if (d.source === 'builtin') throw new Error(t('ppt.builtinNoRename'))
     d.name = name.trim() || d.name
     d.updatedAt = new Date().toISOString()
     this.persist()
@@ -107,8 +112,8 @@ class PptLibrary {
 
   delete(id: string): void {
     const d = this.get(id)
-    if (!d) throw new Error(`PPT 不存在: ${id}`)
-    if (d.source === 'builtin') throw new Error('内置演示不可删除')
+    if (!d) throw new Error(t('ppt.deckNotFound', { id }))
+    if (d.source === 'builtin') throw new Error(t('ppt.builtinNoDelete'))
     rmSync(this.dir(id), { recursive: true, force: true })
     this.data.decks = this.data.decks.filter((x) => x.id !== id)
     if (this.data.activeDeckId === id) this.data.activeDeckId = BUILTIN_DECK_ID

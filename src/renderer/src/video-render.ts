@@ -6,6 +6,7 @@
  */
 
 import { DEFAULT_SUBTITLE_STYLE, type SubtitleStyle } from '@shared/ppt'
+import { t } from './i18n'
 
 interface SpotlightRect {
   x: number // %（相对图片）
@@ -31,7 +32,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image()
     img.onload = () => resolve(img)
-    img.onerror = () => reject(new Error('图片加载失败'))
+    img.onerror = () => reject(new Error(t('video.errImageLoad')))
     img.src = src
   })
 }

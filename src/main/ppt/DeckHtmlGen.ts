@@ -8,12 +8,14 @@
  *   window.huashunSpotlight(rect) 聚光遮罩：rect={x,y,w,h}（0~100），null 清除
  */
 
+import { t } from '@shared/i18n'
+
 /** 生成演示 HTML。slideFiles 为 slides/ 下的图片文件名（有序）。 */
 export function generateDeckHtml(title: string, slideFiles: string[]): string {
   const slides = slideFiles
     .map(
       (f, i) =>
-        `  <div class="slide${i === 0 ? ' active' : ''}" data-title="第 ${i + 1} 页" name="slide"><div class="stage"><img src="slides/${f}" alt=""><div class="spot"></div></div></div>`
+        `  <div class="slide${i === 0 ? ' active' : ''}" data-title="${t('deck.slideTitle', { n: i + 1 })}" name="slide"><div class="stage"><img src="slides/${f}" alt=""><div class="spot"></div></div></div>`
     )
     .join('\n')
 

@@ -19,6 +19,7 @@ Turn a static deck into a talk that can be listened to and talked back to.
 - **Phone as remote & mic** — scan a QR code on the same Wi-Fi network and use a phone as a wireless microphone and remote control (previous / next / pause / resume / end). No app to install.
 - **Video export** — render the whole talk (slides + voice + subtitles) to an MP4.
 - **Theming** — light, dark, or follow-the-system, with 6 accent colors applied across all windows.
+- **English / 简体中文** — the entire interface ships in both languages and can be switched at any time in Settings. The assistant's spoken lines and generated narration follow the same setting, and the Edge TTS voice switches to match.
 
 ## Tech stack
 
@@ -61,6 +62,7 @@ Defaults (changeable in Settings):
 
 | Item | Default |
 | --- | --- |
+| Interface language | `简体中文` |
 | Chat model | `qwen3.8-flash` |
 | Speech recognition | `paraformer-realtime-v2` |
 | Speech synthesis | Edge TTS (`zh-CN-XiaoxiaoNeural`) |

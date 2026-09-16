@@ -10,7 +10,8 @@ import { TOUR_TOOLS, TourTool } from '../ai/tools'
 import { speechSession } from '../speech/SpeechSession'
 import { windowManager } from '../windows/WindowManager'
 import { configStore } from '../config/ConfigStore'
-import { APP_PROFILE } from './assistantProfile'
+import { appProfile } from './assistantProfile'
+import { t } from '@shared/i18n'
 import { SpeechCache } from './SpeechCache'
 import { getTtsEngine } from '../speech/TtsEngine'
 import { pptLibrary } from '../ppt/PptLibrary'
@@ -176,7 +177,7 @@ export class TourEngine {
     try {
       if (this.running) await this.stop()
       if (!configStore.hasApiKey()) {
-        return { success: false, error: '未配置 DashScope API Key，请在设置中填写' }
+        return { success: false, error: t('tour.noApiKey') }
       }
 
       // PPT 演示路由：指定讲稿走内置加载器；
@@ -206,30 +207,30 @@ export class TourEngine {
       if (preloadable.length) {
         // 先预热语音服务：首次建连要完成 DNS 解析 + TLS 握手（国内网络常需十几秒），
         // 若留到第一页合成时才做，很容易撞上连接超时，表现为"第一页失败、后面都正常"
-        this.setState('opening', '正在连接语音服务…')
+        this.setState('opening', t('tour.connecting'))
         await getTtsEngine().warmup?.()
-        if (this.stopRequested || !this.running) return { success: false, error: '已取消' }
+        if (this.stopRequested || !this.running) return { success: false, error: t('tip.cancelled') }
 
-        this.setState('opening', '正在准备讲解音频…')
+        this.setState('opening', t('tour.preparingAudio'))
         let report = await this.speechCache.preload(
           preloadable,
-          (done, total) => this.setState('opening', `正在准备讲解音频 ${done}/${total}…`),
+          (done, total) => this.setState('opening', t('tour.preparingAudioProgress', { done, total })),
           () => this.stopRequested || !this.running
         )
-        if (this.stopRequested || !this.running) return { success: false, error: '已取消' }
+        if (this.stopRequested || !this.running) return { success: false, error: t('tip.cancelled') }
 
         // 有页合成失败 → 开讲前弹窗让用户决定，不直接进入播报
         if (report.failedPages.length > 0) {
           let action = await this.askPreloadFailure(report.failedPages, deck.title)
           if (action === 'retry') {
             // 重试：仍传全部页，内部只补缺的（已缓存的跳过）
-            this.setState('opening', '正在重试合成音频…')
+            this.setState('opening', t('tour.retryingAudio'))
             report = await this.speechCache.preload(
               preloadable,
-              (done, total) => this.setState('opening', `正在重试合成 ${done}/${total}…`),
+              (done, total) => this.setState('opening', t('tour.retryingProgress', { done, total })),
               () => this.stopRequested || !this.running
             )
-            if (this.stopRequested || !this.running) return { success: false, error: '已取消' }
+            if (this.stopRequested || !this.running) return { success: false, error: t('tip.cancelled') }
             if (report.failedPages.length > 0) {
               // 重试仍失败 → 再问一次，但不再提供"重试"，避免死循环
               action = await this.askPreloadFailure(report.failedPages, deck.title, true)
@@ -238,14 +239,14 @@ export class TourEngine {
           if (action === 'cancel' || (action === 'retry' && report.failedPages.length > 0)) {
             this.stopRequested = true
             this.running = false
-            this.setState('idle', '已取消讲解（音频未就绪）')
-            return { success: false, error: '已取消' }
+            this.setState('idle', t('tour.cancelledAudio'))
+            return { success: false, error: t('tip.cancelled') }
           }
           // action === 'continue' → 继续开讲，失败页走静音逐句（播放作者原文，不回退 LLM）
         }
       }
 
-      this.setState('opening', `正在打开「${deck.title}」`)
+      this.setState('opening', t('tour.openingDeck', { title: deck.title }))
 
       // 打开讲解目标
       await browserController.open({ file: deck.file })
@@ -266,14 +267,14 @@ export class TourEngine {
 
       // PPT 打开后先等待 5 秒（静默），让观众看清第一页，再开始播报（支持中途停止）
       // 注意：等待期间保持 opening 状态，避免被"语音命令 idle 判断"误触发重新启动
-      this.setState('opening', '讲解即将开始…')
+      this.setState('opening', t('tour.starting'))
       const waitMs = 5000
       const t0 = Date.now()
       while (Date.now() - t0 < waitMs) {
         if (this.stopRequested) break
         await new Promise((r) => setTimeout(r, 500))
       }
-      if (this.stopRequested) return { success: false, error: '已取消' }
+      if (this.stopRequested) return { success: false, error: t('tip.cancelled') }
 
       // 不播开场白，直接进入逐页讲解（第一页的内容即是开头）
       await this.runPresentation()
@@ -310,23 +311,20 @@ export class TourEngine {
     isRetry = false
   ): Promise<'retry' | 'continue' | 'cancel'> {
     const engine = configStore.get('ttsEngine')
-    const shown = failedPages.slice(0, 12).join('、')
-    const pages = shown + (failedPages.length > 12 ? ` …（共 ${failedPages.length} 页）` : '')
+    const shown = failedPages.slice(0, 12).join(t('list.sep'))
+    const pages = shown + (failedPages.length > 12 ? t('tour.pagesMore', { n: failedPages.length }) : '')
     const parent = windowManager.pptWindow ?? windowManager.orbWindow ?? undefined
 
     const options: Electron.MessageBoxOptions = {
       type: 'warning',
-      title: isRetry ? '语音合成仍然失败' : '部分页面语音合成失败',
+      title: isRetry ? t('tour.ttsRetryFailedTitle') : t('tour.ttsFailedTitle'),
       message: isRetry
-        ? `重试后仍有 ${failedPages.length} 页未能合成语音`
-        : `「${deckTitle}」有 ${failedPages.length} 页未能合成语音`,
-      detail:
-        `失败页码：${pages}\n\n` +
-        `当前语音引擎：${engine}（合成失败通常是该服务网络不通或超时）\n\n` +
-        `· 重试合成：再尝试一次（建议先检查网络，或在设置里切换为更稳定的引擎）\n` +
-        `· 静音播放：照常讲解，失败页只显示字幕与聚光、不出声，内容仍是你的讲稿\n` +
-        `· 取消：结束本次讲解`,
-      buttons: isRetry ? ['静音播放', '取消'] : ['重试合成', '静音播放', '取消'],
+        ? t('tour.ttsRetryFailedMsg', { n: failedPages.length })
+        : t('tour.ttsFailedTitleMsg', { title: deckTitle, n: failedPages.length }),
+      detail: t('tour.ttsFailedDetail', { pages, engine }),
+      buttons: isRetry
+        ? [t('tour.btnMutePlay'), t('action.cancel')]
+        : [t('tour.btnRetrySynth'), t('tour.btnMutePlay'), t('action.cancel')],
       defaultId: 0,
       cancelId: isRetry ? 1 : 2
     }
@@ -377,7 +375,7 @@ export class TourEngine {
     // 主循环进入 handleInterruptPause 后走遥控暂停分支（静默等待）
     this.interruptedDuringSpeak = true
     speechSession.interrupt()
-    this.setState('paused', '已暂停（遥控）')
+    this.setState('paused', t('tour.pausedRemote'))
   }
 
   /**
@@ -399,7 +397,7 @@ export class TourEngine {
     if (target === this.lastShownSlide) return
     this.lastShownSlide = target
     void browserController.showSlide(target + 1).catch(() => undefined)
-    this.setState('paused', this.deck.sections[target]?.title ?? '已暂停')
+    this.setState('paused', this.deck.sections[target]?.title ?? t('tour.paused'))
     // 翻页浏览期间隐藏字幕：旧句字幕停在屏幕上会误导观众（恢复播报时重新显示）
     windowManager.hideSubtitle()
   }
@@ -550,9 +548,8 @@ export class TourEngine {
       const resp = await llmClient.chat({
         system: PRESENT_SYSTEM,
         messages: this.ctx.buildMessages(
-          `请讲解当前区段「${section.title}」。${
-            this.ctx.get()?.history.length ? '（注意：这是被打断后重新讲解，衔接刚才的话题，不要机械重复。）' : ''
-          }`
+          t('tour.presentSection', { title: section.title }) +
+          (this.ctx.get()?.history.length ? t('assistant.interruptedHint') : '')
         ),
         tools: TOUR_TOOLS as unknown as unknown[],
         onDelta: () => {}
@@ -581,7 +578,7 @@ export class TourEngine {
             break
           }
           case TourTool.AskUser: {
-            const question = String(tool.arguments.question ?? '大家有什么疑问吗？')
+            const question = String(tool.arguments.question ?? t('assistant.anyQuestions'))
             await this.speakWithSubtitles(question, false)
             this.emitData({ kind: 'chat', role: 'assistant', text: question })
             const answer = await this.waitForUserInput(20000)
@@ -667,7 +664,7 @@ export class TourEngine {
 
     const pageNo = this.sectionIndex + 1
     console.warn(`[Tour] 第 ${pageNo} 页语音合成失败 → 静音播放作者讲稿（不回退 LLM）`)
-    this.setState('presenting', `第 ${pageNo} 页语音合成失败，静音播放中`)
+    this.setState('presenting', t('tour.slideTtsFailed', { n: pageNo }))
 
     // 字幕由逐句索引驱动，不走"播放进度估算"（没有音频进度可估）
     this.subtitleSentences = speech.map((s) => s.text)
@@ -716,7 +713,7 @@ export class TourEngine {
       return
     }
     // 按下打断后进入"倾听中"状态：等待/倾听用户说话
-    this.setState('listening', '倾听中，请讲')
+    this.setState('listening', t('assistant.listeningTip'))
     speechSession.interrupt()
     // 进入对话处理：期间不响应新的 ASR 打断，避免用户后续话语反复打断 LLM 回答
     speechSession.setInConversation(true)
@@ -728,8 +725,8 @@ export class TourEngine {
         if (!text || text === '__resume__' || isContinueCmd(text)) break
         // 暂停类指令（稍等/停一下）：用户要自己补充，暂停播报直到说"继续"或提出疑问
         if (isPauseCmd(text)) {
-          this.setState('paused', '已暂停，等您补充')
-          await this.speak('好的，我暂停一下，您先讲。需要继续时请说"继续"。', false)
+          this.setState('paused', t('assistant.holdTip'))
+          await this.speak(t('assistant.holdOn'), false)
           text = null
           while (!this.stopRequested && this.running) {
             text = await this.waitForUserInput(120000)
@@ -747,15 +744,15 @@ export class TourEngine {
         await this.respondToUser(text)
         if (this.stopRequested || !this.running) return
         // 回答完毕：允许连续追问；沉默超时 / 说"继续" / 松开按钮 → 恢复讲解
-        this.setState('listening', '还有问题请讲，或说"继续"')
+        this.setState('listening', t('assistant.askMoreTip'))
         // 若用户刚按按钮打断了回答播报（正在说话），跳过提示音，避免压住用户语音
         if (!this.interruptedDuringSpeak) {
-          await this.speak('还有问题请讲，或者说"继续"。', false)
+          await this.speak(t('assistant.askMore'), false)
         }
         text = await this.waitForUserInput(10000)
       }
       this.setState('resuming')
-      await this.speak('好，我们继续。', false)
+      await this.speak(t('assistant.resume'), false)
     } finally {
       speechSession.setInConversation(false)
       // 打断已在本次暂停流中处理完毕：清除标志，避免主循环重复进入暂停流程。
@@ -772,7 +769,7 @@ export class TourEngine {
     this.emitData({ kind: 'chat', role: 'user', text })
 
     const resp = await llmClient.chat({
-      system: QNA_SYSTEM + '\n\n' + APP_PROFILE,
+      system: QNA_SYSTEM + '\n\n' + appProfile(),
       messages: this.ctx.buildMessages(`听众说：「${text}」\n请处理：若是指令则调用工具，若是问题则直接回答。`),
       tools: TOUR_TOOLS as unknown as unknown[],
       onDelta: () => {}
@@ -876,7 +873,7 @@ export class TourEngine {
       `当前区段: ${section?.title ?? ''}`,
       `区段内容: ${(ctx.sectionText || section?.content || '').slice(0, 1500)}`,
       `已讲: ${ctx.presented.join('、')}`,
-      `【应用背景知识】\n${APP_PROFILE}`
+      `【应用背景知识】\n${appProfile()}`
     ].join('\n')
   }
 

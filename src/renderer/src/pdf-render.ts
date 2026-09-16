@@ -5,6 +5,7 @@
 
 import * as pdfjsLib from 'pdfjs-dist'
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+import { t } from './i18n'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl
 
@@ -48,7 +49,7 @@ window.__pdfLoad = async (bytes: Uint8Array): Promise<number> => {
 
 /** 渲染第 n 页（1 起）为 PNG dataURL；targetWidth 为输出像素宽（高度按比例） */
 window.__pdfRenderPage = async (n: number, targetWidth: number): Promise<string> => {
-  if (!doc) throw new Error('PDF 未载入')
+  if (!doc) throw new Error(t('pdf.errNotLoaded'))
   const page = await doc.getPage(n)
   const base = pageSizes[n - 1]
   const scale = targetWidth / base.w
@@ -65,7 +66,7 @@ window.__pdfRenderPage = async (n: number, targetWidth: number): Promise<string>
 
 /** 提取第 n 页文本层（无文本层的扫描页返回空串） */
 window.__pdfPageText = async (n: number): Promise<string> => {
-  if (!doc) throw new Error('PDF 未载入')
+  if (!doc) throw new Error(t('pdf.errNotLoaded'))
   const page = await doc.getPage(n)
   const tc = await page.getTextContent()
   return tc.items.map((it) => it.str ?? '').join('')

@@ -3,18 +3,27 @@
     <!-- 顶部：选择 PPT + 操作 -->
     <div class="toolbar">
       <select v-model="deckId" @change="loadDeck()">
-        <option value="" disabled>选择要编辑的 PPT…</option>
+        <option value="" disabled>{{ t('edit.selectDeck') }}</option>
         <option v-for="d in editableDecks" :key="d.id" :value="d.id">{{ d.name }}</option>
       </select>
       <template v-if="deckId">
-        <button class="btn" :class="{ primary: styleOpen }" title="整份讲稿统一的字幕样式" @click="toggleStylePanel">
-          字幕样式
+        <button
+          class="btn"
+          :class="{ primary: styleOpen }"
+          :title="t('edit.subtitleStyleTip')"
+          @click="toggleStylePanel"
+        >
+          {{ t('edit.subtitleStyle') }}
         </button>
-        <button class="btn" :disabled="!canUndo" title="撤销 (Ctrl+Z)" @click="undo">↶ 撤销</button>
-        <button class="btn" :disabled="!canRedo" title="重做 (Ctrl+Shift+Z)" @click="redo">↷ 重做</button>
-        <button class="btn" @click="doImportScript">导入讲稿 JSON</button>
-        <button class="btn primary" :disabled="!dirty" @click="doSave">保存讲稿</button>
-        <span v-if="savedTip" class="ok">✓ 已保存</span>
+        <button class="btn" :disabled="!canUndo" :title="t('edit.undoTip')" @click="undo">
+          {{ t('edit.undo') }}
+        </button>
+        <button class="btn" :disabled="!canRedo" :title="t('edit.redoTip')" @click="redo">
+          {{ t('edit.redo') }}
+        </button>
+        <button class="btn" @click="doImportScript">{{ t('edit.importScript') }}</button>
+        <button class="btn primary" :disabled="!dirty" @click="doSave">{{ t('edit.saveScript') }}</button>
+        <span v-if="savedTip" class="ok">{{ t('edit.savedTip') }}</span>
       </template>
     </div>
     <p v-if="error" class="err">⚠ {{ error }}</p>
@@ -58,7 +67,9 @@
           </div>
           <!-- 拖拽中的框 -->
           <div v-if="dragRect" class="rect dragging" :style="rectStyle(dragRect)"></div>
-          <div v-if="boxingIndex !== null" class="box-tip">拖动鼠标框选第 {{ boxingIndex + 1 }} 句的聚光范围</div>
+          <div v-if="boxingIndex !== null" class="box-tip">
+            {{ t('edit.boxTip', { n: boxingIndex + 1 }) }}
+          </div>
           <!-- 选中句字幕预览：与讲演字幕窗口同构（shell 容器 → 文字 → 进度），共用同一套换算函数 -->
           <div v-if="selSentenceText" class="preview-shell" :style="previewShellStyle">
             <div class="ps-text" :style="previewTextStyle">{{ selSentenceText }}</div>
@@ -67,14 +78,14 @@
             </div>
           </div>
         </div>
-        <p class="hint">聚光框 = 页面压暗后保持高亮的区域。点击右侧「框选」后在本图上拖拽。</p>
+        <p class="hint">{{ t('edit.stageHint') }}</p>
       </div>
 
       <!-- 右：句子列表 -->
       <div class="sent-panel">
         <div class="sent-head">
-          <span>第 {{ currentSlide }} 页 · {{ currentSpeech.length }} 句</span>
-          <button class="mini" @click="addSentence">+ 加一句</button>
+          <span>{{ t('edit.slideHeader', { n: currentSlide, m: currentSpeech.length }) }}</span>
+          <button class="mini" @click="addSentence">{{ t('edit.addSentence') }}</button>
         </div>
         <div class="sent-list">
           <div
@@ -94,142 +105,144 @@
             ></textarea>
             <div class="sent-ops">
               <button class="mini" :class="{ primary: boxingIndex === i }" @click.stop="startBox(i)">
-                {{ boxingIndex === i ? '取消' : sent.spotlight ? '重框' : '框选' }}
+                {{ boxingIndex === i ? t('action.cancel') : sent.spotlight ? t('edit.rebox') : t('edit.box') }}
               </button>
-              <button v-if="sent.spotlight" class="mini" @click.stop="clearBox(i)">清框</button>
+              <button v-if="sent.spotlight" class="mini" @click.stop="clearBox(i)">
+                {{ t('edit.clearBox') }}
+              </button>
               <button class="mini" :disabled="i === 0" @click.stop="moveSentence(i, -1)">↑</button>
               <button class="mini" :disabled="i === currentSpeech.length - 1" @click.stop="moveSentence(i, 1)">↓</button>
-              <button class="mini danger" @click.stop="removeSentence(i)">删</button>
+              <button class="mini danger" @click.stop="removeSentence(i)">{{ t('edit.deleteShort') }}</button>
             </div>
           </div>
-          <p v-if="currentSpeech.length === 0" class="hint">本页还没有讲解句，点「+ 加一句」开始。</p>
+          <p v-if="currentSpeech.length === 0" class="hint">{{ t('edit.emptySentences') }}</p>
         </div>
       </div>
     </div>
     <!-- 字幕样式：整份讲稿统一，作用于编辑预览 / AI 讲演 / 导出视频 -->
     <div v-if="deckId && script && styleOpen" class="style-panel">
       <div class="sp-head">
-        <b>字幕样式</b>
-        <span class="sp-scope">整份讲稿统一 · 同步到讲演与视频</span>
-        <button class="mini" @click="resetStyle">恢复默认</button>
-        <button class="mini" @click="styleOpen = false">关闭</button>
+        <b>{{ t('edit.subtitleStyle') }}</b>
+        <span class="sp-scope">{{ t('edit.styleScope') }}</span>
+        <button class="mini" @click="resetStyle">{{ t('edit.resetStyle') }}</button>
+        <button class="mini" @click="styleOpen = false">{{ t('action.close') }}</button>
       </div>
       <div class="sp-body">
-        <div class="sp-sec">文字</div>
+        <div class="sp-sec">{{ t('edit.secText') }}</div>
         <label class="sp-row">
-          <span>字体</span>
+          <span>{{ t('edit.font') }}</span>
           <select v-model="sty.fontFamily" @change="onStyleChange">
-            <option value='"Microsoft YaHei", "PingFang SC", sans-serif'>微软雅黑</option>
-            <option value='"SimHei", sans-serif'>黑体</option>
-            <option value='"SimSun", serif'>宋体</option>
-            <option value='"KaiTi", serif'>楷体</option>
-            <option value='"Source Han Sans CN", "Noto Sans SC", sans-serif'>思源黑体</option>
+            <option value='"Microsoft YaHei", "PingFang SC", sans-serif'>{{ t('edit.fontMsYahei') }}</option>
+            <option value='"SimHei", sans-serif'>{{ t('edit.fontSimHei') }}</option>
+            <option value='"SimSun", serif'>{{ t('edit.fontSimSun') }}</option>
+            <option value='"KaiTi", serif'>{{ t('edit.fontKaiTi') }}</option>
+            <option value='"Source Han Sans CN", "Noto Sans SC", sans-serif'>{{ t('edit.fontSourceHan') }}</option>
             <option value='Arial, Helvetica, sans-serif'>Arial</option>
           </select>
         </label>
         <label class="sp-row">
-          <span>字重</span>
+          <span>{{ t('edit.fontWeight') }}</span>
           <select v-model.number="sty.fontWeight" @change="onStyleChange">
-            <option :value="400">常规</option>
-            <option :value="500">中等</option>
-            <option :value="600">半粗</option>
-            <option :value="700">加粗</option>
+            <option :value="400">{{ t('edit.weight.regular') }}</option>
+            <option :value="500">{{ t('edit.weight.medium') }}</option>
+            <option :value="600">{{ t('edit.weight.semibold') }}</option>
+            <option :value="700">{{ t('edit.weight.bold') }}</option>
           </select>
         </label>
         <label class="sp-row">
-          <span>字号 {{ sty.fontSizePct.toFixed(2) }}%</span>
+          <span>{{ t('edit.fontSize', { v: sty.fontSizePct.toFixed(2) }) }}</span>
           <input v-model.number="sty.fontSizePct" type="range" min="1" max="8" step="0.05" @change="onStyleChange" />
         </label>
         <label class="sp-row">
-          <span>行高 {{ sty.lineHeight.toFixed(2) }}</span>
+          <span>{{ t('edit.lineHeight', { v: sty.lineHeight.toFixed(2) }) }}</span>
           <input v-model.number="sty.lineHeight" type="range" min="1" max="2.4" step="0.05" @change="onStyleChange" />
         </label>
         <label class="sp-row">
-          <span>颜色</span>
+          <span>{{ t('edit.color') }}</span>
           <input v-model="sty.color" type="color" @change="onStyleChange" />
         </label>
         <label class="sp-row">
-          <span>显示句序</span>
+          <span>{{ t('edit.showProgress') }}</span>
           <input v-model="sty.showProgress" type="checkbox" @change="onStyleChange" />
         </label>
 
-        <div class="sp-sec">背景板</div>
+        <div class="sp-sec">{{ t('edit.secBg') }}</div>
         <label class="sp-row">
-          <span>启用</span>
+          <span>{{ t('edit.enabled') }}</span>
           <input v-model="sty.bgEnabled" type="checkbox" @change="onStyleChange" />
         </label>
         <template v-if="sty.bgEnabled">
           <label class="sp-row">
-            <span>背景色</span>
+            <span>{{ t('edit.bgColor') }}</span>
             <input v-model="sty.bgColor" type="color" @change="onStyleChange" />
           </label>
           <label class="sp-row">
-            <span>圆角 {{ sty.bgRadius }}</span>
+            <span>{{ t('edit.bgRadius', { v: sty.bgRadius }) }}</span>
             <input v-model.number="sty.bgRadius" type="range" min="0" max="48" step="1" @change="onStyleChange" />
           </label>
           <label class="sp-row">
-            <span>横向内边距 {{ sty.bgPaddingX }}</span>
+            <span>{{ t('edit.bgPaddingX', { v: sty.bgPaddingX }) }}</span>
             <input v-model.number="sty.bgPaddingX" type="range" min="0" max="80" step="1" @change="onStyleChange" />
           </label>
           <label class="sp-row">
-            <span>纵向内边距 {{ sty.bgPaddingY }}</span>
+            <span>{{ t('edit.bgPaddingY', { v: sty.bgPaddingY }) }}</span>
             <input v-model.number="sty.bgPaddingY" type="range" min="0" max="60" step="1" @change="onStyleChange" />
           </label>
         </template>
 
-        <div class="sp-sec">描边</div>
+        <div class="sp-sec">{{ t('edit.secStroke') }}</div>
         <label class="sp-row">
-          <span>启用</span>
+          <span>{{ t('edit.enabled') }}</span>
           <input v-model="sty.strokeEnabled" type="checkbox" @change="onStyleChange" />
         </label>
         <template v-if="sty.strokeEnabled">
           <label class="sp-row">
-            <span>颜色</span>
+            <span>{{ t('edit.color') }}</span>
             <input v-model="sty.strokeColor" type="color" @change="onStyleChange" />
           </label>
           <label class="sp-row">
-            <span>粗细 {{ sty.strokeWidth }}</span>
+            <span>{{ t('edit.strokeWidth', { v: sty.strokeWidth }) }}</span>
             <input v-model.number="sty.strokeWidth" type="range" min="0.5" max="10" step="0.5" @change="onStyleChange" />
           </label>
         </template>
 
-        <div class="sp-sec">投影</div>
+        <div class="sp-sec">{{ t('edit.secShadow') }}</div>
         <label class="sp-row">
-          <span>启用</span>
+          <span>{{ t('edit.enabled') }}</span>
           <input v-model="sty.shadowEnabled" type="checkbox" @change="onStyleChange" />
         </label>
         <template v-if="sty.shadowEnabled">
           <label class="sp-row">
-            <span>颜色</span>
+            <span>{{ t('edit.color') }}</span>
             <input v-model="sty.shadowColor" type="color" @change="onStyleChange" />
           </label>
           <label class="sp-row">
-            <span>模糊 {{ sty.shadowBlur }}</span>
+            <span>{{ t('edit.shadowBlur', { v: sty.shadowBlur }) }}</span>
             <input v-model.number="sty.shadowBlur" type="range" min="0" max="40" step="1" @change="onStyleChange" />
           </label>
           <label class="sp-row">
-            <span>水平偏移 {{ sty.shadowOffsetX }}</span>
+            <span>{{ t('edit.shadowOffsetX', { v: sty.shadowOffsetX }) }}</span>
             <input v-model.number="sty.shadowOffsetX" type="range" min="-30" max="30" step="1" @change="onStyleChange" />
           </label>
           <label class="sp-row">
-            <span>垂直偏移 {{ sty.shadowOffsetY }}</span>
+            <span>{{ t('edit.shadowOffsetY', { v: sty.shadowOffsetY }) }}</span>
             <input v-model.number="sty.shadowOffsetY" type="range" min="-30" max="30" step="1" @change="onStyleChange" />
           </label>
         </template>
 
-        <div class="sp-sec">位置</div>
+        <div class="sp-sec">{{ t('edit.secPosition') }}</div>
         <label class="sp-row">
-          <span>距底部 {{ sty.bottomPct.toFixed(1) }}%</span>
+          <span>{{ t('edit.bottomPct', { v: sty.bottomPct.toFixed(1) }) }}</span>
           <input v-model.number="sty.bottomPct" type="range" min="0" max="20" step="0.1" @change="onStyleChange" />
         </label>
         <label class="sp-row">
-          <span>最大宽度 {{ sty.maxWidthPct }}%</span>
+          <span>{{ t('edit.maxWidthPct', { v: sty.maxWidthPct }) }}</span>
           <input v-model.number="sty.maxWidthPct" type="range" min="40" max="100" step="1" @change="onStyleChange" />
         </label>
       </div>
     </div>
-    <p v-else-if="deckId" class="hint">加载中…</p>
-    <p v-else class="hint">选择一个 PPT 开始编辑讲稿与聚光框。内置演示的讲稿请直接编辑 introduceProduction/演讲稿.json。</p>
+    <p v-else-if="deckId" class="hint">{{ t('tip.loading') }}</p>
+    <p v-else class="hint">{{ t('edit.chooseHint') }}</p>
   </div>
 </template>
 
@@ -238,6 +251,10 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import type { DeckScriptV2, PptDeckMeta, SpotlightRect, SpeechSentenceV2, SubtitleStyle } from '@shared/ppt'
 import { DEFAULT_SUBTITLE_STYLE } from '@shared/ppt'
 import { subtitleShellStyle, subtitleTextStyle, subtitleProgressStyle } from '../subtitle-style'
+import { initI18n, t } from '../i18n'
+
+// 在 setup 阶段同步应用启动语言（本组件由 PptApp 渲染，此处兜底即可）
+initI18n()
 
 /** 从 PPT 管理页跳转过来的目标 deck（跳转后自动选中并加载） */
 const props = defineProps<{ targetDeckId?: string }>()
@@ -475,14 +492,15 @@ async function loadDeck(keepHistory = false): Promise<void> {
       meta: { title: r.name, slideCount: r.slideCount, generatedBy: 'manual', updatedAt: new Date().toISOString() },
       slides: Array.from({ length: r.slideCount }, (_, i) => ({
         slide: i + 1,
-        title: `第 ${i + 1} 页`,
+        title: t('edit.slideTitle', { n: i + 1 }),
         speech: []
       }))
     }
   }
   // 确保 slides 数与页面数一致
   while (script.value.slides.length < r.slideCount) {
-    script.value.slides.push({ slide: script.value.slides.length + 1, title: `第 ${script.value.slides.length + 1} 页`, speech: [] })
+    const n = script.value.slides.length + 1
+    script.value.slides.push({ slide: n, title: t('edit.slideTitle', { n }), speech: [] })
   }
   // 字幕样式：旧讲稿文件没有该字段，按默认值补齐（缺字段也合并，避免升级后缺项）
   script.value.subtitleStyle = { ...DEFAULT_SUBTITLE_STYLE, ...(script.value.subtitleStyle ?? {}) }
@@ -609,14 +627,14 @@ async function doSave(): Promise<void> {
     const plain = JSON.parse(JSON.stringify(script.value)) as DeckScriptV2
     const r = await window.ops.pptLib.saveScript(deckId.value, plain)
     if (!r.ok) {
-      error.value = r.error ?? '保存失败'
+      error.value = r.error ?? t('edit.errSave')
       return
     }
     dirty.value = false
     savedTip.value = true
     setTimeout(() => (savedTip.value = false), 2000)
   } catch (e) {
-    error.value = `保存失败: ${(e as Error).message}`
+    error.value = t('edit.errSaveDetail', { msg: (e as Error).message })
   }
 }
 
@@ -627,7 +645,7 @@ async function doImportScript(): Promise<void> {
   const r = await window.ops.pptLib.importScript(deckId.value)
   if (!r.ok) {
     undoStack.value.pop() // 取消或失败 → 撤掉这条历史
-    if (r.error !== '已取消') error.value = r.error ?? '导入失败'
+    if (!r.cancelled) error.value = r.error ?? t('edit.errImport')
     return
   }
   await loadDeck(true)
