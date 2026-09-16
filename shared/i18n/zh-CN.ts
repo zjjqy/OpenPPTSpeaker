@@ -27,6 +27,12 @@ export const zhCN = {
   'window.settings': 'OpenPPTSpeaker - 设置',
   'window.ppt': 'OpenPPTSpeaker - PPT 管理',
 
+  // ==================== 自绘标题栏的窗口按钮 ====================
+  'win.minimize': '最小化',
+  'win.maximize': '最大化',
+  'win.restore': '向下还原',
+  'win.close': '关闭窗口',
+
   // ==================== 系统托盘 ====================
   'tray.toggleOrb': '显示/隐藏悬浮球',
   'tray.settings': '设置',

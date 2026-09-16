@@ -29,6 +29,12 @@ export const enUS: Record<DictKey, string> = {
   'window.settings': 'OpenPPTSpeaker - Settings',
   'window.ppt': 'OpenPPTSpeaker - Decks',
 
+  // ==================== Custom title bar window buttons ====================
+  'win.minimize': 'Minimize',
+  'win.maximize': 'Maximize',
+  'win.restore': 'Restore',
+  'win.close': 'Close window',
+
   // ==================== Tray ====================
   'tray.toggleOrb': 'Show / hide the orb',
   'tray.settings': 'Settings',

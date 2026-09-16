@@ -152,6 +152,24 @@ export function registerIpc(): void {
     app.quit()
   })
 
+  // ==================== 无边框窗口的自定义标题栏 ====================
+  // 以「事件来源窗口」为目标，设置窗与 PPT 窗共用同一套按钮，不必按窗口区分通道
+  ipcMain.on(IPC.WindowCtl.Minimize, (e) => {
+    BrowserWindow.fromWebContents(e.sender)?.minimize()
+  })
+  ipcMain.on(IPC.WindowCtl.ToggleMaximize, (e) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    if (!win) return
+    if (win.isMaximized()) win.unmaximize()
+    else win.maximize()
+  })
+  ipcMain.on(IPC.WindowCtl.Close, (e) => {
+    BrowserWindow.fromWebContents(e.sender)?.close()
+  })
+  ipcMain.handle(IPC.WindowCtl.IsMaximized, (e) => {
+    return BrowserWindow.fromWebContents(e.sender)?.isMaximized() ?? false
+  })
+
   // ==================== 剪贴板 ====================
   // 字幕窗口按内容高度自适应（字幕样式可调字号/行高，固定高度会裁剪）
   ipcMain.on(IPC.Subtitle.Fit, (_e, h: number) => {

@@ -138,6 +138,30 @@ textarea {
 .btn-icon { width: 36px; padding: 0; }
 .btn-icon.btn-sm { width: 28px; }
 
+/*
+ * 图标按钮：悬浮球头部与窗口标题栏共用的「小方块图标键」。
+ * 抽到全局是为了保证跨窗口规格一致（28px / 圆角 9 / 15px 图标 / 悬停用强调色），
+ * 避免各处各写一份后逐渐漂移。
+ */
+.icon-btn {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--vd-text-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s var(--vd-ease);
+}
+.icon-btn:hover { background: var(--vd-accent-soft); color: var(--vd-accent); }
+.icon-btn:disabled { opacity: 0.35; pointer-events: none; }
+.icon-btn svg { width: 15px; height: 15px; }
+/* 关闭 / 删除类：悬停转危险色，与 .btn-danger 语义一致 */
+.icon-btn.danger:hover { background: var(--vd-danger); color: #fff; }
+
 /* ---------- 分段控件 / 开关 / chip ---------- */
 .seg {
   display: inline-flex;

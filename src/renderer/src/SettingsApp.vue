@@ -1,13 +1,8 @@
 <template>
   <div class="settings">
+    <!-- 无边框窗口：品牌与版本号移入自绘标题栏，标题栏横跨两栏 -->
+    <TitleBar class="tb" :subtitle="`v${appVersion}`" />
     <nav class="side-nav">
-      <div class="nav-brand">
-        <span class="lg"></span>
-        <div>
-          <b>OpenPPTSpeaker</b>
-          <span class="faint">v{{ appVersion }}</span>
-        </div>
-      </div>
       <div class="nav-group">{{ t('settings.group.preferences') }}</div>
       <div class="nav-item" :class="{ on: sec === 'general' }" @click="sec = 'general'">
         {{ t('settings.nav.general') }}
@@ -320,6 +315,7 @@ import {
   type ThemeMode
 } from '../../main/config/schema'
 import { LANGS } from '@shared/i18n'
+import TitleBar from './components/TitleBar.vue'
 import { initI18n, lang, t } from './i18n'
 
 // 在 setup 阶段同步应用启动语言，保证首帧就是正确语言（不闪中文）
@@ -492,12 +488,16 @@ function save(): void {
 </script>
 
 <style scoped>
+/* 两栏网格：第 1 行是标题栏（横跨两栏），第 2 行才是「左导航 + 右表单」 */
 .settings {
-  display: flex;
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   height: 100vh;
   overflow: hidden;
   background: var(--vd-bg);
 }
+.tb { grid-column: 1 / -1; }
 html,
 body {
   background: var(--vd-bg);
@@ -514,13 +514,6 @@ body {
   gap: 2px;
   overflow-y: auto;
 }
-.nav-brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 14px; }
-.nav-brand .lg {
-  width: 24px; height: 24px; border-radius: 50%;
-  background: radial-gradient(circle at 34% 30%, var(--vd-accent), var(--vd-accent-strong) 78%);
-}
-.nav-brand b { display: block; font-size: 13.5px; }
-.nav-brand .faint { font-size: 11px; }
 .nav-group {
   font-size: 10.5px;
   font-weight: 700;
@@ -540,7 +533,8 @@ body {
 .nav-item.on { background: var(--vd-accent-soft); color: var(--vd-accent); }
 .ok-tip { font-size: 11.5px; color: var(--vd-success); text-align: center; }
 
-.side-main { flex: 1; padding: 26px 30px; overflow-y: auto; }
+/* min-height: 0 让网格项能正确内部滚动，否则内容会把行高撑开 */
+.side-main { min-height: 0; padding: 26px 30px; overflow-y: auto; }
 .sect { max-width: 860px; }
 .sect h2 { font-size: 20px; margin-bottom: 4px; }
 .desc { font-size: 13px; color: var(--vd-text-3); margin-bottom: 14px; }

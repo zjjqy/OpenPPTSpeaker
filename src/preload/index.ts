@@ -28,6 +28,17 @@ const api = {
       ipcRenderer.on(IPC.Window.OrbModeChanged, (_e, minimized: boolean) => cb(minimized))
     }
   },
+  /** 无边框窗口的自定义标题栏：作用于调用方所在窗口 */
+  windowCtl: {
+    minimize: (): void => ipcRenderer.send(IPC.WindowCtl.Minimize),
+    toggleMaximize: (): void => ipcRenderer.send(IPC.WindowCtl.ToggleMaximize),
+    close: (): void => ipcRenderer.send(IPC.WindowCtl.Close),
+    isMaximized: (): Promise<boolean> => ipcRenderer.invoke(IPC.WindowCtl.IsMaximized),
+    /** 最大化状态变化（双击标题栏、Win+↑、拖到屏幕顶部等系统操作也会触发） */
+    onMaximizedChanged: (cb: (maximized: boolean) => void): void => {
+      ipcRenderer.on(IPC.WindowCtl.MaximizedChanged, (_e, maximized: boolean) => cb(maximized))
+    }
+  },
   subtitle: {
     hide: (): void => ipcRenderer.send(IPC.Window.SubtitleHide),
     setMode: (active: boolean): void => ipcRenderer.send(IPC.Window.SubtitleMode, active),

@@ -22,6 +22,21 @@ export const IPC = {
     /** 悬浮球迷你/完整模式切换事件（主进程 → 渲染层） */
     OrbModeChanged: 'window:orb-mode-changed',
   },
+  /**
+   * 无边框窗口的自定义标题栏控制。
+   * 一律作用于「发起请求的那个窗口」自身（BrowserWindow.fromWebContents），
+   * 因此设置窗 / PPT 窗可以共用同一套按钮，不需要按窗口区分通道。
+   */
+  WindowCtl: {
+    Minimize: 'windowctl:minimize',
+    /** 最大化 ⇄ 还原 */
+    ToggleMaximize: 'windowctl:toggle-maximize',
+    Close: 'windowctl:close',
+    /** 查询当前是否最大化（页面加载时取初值） */
+    IsMaximized: 'windowctl:is-maximized',
+    /** 最大化状态变更事件（主进程 → 渲染层），用于切换按钮图标 */
+    MaximizedChanged: 'windowctl:maximized-changed',
+  },
   Speech: {
     /** 启动语音会话（开始采集/唤醒监听） */
     Start: 'speech:start',

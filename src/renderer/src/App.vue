@@ -6,14 +6,14 @@
         <span class="lg"></span>
         <span class="tt">{{ t('orb.header') }}</span>
         <span class="spread"></span>
-        <button class="ic-btn" :title="t('orb.tipPpt')" @click="openPpt">
+        <button class="icon-btn" :title="t('orb.tipPpt')" @click="openPpt">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>
         </button>
-        <button class="ic-btn" :title="t('orb.tipSettings')" @click="openSettings">
+        <button class="icon-btn" :title="t('orb.tipSettings')" @click="openSettings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
         <button
-          class="ic-btn"
+          class="icon-btn"
           :disabled="tourActive"
           :title="tourActive ? t('orb.tipMinimizeDisabled') : t('orb.tipMinimize')"
           @click="minimize"
@@ -275,21 +275,7 @@ onMounted(() => {
   border: 1px dashed var(--vd-accent-ring);
 }
 .orb-head .tt { font-weight: 700; font-size: 13.5px; }
-.ic-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 9px;
-  border: none;
-  background: transparent;
-  color: var(--vd-text-2);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
-}
-.ic-btn:hover { background: var(--vd-accent-soft); color: var(--vd-accent); }
-.ic-btn:disabled { opacity: 0.35; pointer-events: none; }
-.ic-btn svg { width: 15px; height: 15px; }
+/* 头部图标键规格见全局 .icon-btn（base.css），与窗口标题栏保持一致 */
 
 /* 能量球 */
 .orb-body {

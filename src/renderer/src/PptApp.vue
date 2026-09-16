@@ -1,19 +1,12 @@
 <template>
   <div class="ppt-app">
-    <header class="app-head">
-      <div class="brand">
-        <span class="lg"></span>
-        <div>
-          <h1>OpenPPTSpeaker</h1>
-          <span class="faint">{{ t('ppt.subtitle') }}</span>
-        </div>
-      </div>
-      <span class="spread"></span>
+    <!-- 无边框窗口：品牌与页签统一收进自绘标题栏 -->
+    <TitleBar :subtitle="t('ppt.subtitle')">
       <nav class="tabs">
         <button :class="{ on: tab === 'ppt' }" @click="tab = 'ppt'">{{ t('ppt.tabDecks') }}</button>
         <button :class="{ on: tab === 'editor' }" @click="tab = 'editor'">{{ t('ppt.tabEditor') }}</button>
       </nav>
-    </header>
+    </TitleBar>
 
     <div v-show="tab === 'ppt'" class="panel">
       <PptManager @edit-script="onEditScript" />
@@ -28,6 +21,7 @@
 import { ref } from 'vue'
 import PptManager from './components/PptManager.vue'
 import ScriptEditor from './components/ScriptEditor.vue'
+import TitleBar from './components/TitleBar.vue'
 import { initI18n, t } from './i18n'
 
 // 在 setup 阶段同步应用启动语言，保证首帧语言正确（不闪中文）
@@ -56,22 +50,6 @@ body {
   background: var(--vd-bg);
   color: var(--vd-text-1);
 }
-.app-head {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 22px;
-  border-bottom: 1px solid var(--vd-line);
-  background: var(--vd-surface);
-  flex: none;
-}
-.brand { display: flex; align-items: center; gap: 10px; }
-.brand .lg {
-  width: 26px; height: 26px; border-radius: 50%;
-  background: radial-gradient(circle at 34% 30%, var(--vd-accent), var(--vd-accent-strong) 78%);
-}
-.brand h1 { font-size: 16px; font-weight: 700; }
-.brand .faint { font-size: 11.5px; }
 .tabs { display: flex; gap: 4px; }
 .tabs button {
   height: 32px;

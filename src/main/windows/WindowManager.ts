@@ -36,6 +36,22 @@ export class WindowManager {
    */
   private orbHiddenBySetting = false
 
+  /**
+   * 无边框窗口的最大化状态同步。
+   *
+   * 最大化不只由标题栏按钮触发：双击标题栏、Win+↑、拖到屏幕顶端、系统右键菜单
+   * 都会改变状态，所以必须监听窗口事件回推给渲染层，而不是只在点击时翻转图标。
+   */
+  private attachFramelessChrome(win: BrowserWindow): void {
+    const notify = (): void => {
+      if (!win.isDestroyed()) {
+        win.webContents.send(IPC.WindowCtl.MaximizedChanged, win.isMaximized())
+      }
+    }
+    win.on('maximize', notify)
+    win.on('unmaximize', notify)
+  }
+
   /** 窗口内 F12 兜底：无论全局快捷键是否注册成功，窗口聚焦时按 F12 必生效 */
   private attachDevToolsShortcut(win: BrowserWindow): void {
     win.webContents.on('before-input-event', (_event, input) => {
@@ -302,6 +318,9 @@ export class WindowManager {
       minWidth: 780,
       minHeight: 640,
       resizable: true,
+      // 无边框：标题栏由渲染层的 TitleBar 组件自绘，与悬浮球/字幕/讲演窗保持一致。
+      // 保留 thickFrame 默认值 true —— Windows 下仍提供边缘拖拽改尺寸与投影。
+      frame: false,
       // 深色底：避免启动瞬间白闪（页面 CSS 生效前的兜底）
       backgroundColor: '#0f1216',
       title: t('window.settings'),
@@ -316,6 +335,7 @@ export class WindowManager {
       this.settingsWindow = null
     })
     this.attachDevToolsShortcut(this.settingsWindow)
+    this.attachFramelessChrome(this.settingsWindow)
   }
 
   // ==================== PPT 管理窗口 ====================
@@ -331,6 +351,8 @@ export class WindowManager {
       minWidth: 960,
       minHeight: 640,
       resizable: true,
+      // 无边框：与设置窗同一套自绘标题栏（见 TitleBar.vue）
+      frame: false,
       // 深色底：避免启动瞬间白闪（页面 CSS 生效前的兜底）
       backgroundColor: '#14081a',
       title: t('window.ppt'),
@@ -345,6 +367,7 @@ export class WindowManager {
       this.pptWindow = null
     })
     this.attachDevToolsShortcut(this.pptWindow)
+    this.attachFramelessChrome(this.pptWindow)
   }
 
   // ==================== 悬浮球停靠位置 ====================
