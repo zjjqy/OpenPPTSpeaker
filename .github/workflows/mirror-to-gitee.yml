@@ -8,6 +8,10 @@ name: Mirror to Gitee
 # 需要在 GitHub 侧配置：
 #   Secret   GITEE_TOKEN  — Gitee 私人令牌，勾选 projects 权限（必配）
 #   Variable GITEE_USER   — Gitee 用户名；与 GitHub 同名时不必配（默认取 zjjqy）
+#   Variable GITEE_REPO   — Gitee 仓库路径；默认 open-pptspeaker
+#
+# 注意 Gitee 会把仓库名转成 kebab-case 路径：
+# 仓库叫 OpenPPTSpeaker，但地址是 https://gitee.com/<user>/open-pptspeaker.git
 #
 # ⚠️ 本文件会随镜像出现在 Gitee 的公开仓库里，所以令牌只能走 ${{ secrets.* }}，
 #    绝对不能写成明文 —— 否则等于把令牌公开发布到 Gitee。
@@ -43,7 +47,7 @@ jobs:
         env:
           GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
           GITEE_USER: ${{ vars.GITEE_USER || 'zjjqy' }}
-          GITEE_REPO: OpenPPTSpeaker
+          GITEE_REPO: ${{ vars.GITEE_REPO || 'open-pptspeaker' }}
         run: |
           set -euo pipefail
 
