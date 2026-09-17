@@ -1,0 +1,145 @@
+name: Mirror Release to Gitee
+
+# 把 GitHub 的发行版（含安装包附件）同步到 Gitee 的「发行版」。
+#
+# 为什么要单独一个工作流：发行版附件**不是 git 对象**，`git push` 搬不动它。
+# 源码镜像由 mirror-to-gitee.yml 负责（分支 + 标签），这里只负责发行版与附件。
+#
+# Gitee 官方限制：
+#   - 单个附件 ≤ 100 MB
+#   - 每个仓库附件总容量 1 GB（普通项目）
+# 安装包必须压到这个上限以内才能上传，这也是 1.0.2 瘦身的原因。
+#
+# 触发方式：
+#   1. 在 GitHub 上发布（Publish）一个 Release 时自动触发
+#   2. 手动触发 —— 必须填 tag，用于补历史版本或失败重跑
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '要同步的 tag（例如 v1.0.2）'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+# 同一时间只跑一个，避免两次同步在 Gitee 上抢同一批附件
+concurrency:
+  group: mirror-release-to-gitee
+  cancel-in-progress: false
+
+jobs:
+  mirror-release:
+    runs-on: ubuntu-latest
+    # 上传 90 MB+ 附件到 Gitee 可能较慢，给足时间
+    timeout-minutes: 45
+    steps:
+      - name: Sync release to Gitee
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+          GITEE_USER: ${{ vars.GITEE_USER || 'zjjqy' }}
+          GITEE_REPO: ${{ vars.GITEE_REPO || 'open-pptspeaker' }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          set -euo pipefail
+
+          API="https://gitee.com/api/v5/repos/${GITEE_USER}/${GITEE_REPO}"
+
+          if [ -z "${GITEE_TOKEN}" ]; then
+            echo "::notice::未配置 secrets.GITEE_TOKEN，已跳过。配置后自动生效。"
+            exit 0
+          fi
+
+          if [ -z "${TAG}" ]; then
+            echo "::error::没有拿到 tag。手动触发时请在输入框填写，例如 v1.0.2"
+            exit 1
+          fi
+
+          echo "同步发行版 ${TAG} → gitee.com/${GITEE_USER}/${GITEE_REPO}"
+
+          # ---------- 1. 取 GitHub 发行版的说明与附件 ----------
+          mkdir -p dist
+          # 名称用命令替换取，顺便去掉 gh 输出末尾的换行；说明保留换行，故走文件
+          RELEASE_NAME=$(gh release view "${TAG}" --repo "${GH_REPO}" --json name --jq '.name')
+          gh release view "${TAG}" --repo "${GH_REPO}" --json body --jq '.body' > release_body.md
+          gh release download "${TAG}" --repo "${GH_REPO}" --dir dist --clobber
+
+          echo "---- 待上传附件 ----"
+          ls -lh dist | sed 's/^/  /'
+
+          # ---------- 2. 等 Gitee 上的标签就位 ----------
+          # 标签由 mirror-to-gitee.yml 推送，若刚 push 完就发版，这里可能还没到。
+          # 标签缺失时 Gitee 会用 target_commitish 现场建一个，可能落在错误提交上，
+          # 所以宁可先等。
+          for i in $(seq 1 12); do
+            if curl -sS "${API}/tags?access_token=${GITEE_TOKEN}&per_page=100" \
+               | jq -e --arg t "${TAG}" 'any(.[]; .name == $t)' > /dev/null 2>&1; then
+              echo "Gitee 上已有标签 ${TAG}"
+              break
+            fi
+            echo "等待 Gitee 上的标签 ${TAG}（第 ${i}/12 次）…"
+            sleep 10
+          done
+
+          # ---------- 3. 找同名发行版，没有就创建 ----------
+          RELEASE_ID=$(curl -sS --retry 3 --retry-delay 5 \
+            "${API}/releases?access_token=${GITEE_TOKEN}&per_page=100" \
+            | jq -r --arg t "${TAG}" '.[] | select(.tag_name == $t) | .id' | head -n1 || true)
+
+          if [ -z "${RELEASE_ID}" ] || [ "${RELEASE_ID}" = "null" ]; then
+            echo "Gitee 上还没有 ${TAG} 的发行版，创建中…"
+            RELEASE_ID=$(curl -sS --retry 3 --retry-delay 5 -X POST "${API}/releases" \
+              --data-urlencode "access_token=${GITEE_TOKEN}" \
+              --data-urlencode "tag_name=${TAG}" \
+              --data-urlencode "name=${RELEASE_NAME}" \
+              --data-urlencode "body@release_body.md" \
+              --data-urlencode "target_commitish=main" \
+              | jq -r '.id' || true)
+          else
+            echo "Gitee 上已有 ${TAG} 的发行版（id=${RELEASE_ID}），将复用"
+          fi
+
+          if [ -z "${RELEASE_ID}" ] || [ "${RELEASE_ID}" = "null" ]; then
+            echo "::error::获取/创建 Gitee 发行版失败，请检查令牌是否具备 projects 权限"
+            exit 1
+          fi
+          echo "Gitee 发行版 id = ${RELEASE_ID}"
+
+          # ---------- 4. 删掉同名旧附件 ----------
+          # 手动重跑或重复发版时，否则会在 Gitee 上堆出多份同名附件。
+          EXISTING=$(curl -sS "${API}/releases/${RELEASE_ID}/attach_files?access_token=${GITEE_TOKEN}&per_page=100" \
+            | jq -r 'if type=="array" then .[] | "\(.id)\t\(.name)" else empty end' || true)
+          for f in dist/*; do
+            name=$(basename "$f")
+            aid=$(echo "${EXISTING}" | awk -v n="${name}" -F'\t' '$2 == n {print $1}' | head -n1)
+            if [ -n "${aid}" ]; then
+              echo "删除 Gitee 上的同名旧附件 ${name}（id=${aid}）"
+              curl -sS -X DELETE \
+                "${API}/releases/${RELEASE_ID}/attach_files/${aid}?access_token=${GITEE_TOKEN}" \
+                > /dev/null || true
+            fi
+          done
+
+          # ---------- 5. 逐个上传 ----------
+          for f in dist/*; do
+            name=$(basename "$f")
+            size=$(stat -c %s "$f")
+            if [ "${size}" -gt 104857600 ]; then
+              echo "::warning::${name} 为 $((size/1048576)) MB，超过 Gitee 单附件 100 MB 上限，跳过"
+              continue
+            fi
+            echo "上传 ${name}（$((size/1048576)) MB）…"
+            curl -sS --retry 3 --retry-delay 10 --connect-timeout 30 -X POST \
+              -F "access_token=${GITEE_TOKEN}" \
+              -F "file=@${f}" \
+              "${API}/releases/${RELEASE_ID}/attach_files" \
+              | jq -r 'if .name then "  ✅ \(.name)" else "  ⚠️ 返回：\(.)" end' || true
+          done
+
+          echo "✅ 发行版已同步到 https://gitee.com/${GITEE_USER}/${GITEE_REPO}/releases"
