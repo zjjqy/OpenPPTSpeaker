@@ -152,6 +152,13 @@ export class WindowManager {
 
     this.subtitleWindow.loadFile(join(__dirname, '../renderer/subtitle.html'))
     this.subtitleWindow.setIgnoreMouseEvents(true, { forward: true })
+    // 字幕页没有任何其它观察窗口：把它的 console 转发到主进程终端，
+    // 否则页面脚本一旦报错（preload 未生效、样式换算抛异常等），
+    // 现场只能看到"字幕不显示"这一个现象，无法定位
+    this.subtitleWindow.webContents.on('console-message', (_e, level, message) => {
+      const method = (['log', 'warn', 'error', 'info'] as const)[level] ?? 'info'
+      console[method]('[subtitle]', message)
+    })
     this.attachDevToolsShortcut(this.subtitleWindow)
   }
 

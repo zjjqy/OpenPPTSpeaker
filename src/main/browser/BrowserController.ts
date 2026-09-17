@@ -145,7 +145,10 @@ export class BrowserController {
           const r = el.getBoundingClientRect();
           const x = r.left + window.scrollX, y = r.top + window.scrollY, w = r.width, h = r.height;
           const ov = document.createElement('div');
-          ov.className = 'huashun-spot';
+          // 类名必须与上方预清理、以及 clearSpotlight 里的 .ops-spot 选择器一致。
+          // 此处曾残留旧品牌名 huashun-spot：查询用的是 .ops-spot，永远匹配不到新建的元素
+          // → 旧遮罩删不掉，每句聚光都叠加一层 50% 压暗，画面越来越黑且挖空失效。
+          ov.className = 'ops-spot';
           ov.style.cssText = 'position:fixed;inset:0;z-index:99997;pointer-events:none;';
           ov.innerHTML = '<svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0">'
             + '<defs><mask id="ops-spot-mask">'
@@ -160,8 +163,10 @@ export class BrowserController {
           const vw = Math.max(1, window.innerWidth), vh = Math.max(1, window.innerHeight);
           const cx = x / vw * vbW, cy = y / vh * vbH, cw = w / vw * vbW, ch = h / vh * vbH;
           // 先从放大的位置收敛到精确位置（600ms expo-out）
-          const cut = document.getElementById('ops-spot-cut');
-          const border = document.getElementById('ops-spot-border');
+          // 用 ov 作用域查找而非 document.getElementById：遮罩内 id 在整页唯一，
+          // 万一出现多个遮罩，全局查找会命中前一个，导致新遮罩的挖空停在 0×0、整屏被压暗
+          const cut = ov.querySelector('#ops-spot-cut');
+          const border = ov.querySelector('#ops-spot-border');
           cut.style.transition = 'all .6s cubic-bezier(0.16,1,0.3,1)';
           border.style.transition = 'all .5s cubic-bezier(0.16,1,0.3,1) .05s';
           cut.setAttribute('x', String(cx - 8)); cut.setAttribute('y', String(cy - 8));

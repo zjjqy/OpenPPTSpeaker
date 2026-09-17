@@ -10,6 +10,22 @@ import type { AppConfig } from '../main/config/schema'
 /** 应用版本号：构建时由 electron-vite 从 package.json 注入（见 electron.vite.config.ts） */
 declare const __APP_VERSION__: string
 
+/**
+ * 同步取启动语言。
+ *
+ * 必须 try/catch 兜底：preload 抛错会导致 contextBridge 不执行，
+ * window.ops 不存在，整个页面（悬浮球/字幕/设置…）直接失效。
+ * 语言取不到只是文案回退默认语言，绝不能因此拖垮窗口。
+ */
+function readInitialLang(): string {
+  try {
+    const lang = ipcRenderer.sendSync(IPC.Config.GetLangSync)
+    return typeof lang === 'string' ? lang : ''
+  } catch {
+    return ''
+  }
+}
+
 const api = {
   /** 应用版本号（与 package.json 同步，构建时注入，无需手动维护） */
   appVersion: __APP_VERSION__,
@@ -17,7 +33,7 @@ const api = {
    * 启动时的界面语言。同步取（sendSync）而非等 config.get() 的 Promise：
    * 页面脚本需要首帧就渲染正确语言，异步拿到会让英文模式先闪一下中文。
    */
-  initialLang: ipcRenderer.sendSync(IPC.Config.GetLangSync) as string,
+  initialLang: readInitialLang(),
   window: {
     minimize: (): void => ipcRenderer.send(IPC.Window.OrbMinimize),
     restore: (): void => ipcRenderer.send(IPC.Window.OrbRestore),
