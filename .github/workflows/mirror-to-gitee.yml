@@ -1,0 +1,72 @@
+name: Mirror to Gitee
+
+# 单向镜像：GitHub → Gitee。
+#
+# 设计前提：Gitee 侧是**只读副本**。若直接在 Gitee 上改代码，
+# 下次同步会被强制覆盖（分支用 --prune 对齐，标签用 --force 覆盖）。
+#
+# 需要在 GitHub 侧配置：
+#   Secret   GITEE_TOKEN  — Gitee 私人令牌，勾选 projects 权限（必配）
+#   Variable GITEE_USER   — Gitee 用户名；与 GitHub 同名时不必配（默认取 zjjqy）
+#
+# ⚠️ 本文件会随镜像出现在 Gitee 的公开仓库里，所以令牌只能走 ${{ secrets.* }}，
+#    绝对不能写成明文 —— 否则等于把令牌公开发布到 Gitee。
+
+on:
+  push:
+    branches: ['**']
+    tags: ['**']
+  # 定时兜底：GitHub Actions 运行器在海外，Gitee 对其偶发风控/超时，
+  # 一次失败可在次日自动补齐
+  schedule:
+    - cron: '0 19 * * *' # UTC 19:00 = 北京时间 03:00
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 串行执行，避免两次同步并发 push 互相打断
+concurrency:
+  group: mirror-to-gitee
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 镜像需要完整提交历史与标签
+
+      - name: Push to Gitee
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+          GITEE_USER: ${{ vars.GITEE_USER || 'zjjqy' }}
+          GITEE_REPO: OpenPPTSpeaker
+        run: |
+          set -euo pipefail
+
+          # 未配置令牌时温和跳过，避免首次提交就在仓库上留一个红叉；
+          # 令牌配错或过期仍会在 push 阶段明确报错。
+          if [ -z "${GITEE_TOKEN}" ]; then
+            echo "::notice::未配置 secrets.GITEE_TOKEN，已跳过同步。配置后自动生效。"
+            exit 0
+          fi
+
+          # 令牌放在 URL 中：GitHub Actions 会把 secret 值在日志里自动打码为 ***
+          git remote add gitee "https://${GITEE_USER}:${GITEE_TOKEN}@gitee.com/${GITEE_USER}/${GITEE_REPO}.git"
+
+          # 取全部标签与分支，作为镜像基准（checkout 默认只取触发这次运行的那一个 ref）
+          git fetch origin --tags --force
+          git fetch --prune origin "+refs/heads/*:refs/remotes/origin/*"
+          # origin/HEAD 是符号引用，不删掉会被当成一个名为 HEAD 的分支推上去
+          git update-ref -d refs/remotes/origin/HEAD 2>/dev/null || true
+
+          # 分支整体对齐；--prune 会删除 Gitee 上多出来的分支，使其与 GitHub 严格一致
+          git push --prune gitee "+refs/remotes/origin/*:refs/heads/*"
+
+          # 标签整体对齐；--force 覆盖 Gitee 上可能已存在的同名标签
+          git push --force gitee --tags
+
+          echo "✅ 已同步到 https://gitee.com/${GITEE_USER}/${GITEE_REPO}"
