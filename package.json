@@ -16,7 +16,8 @@
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "vue-tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
-    "package:win": "electron-vite build && electron-builder --win"
+    "package:win": "electron-vite build && electron-builder --win",
+    "publish:gitee": "node scripts/publish-release-gitee.mjs"
   },
   "dependencies": {
     "@types/ws": "^8.18.1",

@@ -8,6 +8,9 @@ release/
 .env
 .env.local
 
+# Gitee 私人令牌（供 scripts/publish-release-gitee.mjs 本地读取，切勿提交）
+.gitee-token
+
 # 运行时数据（演示库 / 讲稿 / 语音缓存，本地生成，不随仓库分发）
 data/
 

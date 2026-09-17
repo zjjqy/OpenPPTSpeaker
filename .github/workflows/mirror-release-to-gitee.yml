@@ -10,13 +10,18 @@ name: Mirror Release to Gitee
 #   - 每个仓库附件总容量 1 GB（普通项目）
 # 安装包必须压到这个上限以内才能上传，这也是 1.0.2 瘦身的原因。
 #
-# 触发方式：
-#   1. 在 GitHub 上发布（Publish）一个 Release 时自动触发
-#   2. 手动触发 —— 必须填 tag，用于补历史版本或失败重跑
+# ⚠️ 默认不自动触发，原因见下（实测数据）：
+#
+#   GitHub Actions 的 runner 在海外，向 Gitee 上传 91.68 MB 的安装包
+#   实测速率约 0.08 MB/s —— 跑 20 分钟仍未传完，因此不适合挂在
+#   `release: published` 上自动执行，那会让每次发版都拖住二十多分钟甚至超时。
+#
+# 推荐做法：发版后在**国内本地**执行 `npm run publish:gitee`，
+#   脚本见 scripts/publish-release-gitee.mjs，本地到 Gitee 通常几十秒完成。
+#
+# 本工作流保留为备用手段（例如你手边没有本地环境时），只能手动触发。
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       tag:
