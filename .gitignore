@@ -3,9 +3,6 @@ out/
 dist/
 release/
 
-# 本地调试截图（含第三方系统界面，禁止提交）
-screenshots/
-
 *.log
 .DS_Store
 .env

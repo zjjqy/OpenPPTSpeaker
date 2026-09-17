@@ -11,9 +11,17 @@
 
 ## 下载
 
-**[⬇ 下载最新版本](https://github.com/zjjqy/OpenPPTSpeaker/releases/latest)** — Windows 安装包（x64），约 112 MB。
+**[⬇ 下载最新版本](https://github.com/zjjqy/OpenPPTSpeaker/releases/latest)** — Windows 安装包（x64），约 115 MB。
 
-安装包未做代码签名，Windows 会弹出 SmartScreen 提示，选择**更多信息 → 仍要运行**即可；详细说明见[版本说明](./RELEASE_NOTES_v1.0.0.md)。想自行编译？见[快速开始](#快速开始)。
+安装包未做代码签名，Windows 会弹出 SmartScreen 提示，选择**更多信息 → 仍要运行**即可；详细说明见[版本说明](./RELEASE_NOTES_v1.0.1.md)。想自行编译？见[快速开始](#快速开始)。
+
+## 演示截图
+
+| 悬浮球 | PPT 库 |
+| --- | --- |
+| ![悬浮球：状态与开始讲解按钮](./screenshots/orb.png) | ![PPT 库：导入面板与演示卡片](./screenshots/deck-library.png) |
+
+![讲演现场：页面聚光压暗、字幕与语音同步、右下角迷你胶囊](./screenshots/presenting.png)
 
 ## 特性
 

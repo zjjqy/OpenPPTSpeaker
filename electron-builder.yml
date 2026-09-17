@@ -4,6 +4,7 @@
   "directories": {
     "output": "release"
   },
+  "artifactName": "${productName}-${version}-setup.${ext}",
   "files": [
     "out/**/*",
     "assets/**/*",

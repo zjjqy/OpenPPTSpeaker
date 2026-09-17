@@ -11,9 +11,17 @@ Turn a static deck into a talk that can be listened to and talked back to.
 
 ## Download
 
-**[⬇ Download the latest release](https://github.com/zjjqy/OpenPPTSpeaker/releases/latest)** — Windows installer (x64), ~112 MB.
+**[⬇ Download the latest release](https://github.com/zjjqy/OpenPPTSpeaker/releases/latest)** — Windows installer (x64), ~115 MB.
 
-The installer is not code-signed, so Windows SmartScreen will warn you. Choose **More info → Run anyway**; the full explanation is in the [release notes](./RELEASE_NOTES_v1.0.0.md). Prefer to build it yourself? See [Getting started](#getting-started).
+The installer is not code-signed, so Windows SmartScreen will warn you. Choose **More info → Run anyway**; the full explanation is in the [release notes](./RELEASE_NOTES_v1.0.1.md). Prefer to build it yourself? See [Getting started](#getting-started).
+
+## Screenshots
+
+| Floating orb | Deck library |
+| --- | --- |
+| ![The floating orb: status and the start button](./screenshots/orb.png) | ![The deck library with its import panel](./screenshots/deck-library.png) |
+
+![Presenting a deck: dimmed background, subtitles synced to the audio, and the mini capsule in the corner](./screenshots/presenting.png)
 
 ## Features
 
