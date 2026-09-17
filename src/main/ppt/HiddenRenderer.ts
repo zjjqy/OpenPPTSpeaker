@@ -29,6 +29,9 @@ class HiddenRenderer {
       height: 300,
       show: false,
       webPreferences: {
+        // 隐藏工作页同样挂 preload：i18n 通过 window.ops.initialLang 同步取启动语言，
+        // 而 pdf-render / video-render 的错误文案会透传到界面上，需要跟随语言
+        preload: join(__dirname, '../preload/index.js'),
         nodeIntegration: false,
         contextIsolation: true,
         backgroundThrottling: false

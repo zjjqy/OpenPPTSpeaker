@@ -39,14 +39,19 @@ export function t(key: DictKey | string, params?: Record<string, string | number
 /**
  * 各窗口入口调用一次，用于订阅配置变更。
  * 语言初始化不依赖调用方：见下方模块级 applyLang —— 任何页面只要 import 本模块就已用对语言。
+ * 没有 preload 的页面会跳过订阅（可选链兜底）。
  */
 export function initI18n(): void {
-  window.ops.config.onChange((cfg) => applyLang(cfg.language))
+  window.ops?.config.onChange((cfg) => applyLang(cfg.language))
 }
 
 /**
  * 模块级副作用：拿到 preload 同步取回的启动语言并立即应用。
  * 放在这里（而不是只放在 initI18n 里）是为了让每个使用 t() 的页面都自动正确，
- * 包括 video-render / pdf-render 这类不渲染常规 UI、不会调用 initI18n 的工作页。
+ * 包括 pdf-render / video-render 这类不渲染常规 UI、不会调用 initI18n 的工作页。
+ *
+ * 必须用可选链兜底：共享模块的顶层副作用一旦抛错，整个页面的脚本都不会执行。
+ * 隐藏工作页曾因为没有 preload 而 window.ops 为 undefined，直接取 .initialLang 抛错，
+ * 导致 pdf-render 整页加载失败，主进程只报 "Script failed to execute"（看不出真实原因）。
  */
-applyLang(window.ops.initialLang)
+applyLang(window.ops?.initialLang)
