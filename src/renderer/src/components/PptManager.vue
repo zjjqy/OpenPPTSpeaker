@@ -105,12 +105,27 @@
         </div>
       </div>
     </div>
+
+    <!-- 应用内对话框：替代 Electron 不可用的 window.prompt / 有缺陷的 window.confirm -->
+    <AppDialog
+      v-model="dlg.value"
+      :open="dlg.open"
+      :title="dlg.title"
+      :message="dlg.message"
+      :show-input="dlg.showInput"
+      :confirm-label="dlg.confirmLabel"
+      :cancel-label="t('action.cancel')"
+      :danger="dlg.danger"
+      @confirm="onDialogConfirm"
+      @cancel="dlg.open = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import type { PptDeckMeta, PptProgressEvent } from '@shared/ppt'
+import AppDialog from './AppDialog.vue'
 import { initI18n, t } from '../i18n'
 
 // 在 setup 阶段同步应用启动语言（本组件由 PptApp 渲染，此处兜底即可）
@@ -217,18 +232,70 @@ async function doExport(id: string): Promise<void> {
   if (!r.ok && !r.cancelled) error.value = r.error ?? t('ppt.errExport')
 }
 
-async function doRename(d: PptDeckMeta): Promise<void> {
-  const name = prompt(t('ppt.newNamePrompt'), d.name)
-  if (!name || !name.trim()) return
-  await window.ops.pptLib.rename(d.id, name.trim())
-  await refresh()
+/**
+ * 应用内对话框状态。
+ *
+ * 原实现用 window.prompt / window.confirm —— 前者在 Electron 渲染进程里直接抛
+ * "prompt() is and will not be supported"，导致重命名在到达 IPC 之前就中断；
+ * 后者虽能弹出，但有"关闭后输入框无法聚焦"的已知缺陷。
+ */
+const dlg = reactive({
+  open: false,
+  title: '',
+  message: '',
+  showInput: false,
+  value: '',
+  danger: false,
+  confirmLabel: '',
+  /** 点确认后要执行的动作 */
+  onConfirm: null as null | (() => Promise<void>)
+})
+
+function onDialogConfirm(): void {
+  // 先关弹窗再执行：动作失败时错误显示在页面上，不会被弹窗遮住
+  dlg.open = false
+  void dlg.onConfirm?.()
 }
 
-async function doDelete(d: PptDeckMeta): Promise<void> {
-  if (!confirm(t('ppt.confirmDelete', { name: d.name }))) return
-  const r = await window.ops.pptLib.remove(d.id)
-  if (!r.ok) error.value = r.error ?? t('ppt.errDelete')
-  await refresh()
+/** 重命名：弹输入框（原实现用 prompt，在 Electron 中不可用） */
+function doRename(d: PptDeckMeta): void {
+  dlg.open = true
+  dlg.title = t('ppt.renameTitle')
+  dlg.message = ''
+  dlg.showInput = true
+  dlg.value = d.name
+  dlg.danger = false
+  dlg.confirmLabel = t('action.rename')
+  dlg.onConfirm = async () => {
+    const name = dlg.value.trim()
+    if (!name) return
+    // 原先忽略了返回值：重命名失败时界面上毫无反馈
+    const r = await window.ops.pptLib.rename(d.id, name)
+    if (!r.ok) {
+      error.value = r.error ?? t('ppt.errRename')
+      return
+    }
+    await refresh()
+  }
+}
+
+/** 删除：弹确认框（原实现用 confirm，存在关闭后输入框无法聚焦的问题） */
+function doDelete(d: PptDeckMeta): void {
+  dlg.open = true
+  dlg.title = t('ppt.deleteTitle')
+  dlg.message = t('ppt.confirmDelete', { name: d.name })
+  dlg.showInput = false
+  dlg.value = ''
+  dlg.danger = true
+  dlg.confirmLabel = t('action.delete')
+  dlg.onConfirm = async () => {
+    const r = await window.ops.pptLib.remove(d.id)
+    if (!r.ok) {
+      error.value = r.error ?? t('ppt.errDelete')
+      return
+    }
+    await refresh()
+  }
 }
 
 onMounted(() => {
