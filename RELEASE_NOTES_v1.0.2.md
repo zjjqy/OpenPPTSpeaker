@@ -1,4 +1,4 @@
-# OpenPPTSpeaker v1.0.1
+# OpenPPTSpeaker v1.0.2
 
 **English** | [简体中文](#简体中文)
 
@@ -6,28 +6,27 @@
 
 ---
 
-## What's new in 1.0.1
+## What's new in 1.0.2
 
-A patch release. It fixes several problems that made the 1.0.0 installer hard to use:
+**The installer is 20% smaller — 115 MB down to 92 MB.** No feature was touched: the package was simply carrying the same code twice.
 
-- **Importing a PDF failed outright.** A shared module was evaluated before the window's bridge existed, so the PDF worker page never loaded and the import threw *"Script failed to execute"* with no useful detail.
-- **The spotlight stacked up and darkened the slide.** The dimming overlay was created under an old class name that the cleanup code never matched, so every sentence added another 50% dim layer: 50% → 75% → 87.5%. The slide went progressively darker and, because the cut-out rects then collided on duplicate element ids, the spotlight itself stopped working too.
-- **Rename did nothing in the deck library.** It relied on `window.prompt`, which Electron does not implement — the click was swallowed before it ever reached the backend. Rename and delete now use an in-app dialog, and a failed rename is reported instead of silently ignored.
-- **English mode still narrated in Chinese.** The presentation and Q&A system prompts were hard-coded in Chinese, so the model answered in Chinese while an English voice read it back. Prompts, context labels and tool descriptions now follow the interface language.
-- **Cancelling the "import script" file dialog showed a red error.** A missing flag made "user cancelled" indistinguishable from "import failed".
+- **The whole renderer stack was shipped twice.** `pdfjs-dist`, `vue` and `@vue` are bundled into `out/renderer` by Vite at build time, so the copies electron-builder was *also* placing in `app.asar` could never be reached. Excluded: ~48 MB.
+- **`@napi-rs/canvas` was dead weight.** It is an optional dependency of `pdfjs-dist`, used only when pdf.js renders through a Node canvas. The renderer draws to the DOM, so that 36 MB platform binary was never loaded.
+- **55 Electron locale packs shipped; 2 are usable.** The interface speaks `en-US` and `zh-CN` only. The other 53 are gone.
+
+Why bother about size? Because Gitee caps a release attachment at **100 MB**, so a 115 MB installer cannot be uploaded there at all — not by automation, and not by hand either.
 
 Also in this release:
 
-- Screenshots added to the README.
-- The installer file name no longer contains spaces — `OpenPPTSpeaker-1.0.1-setup.exe`.
-- The subtitle window now forwards its console output to the terminal, so a broken subtitle page is diagnosable instead of just silently blank.
+- **The source is now mirrored to Gitee**: [gitee.com/zjjqy/open-pptspeaker](https://gitee.com/zjjqy/open-pptspeaker), updated automatically on every push and tag.
+- The five usability fixes from 1.0.1 are unchanged. Upgrading straight from 1.0.0? See the [1.0.1 notes](https://github.com/zjjqy/OpenPPTSpeaker/releases/tag/v1.0.1).
 
 ## Download
 
 | File | Size | What it is |
 | --- | --- | --- |
-| `OpenPPTSpeaker-1.0.1-setup.exe` | ~115 MB | Windows installer (x64), NSIS, choose your own install directory |
-| `OpenPPTSpeaker-1.0.1-setup.exe.blockmap` | ~100 KB | Delta-update index, only needed by auto-update clients |
+| `OpenPPTSpeaker-1.0.2-setup.exe` | ~92 MB | Windows installer (x64), NSIS, choose your own install directory |
+| `OpenPPTSpeaker-1.0.2-setup.exe.blockmap` | ~100 KB | Delta-update index, only needed by auto-update clients |
 
 ## ⚠️ Read this before installing
 
@@ -94,28 +93,27 @@ Requires Node.js >= 18.
 
 > 开源的 AI PPT 讲演助手：导入演示文稿，由大模型撰写讲解词，用语音逐页讲出来，字幕与声音精确同步，并支持听众随时打断提问。
 
-## 1.0.1 更新内容
+## 1.0.2 更新内容
 
-修复版。以下是 1.0.0 安装包里影响使用的问题：
+**安装包缩小 20%：115 MB → 92 MB。** 功能一行没改，纯粹是包里把同一份代码装了两遍。
 
-- **导入 PDF 直接失败。** 一个共享模块在窗口桥接就绪之前就被求值，导致 PDF 工作页整页未加载，导入时只报 *"Script failed to execute"*，看不出真实原因。
-- **聚光不停叠加、画面越来越黑。** 压暗遮罩用了旧品牌的类名，而清理逻辑查的是新名字，永远匹配不上 —— 每讲一句就叠加一层 50% 压暗：50% → 75% → 87.5%。画面持续变暗，且由于遮罩内元素 id 重复、挖空矩形被撞掉，聚光效果本身也一并失效。
-- **PPT 库里重命名点了没反应。** 用的是 `window.prompt`，而 Electron 不支持该 API，点击在到达后端之前就被吞掉了。现已改为应用内弹窗，并且重命名失败会给出提示而不是静默忽略。
-- **英文模式下讲解仍是中文。** 讲解与问答的系统提示词是硬编码中文，模型照中文要求作答，再被英文音色读出来。提示词、上下文标签与工具描述现已全部随界面语言切换。
-- **取消「导入讲稿」的文件对话框会弹出红色错误。** 少了一个标志位，导致「用户取消」和「导入失败」无法区分。
+- **整个渲染层依赖被打包了两次。** `pdfjs-dist`、`vue`、`@vue` 在构建时已被 Vite 打进 `out/renderer`，而 electron-builder 又在 `app.asar` 里放了一份 —— 后者永远不会被加载。排除后省下约 48 MB。
+- **`@napi-rs/canvas` 是死重量。** 它是 `pdfjs-dist` 的可选依赖，只在 pdf.js 通过 Node canvas 渲染时才用到；渲染层画在 DOM 上，那 36 MB 的平台二进制从未被加载。
+- **55 个 Electron 语言包里只有 2 个有用。** 界面只支持 `en-US` 和 `zh-CN`，其余 53 个已移除。
+
+为什么要折腾体积？因为 Gitee 的发行版附件上限是 **100 MB**，115 MB 的安装包**根本传不上去** —— 自动化不行，你手动拖文件也不行。
 
 本次同时包含：
 
-- README 加入演示截图。
-- 安装包文件名去掉空格 —— `OpenPPTSpeaker-1.0.1-setup.exe`。
-- 字幕窗口的日志会转发到终端，字幕页出问题时便于定位，而不是只表现为「一片空白」。
+- **源码已镜像到 Gitee**：[gitee.com/zjjqy/open-pptspeaker](https://gitee.com/zjjqy/open-pptspeaker)，每次 push 与打标签都会自动同步。
+- 1.0.1 的五个易用性修复保持不变；如果你是从 1.0.0 直接升级，细节见 [1.0.1 版本说明](https://github.com/zjjqy/OpenPPTSpeaker/releases/tag/v1.0.1)。
 
 ## 下载
 
 | 文件 | 大小 | 说明 |
 | --- | --- | --- |
-| `OpenPPTSpeaker-1.0.1-setup.exe` | 约 115 MB | Windows 安装包（x64），NSIS，可自选安装目录 |
-| `OpenPPTSpeaker-1.0.1-setup.exe.blockmap` | 约 100 KB | 增量更新索引，仅自动更新客户端需要 |
+| `OpenPPTSpeaker-1.0.2-setup.exe` | 约 92 MB | Windows 安装包（x64），NSIS，可自选安装目录 |
+| `OpenPPTSpeaker-1.0.2-setup.exe.blockmap` | 约 100 KB | 增量更新索引，仅自动更新客户端需要 |
 
 ## ⚠️ 安装前必看
 

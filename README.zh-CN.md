@@ -24,9 +24,9 @@
 
 ## 下载
 
-**[⬇ 下载最新版本](https://github.com/zjjqy/OpenPPTSpeaker/releases/latest)** — Windows 安装包（x64），约 115 MB。
+**[⬇ 下载最新版本](https://github.com/zjjqy/OpenPPTSpeaker/releases/latest)** — Windows 安装包（x64），约 92 MB。
 
-安装包未做代码签名，Windows 会弹出 SmartScreen 提示，选择**更多信息 → 仍要运行**即可；详细说明见[版本说明](./RELEASE_NOTES_v1.0.1.md)。想自行编译？见[快速开始](#快速开始)。
+安装包未做代码签名，Windows 会弹出 SmartScreen 提示，选择**更多信息 → 仍要运行**即可；详细说明见[版本说明](./RELEASE_NOTES_v1.0.2.md)。想自行编译？见[快速开始](#快速开始)。
 
 **国内用户**：源码同步镜像在 **[gitee.com/zjjqy/open-pptspeaker](https://gitee.com/zjjqy/open-pptspeaker)**，GitHub 拉取慢时从这里克隆。该镜像为只读副本、自动跟随本仓库更新；安装包仅在 GitHub 发布。
 

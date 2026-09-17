@@ -9,8 +9,15 @@
     "out/**/*",
     "assets/**/*",
     "resources/**/*",
-    "package.json"
+    "package.json",
+    "!node_modules/pdfjs-dist/**",
+    "!node_modules/@napi-rs/**",
+    "!node_modules/vue/**",
+    "!node_modules/@vue/**",
+    "!node_modules/@babel/**",
+    "!node_modules/magic-string/**"
   ],
+  "electronLanguages": ["en-US", "zh-CN"],
   "asarUnpack": [
     "node_modules/ffmpeg-static/**"
   ],

@@ -1,6 +1,6 @@
 {
   "name": "open-ppt-speaker",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "OpenPPTSpeaker（开源 PPT 讲演助手）：千问驱动的讲解引擎 + 语音会话 + 可打断问答",
   "main": "./out/main/index.js",
   "author": "zjjqy",

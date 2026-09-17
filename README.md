@@ -24,9 +24,9 @@ We cannot verify any of that. What we can verify: a star costs you exactly one a
 
 ## Download
 
-**[⬇ Download the latest release](https://github.com/zjjqy/OpenPPTSpeaker/releases/latest)** — Windows installer (x64), ~115 MB.
+**[⬇ Download the latest release](https://github.com/zjjqy/OpenPPTSpeaker/releases/latest)** — Windows installer (x64), ~92 MB.
 
-The installer is not code-signed, so Windows SmartScreen will warn you. Choose **More info → Run anyway**; the full explanation is in the [release notes](./RELEASE_NOTES_v1.0.1.md). Prefer to build it yourself? See [Getting started](#getting-started).
+The installer is not code-signed, so Windows SmartScreen will warn you. Choose **More info → Run anyway**; the full explanation is in the [release notes](./RELEASE_NOTES_v1.0.2.md). Prefer to build it yourself? See [Getting started](#getting-started).
 
 **Behind the Great Firewall?** The source is mirrored to Gitee: **[gitee.com/zjjqy/open-pptspeaker](https://gitee.com/zjjqy/open-pptspeaker)** — clone from there when GitHub is slow. It is a read-only mirror that follows this repository automatically; installers are published on GitHub only.
 
