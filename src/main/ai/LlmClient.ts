@@ -156,7 +156,7 @@ export class LlmClient {
     if (context) {
       messages.push({
         role: 'system',
-        content: `以下是当前讲解场景的资料，回答用户问题时可参考：\n${context}`
+        content: t('prompt.contextWrap', { v: context })
       })
     }
     messages.push({ role: 'user', content: question })

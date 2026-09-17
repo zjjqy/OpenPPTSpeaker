@@ -61,23 +61,26 @@ export class ContextManager {
     const ctx = this.ctx
     const section = ctx?.deck.sections[ctx.currentIndex]
     const parts: string[] = []
-    parts.push(`【讲解对象】${ctx?.deck.title ?? ''}`)
-    if (ctx?.pageSummary) parts.push(`【页面结构】\n${ctx.pageSummary}`)
+    parts.push(t('ctx.deckTitle', { v: ctx?.deck.title ?? '' }))
+    if (ctx?.pageSummary) parts.push(t('ctx.pageSummary', { v: ctx.pageSummary }))
     if (ctx?.sectionText || section?.content) {
-      parts.push(`【当前区段内容】\n${ctx?.sectionText || section?.content || ''}`)
+      parts.push(t('ctx.sectionContent', { v: ctx?.sectionText || section?.content || '' }))
     }
     if (!ctx?.sectionText && !section?.content) {
       parts.push(t('ctx.noSection'))
     }
-    if (section?.prompt) parts.push(`【讲解要求】${section.prompt}`)
+    if (section?.prompt) parts.push(t('ctx.sectionPrompt', { v: section.prompt }))
     parts.push(
-      `【进度】正在讲解第 ${(ctx?.currentIndex ?? 0) + 1} / ${ctx?.deck.sections.length ?? 0} 区段。`
+      t('ctx.progress', {
+        i: (ctx?.currentIndex ?? 0) + 1,
+        n: ctx?.deck.sections.length ?? 0
+      })
     )
     if (ctx?.presented.length) {
-      parts.push(`【已讲完】${ctx.presented.join('、')}`)
+      parts.push(t('ctx.presented', { v: ctx.presented.join(t('list.sep')) }))
     }
     if (ctx?.focuses.length) {
-      parts.push(`【听众关注点】${ctx.focuses.join('；')}`)
+      parts.push(t('ctx.focuses', { v: ctx.focuses.join(t('list.semi')) }))
     }
 
     const messages: ContextMessage[] = [{ role: 'user', content: parts.join('\n').slice(0, 6000) }]
@@ -86,9 +89,13 @@ export class ContextManager {
     if (history.length) {
       messages.push({
         role: 'system',
-        content: `【与本区段相关的近期问答】\n${history
-          .map((h) => `${h.role === 'user' ? t('ctx.roleUser') : t('ctx.roleAssistant')}: ${h.content}`)
-          .join('\n')}`
+        content: t('ctx.recentQa', {
+          v: history
+            .map(
+              (h) => `${h.role === 'user' ? t('ctx.roleUser') : t('ctx.roleAssistant')}: ${h.content}`
+            )
+            .join('\n')
+        })
       })
     }
     messages.push({ role: 'user', content: userInstruction })

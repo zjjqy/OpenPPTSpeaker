@@ -1,5 +1,7 @@
 /** LLM Function Calling 工具定义 —— 讲解引擎的"手" */
 
+import { t } from '@shared/i18n'
+
 export interface ToolCall {
   name: string
   arguments: Record<string, unknown>
@@ -18,43 +20,61 @@ export const TourTool = {
   EndTour: 'end_tour'
 } as const
 
-export const TOUR_TOOLS = [
-  {
-    type: 'function',
-    function: {
-      name: TourTool.GoNext,
-      description: '进入下一区段/下一页。当前区段讲解完毕时调用。',
-      parameters: { type: 'object', properties: {}, required: [] }
-    }
-  },
-  {
-    type: 'function',
-    function: {
-      name: TourTool.GoPrev,
-      description: '返回上一区段/上一页。',
-      parameters: { type: 'object', properties: {}, required: [] }
-    }
-  },
-  {
-    type: 'function',
-    function: {
-      name: TourTool.AskUser,
-      description: '主动向听众提问，询问是否继续、是否有疑问。讲解关键节点或长段结束后调用。',
-      parameters: {
-        type: 'object',
-        properties: {
-          question: { type: 'string', description: '要问听众的问题' }
-        },
-        required: ['question']
+export interface TourToolDef {
+  type: 'function'
+  function: {
+    name: string
+    description: string
+    parameters: Record<string, unknown>
+  }
+}
+
+/**
+ * 工具定义。
+ *
+ * 做成函数而非常量：description 会随界面语言变化，而模型正是靠它判断何时调用哪个工具
+ * （英文界面配中文描述会明显降低选工具的准确率）。若在模块加载时求值，
+ * 语言会被冻结在 import 那一刻——那时用户配置甚至还没读完。
+ */
+export function tourTools(): TourToolDef[] {
+  return [
+    {
+      type: 'function',
+      function: {
+        name: TourTool.GoNext,
+        description: t('tool.goNext'),
+        parameters: { type: 'object', properties: {}, required: [] }
+      }
+    },
+    {
+      type: 'function',
+      function: {
+        name: TourTool.GoPrev,
+        description: t('tool.goPrev'),
+        parameters: { type: 'object', properties: {}, required: [] }
+      }
+    },
+    {
+      type: 'function',
+      function: {
+        name: TourTool.AskUser,
+        description: t('tool.askUser'),
+        parameters: {
+          type: 'object',
+          properties: {
+            question: { type: 'string', description: t('tool.askUserQuestion') }
+          },
+          required: ['question']
+        }
+      }
+    },
+    {
+      type: 'function',
+      function: {
+        name: TourTool.EndTour,
+        description: t('tool.endTour'),
+        parameters: { type: 'object', properties: {}, required: [] }
       }
     }
-  },
-  {
-    type: 'function',
-    function: {
-      name: TourTool.EndTour,
-      description: '全部区段讲解完成，或听众要求结束时调用。会做总结收尾。',
-      parameters: { type: 'object', properties: {}, required: [] }
-    }
-  }
-] as const
+  ]
+}

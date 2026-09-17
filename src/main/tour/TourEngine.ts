@@ -6,7 +6,7 @@ import { loadSlideDeck, loadLibrarySlideDeck } from './deckLoader'
 import { ContextManager } from './ContextManager'
 import { browserController } from '../browser/BrowserController'
 import { llmClient } from '../ai/LlmClient'
-import { TOUR_TOOLS, TourTool } from '../ai/tools'
+import { tourTools, TourTool } from '../ai/tools'
 import { speechSession } from '../speech/SpeechSession'
 import { windowManager } from '../windows/WindowManager'
 import { configStore } from '../config/ConfigStore'
@@ -17,20 +17,20 @@ import { getTtsEngine } from '../speech/TtsEngine'
 import { pptLibrary } from '../ppt/PptLibrary'
 import type { SpotlightRect } from '@shared/ppt'
 
-const PRESENT_SYSTEM = `你是"OpenPPTSpeaker"，一位专业的开源 AI 讲演助手，正在通过语音向听众实时讲解一份 PPT 演示。
-规则：
-1. 讲解口语化、亲切、自然，每段控制在 2~4 句话，适合语音朗读，不要使用 Markdown 符号。
-2. 聚光与翻页高亮由系统按讲稿自动处理，你只需专注讲解内容本身。
-3. 当前区段讲解完毕，调用 go_next 进入下一区段；若需回顾调用 go_prev。
-4. 在关键节点可调用 ask_user 主动询问听众是否有疑问，并根据回应继续讲解。
-5. 全部区段讲解完成时调用 end_tour 做总结。
-6. 只输出要念的讲解词本身，严禁输出任何解释、标题或注释。`
+/**
+ * 讲解 / 问答的系统提示词。
+ *
+ * 必须是函数而非常量：语言可在运行中切换，且这两段直接决定模型用什么语言输出。
+ * 若英文界面下这里仍写死中文指令，模型会照中文要求输出中文讲解，
+ * 而 TTS 用的是英文音色 —— 变成"英文音色朗读中文文本"。
+ */
+function presentSystem(): string {
+  return t('prompt.presentSystem')
+}
 
-const QNA_SYSTEM = `你是"OpenPPTSpeaker"，正在讲解过程中回答听众的问题或处理指令。
-规则：
-1. 依据【讲解上下文】作答，口语化，2~4 句话，不要用 Markdown。
-2. 若听众发出指令（如"下一页/上一页/重复一遍/停止/结束/继续"），调用相应工具（go_next/go_prev/end_tour），不要输出多余话术；若是要求重复，则复述刚才的重点内容。
-3. 完全无关的问题，礼貌说明并引导回当前主题。`
+function qnaSystem(): string {
+  return t('prompt.qnaSystem')
+}
 
 export class TourEngine {
   state: TourState = 'idle'
@@ -546,12 +546,12 @@ export class TourEngine {
     while (!done && !this.stopRequested && guard < 6) {
       guard++
       const resp = await llmClient.chat({
-        system: PRESENT_SYSTEM,
+        system: presentSystem(),
         messages: this.ctx.buildMessages(
           t('tour.presentSection', { title: section.title }) +
           (this.ctx.get()?.history.length ? t('assistant.interruptedHint') : '')
         ),
-        tools: TOUR_TOOLS as unknown as unknown[],
+        tools: tourTools(),
         onDelta: () => {}
       })
 
@@ -585,7 +585,7 @@ export class TourEngine {
             if (answer && answer !== '__resume__') {
               this.ctx.addFocus(answer.slice(0, 40))
               this.ctx.addHistory('user', answer)
-              const reply = await llmClient.ask(answer, this.buildContextBrief(), QNA_SYSTEM)
+              const reply = await llmClient.ask(answer, this.buildContextBrief(), qnaSystem())
               if (reply) {
                 await this.speakWithSubtitles(reply, true)
                 this.ctx.addHistory('assistant', reply)
@@ -769,9 +769,9 @@ export class TourEngine {
     this.emitData({ kind: 'chat', role: 'user', text })
 
     const resp = await llmClient.chat({
-      system: QNA_SYSTEM + '\n\n' + appProfile(),
-      messages: this.ctx.buildMessages(`听众说：「${text}」\n请处理：若是指令则调用工具，若是问题则直接回答。`),
-      tools: TOUR_TOOLS as unknown as unknown[],
+      system: qnaSystem() + '\n\n' + appProfile(),
+      messages: this.ctx.buildMessages(t('prompt.listenersSay', { text })),
+      tools: tourTools(),
       onDelta: () => {}
     })
 
@@ -816,8 +816,8 @@ export class TourEngine {
     const deck = this.deck!
     this.setState('presenting')
     const resp = await llmClient.chat({
-      system: PRESENT_SYSTEM,
-      messages: this.ctx.buildMessages(`全部 ${deck.sections.length} 个区段已讲解完毕，请做一段简短的总结收尾（2~3 句话）。`),
+      system: presentSystem(),
+      messages: this.ctx.buildMessages(t('prompt.wrapUp', { n: deck.sections.length })),
       onDelta: () => {}
     })
     if (resp.text) {
@@ -869,11 +869,11 @@ export class TourEngine {
     if (!ctx) return ''
     const section = ctx.deck.sections[ctx.currentIndex]
     return [
-      `主题: ${ctx.deck.title}`,
-      `当前区段: ${section?.title ?? ''}`,
-      `区段内容: ${(ctx.sectionText || section?.content || '').slice(0, 1500)}`,
-      `已讲: ${ctx.presented.join('、')}`,
-      `【应用背景知识】\n${appProfile()}`
+      t('prompt.briefTopic', { v: ctx.deck.title }),
+      t('prompt.briefSection', { v: section?.title ?? '' }),
+      t('prompt.briefContent', { v: (ctx.sectionText || section?.content || '').slice(0, 1500) }),
+      t('prompt.briefPresented', { v: ctx.presented.join(t('list.sep')) }),
+      t('ctx.appProfile', { v: appProfile() })
     ].join('\n')
   }
 

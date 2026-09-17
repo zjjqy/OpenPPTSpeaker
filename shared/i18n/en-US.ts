@@ -351,6 +351,46 @@ export const enUS: Record<DictKey, string> = {
 - You do not know the deck beyond its script and page text; treat those as the source of truth.
 - Make no factual claims about anything outside this application, and politely steer unrelated questions back to the deck.`,
 
+  // ==================== Prompts (sent straight to the LLM, so they follow the language)====================
+  'prompt.presentSystem': `You are "OpenPPTSpeaker", a professional open-source AI presenting assistant, narrating a deck to an audience live over voice.
+Rules:
+1. Keep the narration conversational, warm and natural; 2–4 sentences per section, written to be read aloud; do not use Markdown.
+2. Spotlight and page navigation are handled automatically from the script — focus only on the narration itself.
+3. When the current section is finished, call go_next to move on; call go_prev to revisit.
+4. At key moments you may call ask_user to ask the audience whether they have questions, then continue based on their reply.
+5. When every section has been presented, call end_tour to wrap up.
+6. Output only the words to be spoken — never any explanation, heading or annotation.`,
+  'prompt.qnaSystem': `You are "OpenPPTSpeaker", answering audience questions or handling commands during a live presentation.
+Rules:
+1. Answer from the [presentation context], conversationally, in 2–4 sentences, without Markdown.
+2. If the listener gives a command (such as "next page / previous page / repeat that / stop / end / continue"), call the matching tool (go_next / go_prev / end_tour) instead of saying anything extra; if they ask you to repeat, restate the key point you just made.
+3. For a completely unrelated question, explain politely and steer back to the current topic.`,
+  'prompt.contextWrap': 'The following is background for the current presentation; use it when answering the listener:\n{v}',
+  'prompt.listenersSay': 'The listener said: “{text}”\nHandle it: call a tool if it is a command, otherwise answer directly.',
+  'prompt.wrapUp': 'All {n} sections have now been presented. Please give a short closing summary (2–3 sentences).',
+  'prompt.briefTopic': 'Topic: {v}',
+  'prompt.briefSection': 'Current section: {v}',
+  'prompt.briefContent': 'Section content: {v}',
+  'prompt.briefPresented': 'Already presented: {v}',
+
+  // ==================== LLM tool descriptions (they affect how reliably tools are chosen)====================
+  'tool.goNext': 'Move to the next section/page. Call this once the current section has been fully presented.',
+  'tool.goPrev': 'Go back to the previous section/page.',
+  'tool.askUser': 'Ask the audience a question — whether to continue, or whether they have any questions. Call this at key moments or after a long section.',
+  'tool.askUserQuestion': 'The question to ask the audience',
+  'tool.endTour': 'Call this when every section has been presented, or when the audience asks to stop. Wraps up with a summary.',
+
+  // ==================== Presentation context labels ====================
+  'ctx.deckTitle': '[Subject] {v}',
+  'ctx.pageSummary': '[Page structure]\n{v}',
+  'ctx.sectionContent': '[Current section content]\n{v}',
+  'ctx.sectionPrompt': '[Narration requirements] {v}',
+  'ctx.progress': '[Progress] Presenting section {i} of {n}.',
+  'ctx.presented': '[Already presented] {v}',
+  'ctx.focuses': '[Audience interests] {v}',
+  'ctx.recentQa': '[Recent Q&A related to this section]\n{v}',
+  'ctx.appProfile': '[Application background]\n{v}',
+
   // ==================== Presentation flow status ====================
   'tour.noApiKey': 'No DashScope API key configured. Please add one in Settings.',
   'tour.connecting': 'Connecting to the speech service…',
@@ -383,6 +423,8 @@ export const enUS: Record<DictKey, string> = {
   'deck.builtinPathOnly': 'The built-in demo must use the default load path',
   'deck.noSlideImages': 'This deck has no slide images',
   'deck.scriptNotFound': 'Script file not found: {path}',
+  'deck.sectionTitle': '{name} — slide {n}',
+  'deck.sectionDesc': 'Slide {n}: {title}',
   'deck.slideTitle': 'Slide {n}',
 
   // ==================== Deck library and import ====================
@@ -435,6 +477,10 @@ export const enUS: Record<DictKey, string> = {
   // ==================== Speech engines ====================
   'tts.noApiKey': 'No DashScope API key configured',
   'tts.cosyvoiceTimeout': 'CosyVoice connection timed out (10s)',
+  'tts.edgeTimeout': 'Edge TTS connection timed out ({n}s)',
+  'tts.cosyvoiceConnectError': 'CosyVoice connection error: {msg}',
+  'tts.cosyvoiceSynthError': 'CosyVoice synthesis error: {code} {msg}',
+  'tts.edgeConnectError': 'Edge TTS connection error: {msg}',
   'tts.sambertFailed': 'Sambert synthesis failed ({status}): {msg}',
   'llm.requestFailed': 'LLM request failed ({status}): {msg}',
 

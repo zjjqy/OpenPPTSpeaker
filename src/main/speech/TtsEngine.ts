@@ -157,7 +157,7 @@ class CosyVoiceAdapter implements TtsEngine {
           resolve()
         })
         ws.on('error', (err) => {
-          fail(new Error(`CosyVoice 连接错误: ${err.message}`))
+          fail(new Error(t('tts.cosyvoiceConnectError', { msg: err.message })))
           reject(err)
         })
       }),
@@ -216,7 +216,10 @@ class CosyVoiceAdapter implements TtsEngine {
       } else if (ev === 'task-failed' || header.error_code) {
         fail(
           new Error(
-            `CosyVoice 合成错误: ${header.error_code ?? ''} ${header.error_message ?? ''}`.slice(0, 300)
+            t('tts.cosyvoiceSynthError', {
+              code: header.error_code ?? '',
+              msg: header.error_message ?? ''
+            }).slice(0, 300)
           )
         )
       }
@@ -511,12 +514,15 @@ class EdgeTtsAdapter implements TtsEngine {
           resolve()
         })
         ws.on('error', (err) => {
-          fail(new Error(`Edge TTS 连接错误: ${err.message}`))
+          fail(new Error(t('tts.edgeConnectError', { msg: err.message })))
           reject(err)
         })
       }),
       new Promise<never>((_resolve, reject) =>
-        setTimeout(() => reject(new Error(`Edge TTS 连接超时（${connectTimeoutMs / 1000}s）`)), connectTimeoutMs)
+        setTimeout(
+          () => reject(new Error(t('tts.edgeTimeout', { n: connectTimeoutMs / 1000 }))),
+          connectTimeoutMs
+        )
       )
     ])
 

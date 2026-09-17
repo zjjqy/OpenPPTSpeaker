@@ -75,13 +75,13 @@ export function loadSlideDeck(scriptFile?: string): TourDeck {
           .join('\n')
     return {
       id: `page-${s.slide}`,
-      title: s.title || `第 ${s.slide} 页`,
+      title: s.title || t('deck.slideTitle', { n: s.slide }),
       slide: s.slide,
       cssPath: s.cssPath,
       highlightText: s.highlightText,
       content: content || bodyModule.text,
       speech: speech.length ? speech : undefined,
-      description: `第 ${s.slide} 页：${s.title}`
+      description: t('deck.sectionDesc', { n: s.slide, title: s.title })
     }
   })
 
@@ -119,12 +119,12 @@ export function loadLibrarySlideDeck(deckId: string): TourDeck {
       : undefined
     sections.push({
       id: `page-${i}`,
-      title: s?.title || `第 ${i} 页`,
+      title: s?.title || t('deck.slideTitle', { n: i }),
       speech,
       content:
         texts[i - 1] ||
         (speech ?? []).map((x) => x.text).join(' ') ||
-        `${meta.name} 第 ${i} 页`,
+        t('deck.sectionTitle', { name: meta.name, n: i }),
       slide: i
     })
   }

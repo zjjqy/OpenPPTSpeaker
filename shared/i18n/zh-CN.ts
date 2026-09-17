@@ -349,6 +349,46 @@ export const zhCN = {
 - 不了解演示内容本身：讲解内容以当前演示的讲稿与页面文字为准。
 - 不提供本应用之外的事实性承诺；与演示无关的问题礼貌引导回主题。`,
 
+  // ==================== 提示词（直接发给大模型，必须随语言）====================
+  'prompt.presentSystem': `你是"OpenPPTSpeaker"，一位专业的开源 AI 讲演助手，正在通过语音向听众实时讲解一份 PPT 演示。
+规则：
+1. 讲解口语化、亲切、自然，每段控制在 2~4 句话，适合语音朗读，不要使用 Markdown 符号。
+2. 聚光与翻页高亮由系统按讲稿自动处理，你只需专注讲解内容本身。
+3. 当前区段讲解完毕，调用 go_next 进入下一区段；若需回顾调用 go_prev。
+4. 在关键节点可调用 ask_user 主动询问听众是否有疑问，并根据回应继续讲解。
+5. 全部区段讲解完成时调用 end_tour 做总结。
+6. 只输出要念的讲解词本身，严禁输出任何解释、标题或注释。`,
+  'prompt.qnaSystem': `你是"OpenPPTSpeaker"，正在讲解过程中回答听众的问题或处理指令。
+规则：
+1. 依据【讲解上下文】作答，口语化，2~4 句话，不要用 Markdown。
+2. 若听众发出指令（如"下一页/上一页/重复一遍/停止/结束/继续"），调用相应工具（go_next/go_prev/end_tour），不要输出多余话术；若是要求重复，则复述刚才的重点内容。
+3. 完全无关的问题，礼貌说明并引导回当前主题。`,
+  'prompt.contextWrap': '以下是当前讲解场景的资料，回答用户问题时可参考：\n{v}',
+  'prompt.listenersSay': '听众说：「{text}」\n请处理：若是指令则调用工具，若是问题则直接回答。',
+  'prompt.wrapUp': '全部 {n} 个区段已讲解完毕，请做一段简短的总结收尾（2~3 句话）。',
+  'prompt.briefTopic': '主题: {v}',
+  'prompt.briefSection': '当前区段: {v}',
+  'prompt.briefContent': '区段内容: {v}',
+  'prompt.briefPresented': '已讲: {v}',
+
+  // ==================== LLM 工具描述（影响模型选工具的准确率）====================
+  'tool.goNext': '进入下一区段/下一页。当前区段讲解完毕时调用。',
+  'tool.goPrev': '返回上一区段/上一页。',
+  'tool.askUser': '主动向听众提问，询问是否继续、是否有疑问。讲解关键节点或长段结束后调用。',
+  'tool.askUserQuestion': '要问听众的问题',
+  'tool.endTour': '全部区段讲解完成，或听众要求结束时调用。会做总结收尾。',
+
+  // ==================== 讲解上下文标签 ====================
+  'ctx.deckTitle': '【讲解对象】{v}',
+  'ctx.pageSummary': '【页面结构】\n{v}',
+  'ctx.sectionContent': '【当前区段内容】\n{v}',
+  'ctx.sectionPrompt': '【讲解要求】{v}',
+  'ctx.progress': '【进度】正在讲解第 {i} / {n} 区段。',
+  'ctx.presented': '【已讲完】{v}',
+  'ctx.focuses': '【听众关注点】{v}',
+  'ctx.recentQa': '【与本区段相关的近期问答】\n{v}',
+  'ctx.appProfile': '【应用背景知识】\n{v}',
+
   // ==================== 讲解流程状态 ====================
   'tour.noApiKey': '未配置 DashScope API Key，请在设置中填写',
   'tour.connecting': '正在连接语音服务…',
@@ -381,6 +421,8 @@ export const zhCN = {
   'deck.builtinPathOnly': '内置演示请走默认加载路径',
   'deck.noSlideImages': '该 PPT 没有页面图片',
   'deck.scriptNotFound': '未找到讲稿文件: {path}',
+  'deck.sectionTitle': '{name} 第 {n} 页',
+  'deck.sectionDesc': '第 {n} 页：{title}',
   'deck.slideTitle': '第 {n} 页',
 
   // ==================== PPT 库与导入 ====================
@@ -433,6 +475,10 @@ export const zhCN = {
   // ==================== 语音引擎 ====================
   'tts.noApiKey': '未配置 DashScope API Key',
   'tts.cosyvoiceTimeout': 'CosyVoice 连接超时（10s）',
+  'tts.edgeTimeout': 'Edge TTS 连接超时（{n}s）',
+  'tts.cosyvoiceConnectError': 'CosyVoice 连接错误: {msg}',
+  'tts.cosyvoiceSynthError': 'CosyVoice 合成错误: {code} {msg}',
+  'tts.edgeConnectError': 'Edge TTS 连接错误: {msg}',
   'tts.sambertFailed': 'Sambert 合成失败 ({status}): {msg}',
   'llm.requestFailed': 'LLM 请求失败 ({status}): {msg}',
 

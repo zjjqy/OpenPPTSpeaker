@@ -352,7 +352,9 @@ export function registerIpc(): void {
       filters: [{ name: 'JSON', extensions: ['json'] }],
       properties: ['openFile']
     })
-    if (picked.canceled || picked.filePaths.length === 0) return { ok: false as const, error: '已取消' }
+    if (picked.canceled || picked.filePaths.length === 0) {
+      return { ok: false as const, cancelled: true, error: t('tip.cancelled') }
+    }
     try {
       const raw = JSON.parse(readFileSync(picked.filePaths[0], 'utf-8').replace(/^﻿/, '')) as DeckScriptV2
       if (raw?.version !== 2 || !Array.isArray(raw.slides)) {
