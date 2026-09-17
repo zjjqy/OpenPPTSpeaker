@@ -66,7 +66,12 @@ jobs:
           # 分支整体对齐；--prune 会删除 Gitee 上多出来的分支，使其与 GitHub 严格一致
           git push --prune gitee "+refs/remotes/origin/*:refs/heads/*"
 
-          # 标签整体对齐；--force 覆盖 Gitee 上可能已存在的同名标签
-          git push --force gitee --tags
+          # 标签整体对齐：--force 覆盖同名标签，--prune 删除 GitHub 上已不存在的标签。
+          # 通配 refspec 匹配不到任何标签时 git 会报错，故先判断有无标签。
+          if [ -n "$(git tag -l)" ]; then
+            git push --prune --force gitee "+refs/tags/*:refs/tags/*"
+          else
+            echo "本地没有任何标签，跳过标签同步"
+          fi
 
           echo "✅ 已同步到 https://gitee.com/${GITEE_USER}/${GITEE_REPO}"
