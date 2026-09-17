@@ -14,6 +14,9 @@ screenshots/
 # 运行时数据（演示库 / 讲稿 / 语音缓存，本地生成，不随仓库分发）
 data/
 
+# 个人文稿（宣传稿等，仅本地保留，不随仓库分发）
+docs/
+
 # TypeScript 增量构建缓存
 *.tsbuildinfo
 

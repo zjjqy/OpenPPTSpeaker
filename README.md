@@ -121,8 +121,8 @@ src/
 │  ├─ tour/              Presentation engine and context
 │  └─ windows/           Window management (orb, subtitle, settings, PPT)
 ├─ preload/              Renderer bridge (window.ops)
-├─ renderer/             Renderer process (Vue 3 + Pinia)
-└─ shared/               Types shared between processes
+└─ renderer/             Renderer process (Vue 3 + Pinia)
+shared/                  Types shared by main / preload / renderer (incl. i18n dictionaries)
 introduceProduction/     Built-in demo deck + control interface spec
 resources/phone/         Phone remote page
 ui/                      Static HTML UI design prototypes

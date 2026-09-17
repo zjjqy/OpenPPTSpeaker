@@ -121,8 +121,8 @@ src/
 │  ├─ tour/              讲解引擎与上下文
 │  └─ windows/           窗口管理（悬浮球、字幕、设置、PPT）
 ├─ preload/              渲染层桥接（window.ops）
-├─ renderer/             渲染层（Vue 3 + Pinia）
-└─ shared/               主进程与渲染层共享类型
+└─ renderer/             渲染层（Vue 3 + Pinia）
+shared/                  主进程 / preload / 渲染层共享类型（含 i18n 词典）
 introduceProduction/     内置示例演示 + 控制接口规范
 resources/phone/         手机遥控页面
 ui/                      静态 HTML UI 设计稿
