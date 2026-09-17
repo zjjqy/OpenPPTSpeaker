@@ -3,7 +3,7 @@
 [English](./README.md) | **简体中文**
 
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
-![Platform: Windows | macOS | Linux](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
+![Platform: Windows x64](https://img.shields.io/badge/platform-Windows%20x64-lightgrey.svg)
 
 > 开源的 AI PPT 讲演助手：导入演示文稿，由大模型撰写讲解词，用语音逐页讲出来，字幕与声音精确同步，并支持听众随时打断提问。
 

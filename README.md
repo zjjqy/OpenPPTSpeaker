@@ -3,7 +3,7 @@
 **English** | [简体中文](./README.zh-CN.md)
 
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
-![Platform: Windows | macOS | Linux](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
+![Platform: Windows x64](https://img.shields.io/badge/platform-Windows%20x64-lightgrey.svg)
 
 > An open-source AI presentation speaker: import your slides, let a large language model write the narration, and have it present aloud with subtitles synced to the audio — interruptible Q&A included.
 
