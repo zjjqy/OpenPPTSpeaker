@@ -172,3 +172,22 @@ export function edgeVoicesFor(lang: Lang): ReadonlyArray<{ value: string; labelK
 function normalizeLangSafe(lang: unknown): Lang {
   return lang === 'en-US' ? 'en-US' : 'zh-CN'
 }
+
+// ==================== 语音识别（ASR）====================
+
+/** ASR 语种提示取值（DashScope language_hints），仅 paraformer-realtime-v2 及更高版本生效 */
+export type AsrLangHint = 'zh' | 'en' | 'ja' | 'yue' | 'ko' | 'de' | 'fr' | 'ru'
+
+/**
+ * 界面语言 → ASR 语种提示（DashScope 的 language_hints）。
+ *
+ * 不传该参数时服务端默认 ['zh','en'] 并自行判断语种 —— 英文场景的问题正出在这里：
+ * 中英同时打开时，英文语音容易被往谐音中文上靠。
+ *
+ * 中文界面刻意保留 'en'：中文演讲里夹英文术语（feature、prompt 之类）很常见，
+ * 只留 'zh' 会让这些词识别失败。英文界面则只留 'en'，杜绝被识别成中文。
+ */
+export const LANG_TO_ASR_HINTS: Record<Lang, AsrLangHint[]> = {
+  'zh-CN': ['zh', 'en'],
+  'en-US': ['en']
+}

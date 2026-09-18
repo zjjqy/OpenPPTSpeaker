@@ -283,6 +283,15 @@ export class SpeechSession {
     }
   }
 
+  /**
+   * 语言切换后重置 ASR 连接。
+   * language_hints 只在 start() 时下发一次，会话还在运行就会一直用旧语种，
+   * 故这里主动断开，让下一次人声活动带着新语言重新建连。
+   */
+  refreshAsrLanguage(): void {
+    if (this.asr.isRunning) this.asr.stop()
+  }
+
   /** audioWorker 上行：PCM 帧 */
   onAudioFrame(buffer: Buffer): void {
     if (this.asr.isRunning) {

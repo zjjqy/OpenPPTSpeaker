@@ -3,6 +3,7 @@
 import WebSocket from 'ws'
 import { randomUUID } from 'node:crypto'
 import { configStore } from '../config/ConfigStore'
+import { LANG_TO_ASR_HINTS } from '../config/schema'
 import type { AsrEvent } from '@shared/speech'
 import { t } from '@shared/i18n'
 
@@ -52,7 +53,10 @@ export class AsrClient {
               format: 'pcm',
               sample_rate: 16000,
               enable_partial_results: true,
-              enable_intermediate_results: true
+              enable_intermediate_results: true,
+              // 语种提示跟随界面语言。不传时服务端默认 ['zh','en'] 并自行判断语种，
+              // 中英同时开着会让英文语音被往谐音中文上靠，故显式指定。
+              language_hints: LANG_TO_ASR_HINTS[configStore.get('language')]
             },
             input: {}
           }

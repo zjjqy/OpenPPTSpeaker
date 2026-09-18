@@ -37,7 +37,9 @@ function broadcastPptProgress(ev: PptProgressEvent): void {
  * 1. 同步主进程 i18n（托盘菜单、窗口标题、文件对话框标题都在主进程取词）
  * 2. Edge 音色跟随语言：当前音色不属于新语言时切到该语言的默认音色。
  *    否则会出现「英文界面 + 中文音色」这种念不出英文的组合。
- * 3. 重刷主进程持有的文案
+ * 3. 重置 ASR 连接：语种提示（language_hints）只在建连时下发，
+ *    不重连的话正在跑的识别会话会一直用旧语种。
+ * 4. 重刷主进程持有的文案
  *
  * 必须在 notifyConfigChanged() 之前调用，保证渲染层收到的是最终配置。
  */
@@ -48,6 +50,7 @@ function applyLanguageChange(): void {
   if (configStore.get('ttsEngine') === 'edge' && edgeVoiceLang(configStore.get('edgeVoice')) !== target) {
     configStore.set('edgeVoice', DEFAULT_EDGE_VOICE[target])
   }
+  speechSession.refreshAsrLanguage()
   windowManager.refreshLocale()
 }
 
