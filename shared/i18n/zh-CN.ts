@@ -217,6 +217,8 @@ export const zhCN = {
   'ppt.tabDecks': '演讲稿管理',
   'ppt.tabEditor': '讲稿编辑',
   'ppt.libraryTitle': '演讲稿库',
+  /** 没有缩略图时的占位文字（内置演示不生成缩略图） */
+  'ppt.thumbEmpty': '演讲稿',
   'ppt.libraryDesc': '导入 PDF / 图片为可讲解的演示，并用大模型生成逐句讲稿',
   'ppt.import': '导入演示',
   'ppt.importName': '演示名称',

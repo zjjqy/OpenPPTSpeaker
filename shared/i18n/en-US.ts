@@ -220,6 +220,8 @@ export const enUS: Record<DictKey, string> = {
   'ppt.tabDecks': 'Decks',
   'ppt.tabEditor': 'Script editor',
   'ppt.libraryTitle': 'Deck library',
+  /** Placeholder when a deck has no thumbnail (the built-in demo has none) */
+  'ppt.thumbEmpty': 'Deck',
   'ppt.libraryDesc': 'Import a PDF or page images as a presentable deck, then let the LLM write the narration sentence by sentence',
   'ppt.import': 'Import a deck',
   'ppt.importName': 'Deck name',

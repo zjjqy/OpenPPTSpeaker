@@ -65,7 +65,7 @@
       <div v-for="d in decks" :key="d.id" class="card deck" :class="{ active: d.id === activeId }">
         <div class="thumb">
           <img v-if="thumbs[d.id]" :src="thumbs[d.id]" alt="" />
-          <span v-else class="thumb-empty">PPT</span>
+          <span v-else class="thumb-empty">{{ t('ppt.thumbEmpty') }}</span>
         </div>
         <div class="d-name">
           <b>{{ d.name }}</b>
