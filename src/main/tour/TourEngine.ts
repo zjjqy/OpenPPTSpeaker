@@ -201,6 +201,13 @@ export class TourEngine {
       this.interruptAt = 0
       this.remotePaused = false
 
+      // 设置为「讲解中不显示」时，开讲第一时间就隐藏悬浮球。
+      // 等待它到「打开讲解窗口」时才收会出现肉眼可见的闪现（准备音频阶段可能很久）。
+      // 失败路径由 catch 里的 restoreOrb() 复原。
+      if (configStore.get('orbPosition') === 'none') {
+        windowManager.hideOrbForTour()
+      }
+
       // 开讲前先把全部讲解词预合成完（已缓存的页秒过）：
       // 保证每页音频就绪、字幕逐句精确同步，避免边讲边合成的时序问题
       const preloadable = deck.sections.filter((s) => s.speech && s.speech.length > 0)

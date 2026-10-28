@@ -456,6 +456,19 @@ export class WindowManager {
     }
   }
 
+  /**
+   * 讲解开始前立刻隐藏悬浮球（供「讲解中不显示」场景在开讲第一时间调用）。
+   * 与 applyOrbDock 的区别：不要求已进入迷你态，也不改窗口位置。
+   * 置 orbHiddenBySetting，讲解结束后 restoreOrb 会把球重新显示出来。
+   */
+  hideOrbForTour(): void {
+    const win = this.orbWindow
+    if (!win || win.isDestroyed()) return
+    console.log(`[Orb] 开讲前隐藏: visible=${win.isVisible()}`)
+    this.orbHiddenBySetting = true
+    if (win.isVisible()) win.hide()
+  }
+
   // ==================== 悬浮球模式切换 ====================
   /** 进入迷你讲解模式（球体缩小并停靠到设定位置，字幕激活） */
   minimizeOrb(): void {
@@ -478,21 +491,35 @@ export class WindowManager {
       if (shouldHide && w.isVisible()) w.hide()
     }, 600)
     // 防御：setAlwaysOnTop 对 transparent+frameless 窗口偶发不生效（DWM 已知问题），
-    // 主动把悬浮球/字幕提到当前 z-order 顶层，并延迟补一次等 DWM 稳定
-    try {
-      this.orbWindow.moveTop()
-      this.subtitleWindow?.moveTop()
-    } catch {
-      /* ignore */
-    }
-    setTimeout(() => {
+    // 主动把悬浮球/字幕提到当前 z-order 顶层，并延迟补一次等 DWM 稳定。
+    // 注意：只在球可见时才提层 —— 对刚 hide() 的窗口调 moveTop() 在 Windows 上
+    // 可能把它顶回来，表现为「设置了讲解中不显示却闪现一下」。
+    const raiseOrb = (): void => {
       try {
-        this.orbWindow?.moveTop()
+        if (this.orbWindow?.isVisible()) this.orbWindow.moveTop()
         this.subtitleWindow?.moveTop()
       } catch {
         /* ignore */
       }
-    }, 300)
+    }
+    raiseOrb()
+    setTimeout(raiseOrb, 300)
+
+    // 诊断：开讲后 2 秒内每 100ms 采样一次可见性，捕捉瞬时闪现
+    let tick = 0
+    const probe = setInterval(() => {
+      const w = this.orbWindow
+      tick++
+      if (!w || w.isDestroyed() || tick > 20) {
+        clearInterval(probe)
+        return
+      }
+      if (w.isVisible()) {
+        console.log(
+          `[Orb] 闪现采样 t=${tick * 100}ms visible=true minimized=${this.orbMinimized} pos=${this.orbPosition}`
+        )
+      }
+    }, 100)
     this.orbWindow.webContents.send(IPC.Window.OrbModeChanged, true)
     this.showSubtitle()
   }
