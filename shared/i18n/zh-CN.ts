@@ -25,7 +25,7 @@ export const zhCN = {
 
   // ==================== 窗口标题 ====================
   'window.settings': 'OpenPPTSpeaker - 设置',
-  'window.ppt': 'OpenPPTSpeaker - PPT 管理',
+  'window.ppt': 'OpenPPTSpeaker - 演讲稿管理',
 
   // ==================== 自绘标题栏的窗口按钮 ====================
   'win.minimize': '最小化',
@@ -36,7 +36,7 @@ export const zhCN = {
   // ==================== 系统托盘 ====================
   'tray.toggleOrb': '显示/隐藏悬浮球',
   'tray.settings': '设置',
-  'tray.ppt': 'PPT 管理',
+  'tray.ppt': '演讲稿管理',
   'tray.quit': '退出应用',
 
   // ==================== 设置：导航 ====================
@@ -178,7 +178,7 @@ export const zhCN = {
 
   // ==================== 悬浮球 ====================
   'orb.header': 'OpenPPTSpeaker 语音讲解',
-  'orb.tipPpt': 'PPT 库 / 讲稿编辑',
+  'orb.tipPpt': '演讲稿库 / 讲稿编辑',
   'orb.tipSettings': '设置',
   'orb.tipMinimize': '收起到托盘',
   'orb.tipMinimizeDisabled': '讲解中，暂不能收起',
@@ -189,15 +189,15 @@ export const zhCN = {
   'orb.pause': '暂停',
   'orb.resume': '继续',
   'orb.end': '结束讲解',
-  'orb.pptLibrary': 'PPT 库',
+  'orb.pptLibrary': '演讲稿库',
   'orb.noApiKey': '未配置 API Key，点击设置',
   'orb.chooseDeck': '选择讲解内容',
   'orb.current': ' · 当前',
   'orb.builtin': '内置演示',
   'orb.slides': '{n} 页',
   'orb.noScript': ' · 无讲稿（将实时生成）',
-  'orb.emptyDecks': '还没有导入的 PPT',
-  'orb.emptyDecksHint': '点击「PPT 库」按钮导入',
+  'orb.emptyDecks': '还没有导入的演讲稿',
+  'orb.emptyDecksHint': '点击「演讲稿库」按钮导入',
   'orb.captionIdle': '说出唤醒词，或点击「开始讲解」',
 
   // 讲解状态
@@ -211,12 +211,12 @@ export const zhCN = {
   'status.wakeup': '已唤醒',
   'status.idle': '待命中',
 
-  // ==================== PPT 库 / 讲稿编辑 ====================
-  'ppt.subtitle': 'PPT 库 · 讲稿编辑',
+  // ==================== 演讲稿库 / 讲稿编辑 ====================
+  'ppt.subtitle': '演讲稿库 · 讲稿编辑',
   'ppt.subtitleEditor': '演讲稿编辑',
-  'ppt.tabDecks': 'PPT 管理',
+  'ppt.tabDecks': '演讲稿管理',
   'ppt.tabEditor': '讲稿编辑',
-  'ppt.libraryTitle': 'PPT 库',
+  'ppt.libraryTitle': '演讲稿库',
   'ppt.libraryDesc': '导入 PDF / 图片为可讲解的演示，并用大模型生成逐句讲稿',
   'ppt.import': '导入演示',
   'ppt.importName': '演示名称',
@@ -431,19 +431,19 @@ export const zhCN = {
   // ==================== 演示加载 ====================
   'deck.noSlides': '演讲稿.json 中没有幻灯片数据',
   'deck.defaultTitle': '产品介绍',
-  'deck.defaultDesc': 'PPT 讲演',
+  'deck.defaultDesc': '演讲稿演示',
   'deck.builtinPathOnly': '内置演示请走默认加载路径',
-  'deck.noSlideImages': '该 PPT 没有页面图片',
+  'deck.noSlideImages': '该演讲稿没有页面图片',
   'deck.scriptNotFound': '未找到讲稿文件: {path}',
   'deck.sectionTitle': '{name} 第 {n} 页',
   'deck.sectionDesc': '第 {n} 页：{title}',
   'deck.slideTitle': '第 {n} 页',
 
-  // ==================== PPT 库与导入 ====================
+  // ==================== 演讲稿库与导入 ====================
   'ppt.builtinDemoName': '内置演示（产品介绍）',
   'ppt.untitledDeck': '未命名演示',
   'ppt.imageDeck': '图片演示',
-  'ppt.deckNotFound': 'PPT 不存在: {id}',
+  'ppt.deckNotFound': '演讲稿不存在: {id}',
   'ppt.builtinNoRename': '内置演示不可重命名',
   'ppt.builtinNoDelete': '内置演示不可删除',
   'ppt.builtinNoExport': '内置演示暂不支持视频导出',
@@ -511,7 +511,7 @@ export const zhCN = {
   'dlg.mp4': 'MP4 视频',
   'err.scriptFormat': '演讲稿格式不正确（需要 version: 2）',
   'err.scriptFormatFull': '演讲稿格式不正确（需要 version: 2 的新格式，含 slides 数组）',
-  'err.deckMissing': 'PPT 不存在',
+  'err.deckMissing': '演讲稿不存在',
   'progress.convert': '转换页面 {done}/{total}…',
   'progress.importImages': '导入图片 {done}/{total}…',
 
