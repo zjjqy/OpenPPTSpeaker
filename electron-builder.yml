@@ -26,10 +26,6 @@
       "from": "introduceProduction",
       "to": "introduceProduction",
       "filter": ["**/*", "!**/*.bak*"]
-    },
-    {
-      "from": "data/tts-cache",
-      "to": "tts-cache-seed"
     }
   ],
   "win": {

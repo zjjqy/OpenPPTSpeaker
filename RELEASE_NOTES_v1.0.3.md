@@ -1,4 +1,4 @@
-# OpenPPTSpeaker v1.0.2
+# OpenPPTSpeaker v1.0.3
 
 **English** | [简体中文](#简体中文)
 
@@ -6,27 +6,26 @@
 
 ---
 
-## What's new in 1.0.2
+## What's new in 1.0.3
 
-**The installer is 20% smaller — 115 MB down to 92 MB.** No feature was touched: the package was simply carrying the same code twice.
+Four user-visible fixes. If you are on 1.0.2 and audio or the settings page misbehaved, this is the release you want.
 
-- **The whole renderer stack was shipped twice.** `pdfjs-dist`, `vue` and `@vue` are bundled into `out/renderer` by Vite at build time, so the copies electron-builder was *also* placing in `app.asar` could never be reached. Excluded: ~48 MB.
-- **`@napi-rs/canvas` was dead weight.** It is an optional dependency of `pdfjs-dist`, used only when pdf.js renders through a Node canvas. The renderer draws to the DOM, so that 36 MB platform binary was never loaded.
-- **55 Electron locale packs shipped; 2 are usable.** The interface speaks `en-US` and `zh-CN` only. The other 53 are gone.
-
-Why bother about size? Because Gitee caps a release attachment at **100 MB**, so a 115 MB installer cannot be uploaded there at all — not by automation, and not by hand either.
+- **Edge TTS produced no sound at all.** Microsoft replaced the `Sec-MS-GEC` token with a v2 scheme: the hashed input is now prefixed with a 57-byte copyright line, the output became `<CS64 checksum>-<SHA-256>`, and the version string moved from `1-` to `2-`. The old code matched none of it, so every request came back 403. Both the checksum and the prefix are implemented now, verified against a live synthesis (101 handshake, 23 KB of MP3 returned).
+- **The switches in Settings could not be clicked.** The `<input>` and the decorative `<i>` pill filled the same box, and the pill was painted on top — so every click landed on an element with no handler. The pill is now `pointer-events: none`. (The one switch in the deck library kept working only because it happened to sit inside a `<label>`, which forwards clicks.)
+- **English presentations were transcribed as Chinese.** `paraformer-realtime-v2` does support English — the real problem was that `language_hints` was never sent, so the service kept its default `["zh","en"]` and pulled English speech toward Chinese homophones. It now follows the interface language: `["zh","en"]` for Chinese (English technical terms stay recognisable), `["en"]` for English.
+- **The orb flashed over the presentation when "hidden while presenting" was set.** Two causes: the orb was only tucked away *after* the deck window had already opened, and `moveTop()` — a native window call — brings a hidden window back on Windows without firing a `show` event. The orb is now hidden before the deck opens, and every `moveTop()` goes through a helper that skips invisible windows.
 
 Also in this release:
 
-- **The source is now mirrored to Gitee**: [gitee.com/zjjqy/open-pptspeaker](https://gitee.com/zjjqy/open-pptspeaker), updated automatically on every push and tag.
-- The five usability fixes from 1.0.1 are unchanged. Upgrading straight from 1.0.0? See the [1.0.1 notes](https://github.com/zjjqy/OpenPPTSpeaker/releases/tag/v1.0.1).
+- **The installer no longer bundles a pre-synthesized speech cache.** `data/tts-cache` is a developer machine's runtime cache and had grown to 40 MB — it pushed the installer past Gitee's 100 MB attachment limit, and it would have shipped a developer's own narration audio inside a public installer. The built-in demo now synthesizes on first play.
+- `scripts/edge-tts-probe.cjs` — a maintenance script that checks Edge TTS end to end (handshake plus real audio). It is not packaged with the app.
 
 ## Download
 
 | File | Size | What it is |
 | --- | --- | --- |
-| `OpenPPTSpeaker-1.0.2-setup.exe` | ~92 MB | Windows installer (x64), NSIS, choose your own install directory |
-| `OpenPPTSpeaker-1.0.2-setup.exe.blockmap` | ~100 KB | Delta-update index, only needed by auto-update clients |
+| `OpenPPTSpeaker-1.0.3-setup.exe` | ~88 MB | Windows installer (x64), NSIS, choose your own install directory |
+| `OpenPPTSpeaker-1.0.3-setup.exe.blockmap` | ~100 KB | Delta-update index, only needed by auto-update clients |
 
 ## ⚠️ Read this before installing
 
@@ -93,27 +92,26 @@ Requires Node.js >= 18.
 
 > 开源的 AI PPT 讲演助手：导入演示文稿，由大模型撰写讲解词，用语音逐页讲出来，字幕与声音精确同步，并支持听众随时打断提问。
 
-## 1.0.2 更新内容
+## 1.0.3 更新内容
 
-**安装包缩小 20%：115 MB → 92 MB。** 功能一行没改，纯粹是包里把同一份代码装了两遍。
+四个用户可感知的修复。如果你在 1.0.2 上遇到没声音、开关点不动，这一版就是需要升级的。
 
-- **整个渲染层依赖被打包了两次。** `pdfjs-dist`、`vue`、`@vue` 在构建时已被 Vite 打进 `out/renderer`，而 electron-builder 又在 `app.asar` 里放了一份 —— 后者永远不会被加载。排除后省下约 48 MB。
-- **`@napi-rs/canvas` 是死重量。** 它是 `pdfjs-dist` 的可选依赖，只在 pdf.js 通过 Node canvas 渲染时才用到；渲染层画在 DOM 上，那 36 MB 的平台二进制从未被加载。
-- **55 个 Electron 语言包里只有 2 个有用。** 界面只支持 `en-US` 和 `zh-CN`，其余 53 个已移除。
-
-为什么要折腾体积？因为 Gitee 的发行版附件上限是 **100 MB**，115 MB 的安装包**根本传不上去** —— 自动化不行，你手动拖文件也不行。
+- **Edge TTS 完全合成不出音频。** 微软把 `Sec-MS-GEC` 令牌换成了 v2 方案：哈希输入前面要拼 57 字节版权声明，输出变成 `<CS64 校验和>-<SHA-256>`，版本号前缀从 `1-` 改成 `2-`。旧代码一样都不符合，所以每个请求都返 403。现已实现校验和与前缀，并用真实合成验证（101 握手、收到 23 KB MP3）。
+- **设置里的开关全部点不动。** `<input>` 和装饰用的 `<i>` 胶囊完全重合，而胶囊绘制在上层 —— 点击全落在没有事件处理的元素上。现在胶囊是 `pointer-events: none`。（PPT 库里那个开关能用只是因为它恰好被 `<label>` 包着，label 会把点击转发给内部控件。）
+- **英文讲解被识别成中文。** `paraformer-realtime-v2` 本身支持英文，真正的问题是从来没传 `language_hints`，服务端一直用默认的 `["zh","en"]`，于是英文语音被往谐音中文上靠。现在该参数跟随界面语言：中文用 `["zh","en"]`（保留英文术语的可识别性），英文用 `["en"]`。
+- **设置「讲解中不显示」后，悬浮球仍会在演讲界面出现时闪一下。** 两个原因：一是悬浮球要等演讲窗口打开之后才收起；二是 `moveTop()` 这个原生窗口调用在 Windows 上会把已隐藏的窗口重新显示出来，且不触发 `show` 事件。现在打开演讲窗口前就隐藏，且所有 `moveTop()` 统一走一个会跳过不可见窗口的辅助方法。
 
 本次同时包含：
 
-- **源码已镜像到 Gitee**：[gitee.com/zjjqy/open-pptspeaker](https://gitee.com/zjjqy/open-pptspeaker)，每次 push 与打标签都会自动同步。
-- 1.0.1 的五个易用性修复保持不变；如果你是从 1.0.0 直接升级，细节见 [1.0.1 版本说明](https://github.com/zjjqy/OpenPPTSpeaker/releases/tag/v1.0.1)。
+- **安装包不再携带预合成的语音缓存。** `data/tts-cache` 是开发机上的运行时缓存，已涨到 40 MB —— 既把安装包顶出了 Gitee 的 100 MB 附件上限，也等于把开发者本机演示过的讲解音频打进公开安装包。内置演示现在首次播放时现合成。
+- `scripts/edge-tts-probe.cjs` —— 端到端检查 Edge TTS 的维护脚本（握手 + 真实音频），不会打进安装包。
 
 ## 下载
 
 | 文件 | 大小 | 说明 |
 | --- | --- | --- |
-| `OpenPPTSpeaker-1.0.2-setup.exe` | 约 92 MB | Windows 安装包（x64），NSIS，可自选安装目录 |
-| `OpenPPTSpeaker-1.0.2-setup.exe.blockmap` | 约 100 KB | 增量更新索引，仅自动更新客户端需要 |
+| `OpenPPTSpeaker-1.0.3-setup.exe` | 约 88 MB | Windows 安装包（x64），NSIS，可自选安装目录 |
+| `OpenPPTSpeaker-1.0.3-setup.exe.blockmap` | 约 100 KB | 增量更新索引，仅自动更新客户端需要 |
 
 ## ⚠️ 安装前必看
 

@@ -106,13 +106,7 @@ export class WindowManager {
     // 硬约束：讲解中 + 设置为「不显示」时，任何来源的显示请求都立即撤销。
     // 只靠各调用方自觉会漏（托盘切换、崩溃重载后的恢复、手机遥控等路径）。
     this.orbWindow.on('show', () => {
-      console.log(
-        `[Orb] show 事件: minimized=${this.orbMinimized} pos=${this.orbPosition}`
-      )
-      if (this.orbMinimized && this.orbPosition === 'none') {
-        console.log('[Orb] 讲解中且设置为不显示 → 立即撤销显示')
-        this.orbWindow?.hide()
-      }
+      if (this.orbMinimized && this.orbPosition === 'none') this.orbWindow?.hide()
     })
 
     // 渲染层重载（崩溃自愈 / 手动 reload）后页面状态会清零，而主进程仍记着迷你态。
@@ -436,9 +430,6 @@ export class WindowManager {
     // 'none' 下窗口仍按右下角摆放（讲解结束恢复显示时的位置），只是讲解期间隐藏
     win.setBounds(this.orbDockBounds(pos === 'none' ? 'bottom-right' : pos))
     if (pos === 'none') {
-      console.log(
-        `[Orb] applyOrbDock → 不显示: minimized=${this.orbMinimized} visible=${win.isVisible()}`
-      )
       if (win.isVisible()) {
         win.hide()
         this.orbHiddenBySetting = true
@@ -478,7 +469,6 @@ export class WindowManager {
   hideOrbForTour(): void {
     const win = this.orbWindow
     if (!win || win.isDestroyed()) return
-    console.log(`[Orb] 开讲前隐藏: visible=${win.isVisible()}`)
     this.orbHiddenBySetting = true
     if (win.isVisible()) win.hide()
   }
@@ -493,17 +483,6 @@ export class WindowManager {
     this.orbMinimized = true
     // 按设置停靠到指定角；'none' 则讲解期间隐藏悬浮球
     this.applyOrbDock()
-    // 兜底复核：Windows 上紧跟在后面的置顶 / 提层操作偶发会把刚隐藏的窗口顶回来。
-    // 延迟再确认一次；同时把判断依据打进日志，便于定位「设置了不显示却还在」的问题。
-    setTimeout(() => {
-      const w = this.orbWindow
-      if (!w || w.isDestroyed()) return
-      const shouldHide = this.orbMinimized && this.orbPosition === 'none'
-      console.log(
-        `[Orb] 迷你态复核: minimized=${this.orbMinimized} pos=${this.orbPosition} visible=${w.isVisible()} shouldHide=${shouldHide}`
-      )
-      if (shouldHide && w.isVisible()) w.hide()
-    }, 600)
     // 防御：setAlwaysOnTop 对 transparent+frameless 窗口偶发不生效（DWM 已知问题），
     // 主动把悬浮球/字幕提到当前 z-order 顶层，并延迟补一次等 DWM 稳定。
     // 注意：只在球可见时才提层 —— 对刚 hide() 的窗口调 moveTop() 在 Windows 上
@@ -519,21 +498,6 @@ export class WindowManager {
     raiseOrb()
     setTimeout(raiseOrb, 300)
 
-    // 诊断：开讲后 2 秒内每 100ms 采样一次可见性，捕捉瞬时闪现
-    let tick = 0
-    const probe = setInterval(() => {
-      const w = this.orbWindow
-      tick++
-      if (!w || w.isDestroyed() || tick > 20) {
-        clearInterval(probe)
-        return
-      }
-      if (w.isVisible()) {
-        console.log(
-          `[Orb] 闪现采样 t=${tick * 100}ms visible=true minimized=${this.orbMinimized} pos=${this.orbPosition}`
-        )
-      }
-    }, 100)
     this.orbWindow.webContents.send(IPC.Window.OrbModeChanged, true)
     this.showSubtitle()
   }
