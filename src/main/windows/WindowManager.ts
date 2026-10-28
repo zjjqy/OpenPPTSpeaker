@@ -275,11 +275,12 @@ export class WindowManager {
     // 用户点击 PPT 内容不会产生 focus（窗口本就是激活态），导致 moveTop 兜底常年不触发。
     // 因此这里在创建后立即挂载监听并主动聚焦。
     win.on('focus', () => {
-      console.log('window focus')
       if (!this.orbMinimized) return
+      // 必须走 raiseOrbWindow：设置为「讲解中不显示」时球是隐藏的，
+      // 而对隐藏窗口调 moveTop() 在 Windows 上会把它重新显示出来 ——
+      // 这正是「演讲界面进来时悬浮球闪一下」的直接原因。
+      this.raiseOrbWindow()
       try {
-        console.log('window focus moveTop')
-        this.orbWindow?.moveTop()
         this.subtitleWindow?.moveTop()
       } catch {
         /* ignore */
@@ -449,6 +450,19 @@ export class WindowManager {
       this.orbHiddenBySetting = false
       win.show()
     }
+    this.raiseOrbWindow()
+  }
+
+  /**
+   * 把悬浮球提到 z-order 顶层，**窗口不可见时直接跳过**。
+   *
+   * ⚠️ 统一走这里，不要直接调 orbWindow.moveTop()：
+   * moveTop() 是原生窗口操作，对已 hide() 的窗口调用在 Windows 上会让它重新出现，
+   * 且**不会触发 show 事件**（所以靠 show 事件守卫也拦不住）。
+   */
+  private raiseOrbWindow(): void {
+    const win = this.orbWindow
+    if (!win || win.isDestroyed() || !win.isVisible()) return
     try {
       win.moveTop()
     } catch {
@@ -495,8 +509,8 @@ export class WindowManager {
     // 注意：只在球可见时才提层 —— 对刚 hide() 的窗口调 moveTop() 在 Windows 上
     // 可能把它顶回来，表现为「设置了讲解中不显示却闪现一下」。
     const raiseOrb = (): void => {
+      this.raiseOrbWindow()
       try {
-        if (this.orbWindow?.isVisible()) this.orbWindow.moveTop()
         this.subtitleWindow?.moveTop()
       } catch {
         /* ignore */
