@@ -1,4 +1,4 @@
-# OpenPPTSpeaker v1.0.3
+# OpenPPTSpeaker v1.0.4
 
 **English** | [简体中文](#简体中文)
 
@@ -6,26 +6,25 @@
 
 ---
 
-## What's new in 1.0.3
+## What's new in 1.0.4
 
-Four user-visible fixes. If you are on 1.0.2 and audio or the settings page misbehaved, this is the release you want.
+Two new controls and two fixes — all of them in the script editor and the library window.
 
-- **Edge TTS produced no sound at all.** Microsoft replaced the `Sec-MS-GEC` token with a v2 scheme: the hashed input is now prefixed with a 57-byte copyright line, the output became `<CS64 checksum>-<SHA-256>`, and the version string moved from `1-` to `2-`. The old code matched none of it, so every request came back 403. Both the checksum and the prefix are implemented now, verified against a live synthesis (101 handshake, 23 KB of MP3 returned).
-- **The switches in Settings could not be clicked.** The `<input>` and the decorative `<i>` pill filled the same box, and the pill was painted on top — so every click landed on an element with no handler. The pill is now `pointer-events: none`. (The one switch in the deck library kept working only because it happened to sit inside a `<label>`, which forwards clicks.)
-- **English presentations were transcribed as Chinese.** `paraformer-realtime-v2` does support English — the real problem was that `language_hints` was never sent, so the service kept its default `["zh","en"]` and pulled English speech toward Chinese homophones. It now follows the interface language: `["zh","en"]` for Chinese (English technical terms stay recognisable), `["en"]` for English.
-- **The orb flashed over the presentation when "hidden while presenting" was set.** Two causes: the orb was only tucked away *after* the deck window had already opened, and `moveTop()` — a native window call — brings a hidden window back on Windows without firing a `show` event. The orb is now hidden before the deck opens, and every `moveTop()` goes through a helper that skips invisible windows.
+- **Generate a script from a prompt without leaving the editor.** The toolbar now has a **Prompt** panel: describe the tone, the audience and how much to say per slide, and the whole deck is regenerated in place, with per-page progress. Be aware that this rewrites the entire script — sentences, spotlights and subtitle styling are all reset, and there is no undo. The panel says so before you press the button.
+- **Subtitles can be turned off.** *Settings → General → Show subtitles* hides the subtitle bar without touching the audio or the spotlights. It takes effect immediately, including mid-presentation — switching it back on brings the current sentence straight back.
+- **A deleted deck's script no longer stays open.** The editor is kept alive with `v-show` while you switch tabs, so it held its own copy of the script in memory: delete the deck in the library, switch back, and the deleted script was still there — fully editable. The library now reports every change and the editor reconciles against it; if its deck is gone, it clears itself.
+- **"PPT library / PPT management" is now "script library / script management" throughout.** Window title, tray menu, the orb's button and tooltip, tabs, empty state and the "not found" errors all use the new wording (13 strings). Decks without a preview used to show a hard-coded `PPT` literal in the thumbnail; that placeholder is localised now too (an English UI had been showing it in Chinese).
 
 Also in this release:
 
-- **The installer no longer bundles a pre-synthesized speech cache.** `data/tts-cache` is a developer machine's runtime cache and had grown to 40 MB — it pushed the installer past Gitee's 100 MB attachment limit, and it would have shipped a developer's own narration audio inside a public installer. The built-in demo now synthesizes on first play.
-- `scripts/edge-tts-probe.cjs` — a maintenance script that checks Edge TTS end to end (handshake plus real audio). It is not packaged with the app.
+- Nothing else changed — 1.0.3's Edge TTS, settings-switch, ASR-language and orb-flash fixes are all still in effect.
 
 ## Download
 
 | File | Size | What it is |
 | --- | --- | --- |
-| `OpenPPTSpeaker-1.0.3-setup.exe` | ~88 MB | Windows installer (x64), NSIS, choose your own install directory |
-| `OpenPPTSpeaker-1.0.3-setup.exe.blockmap` | ~100 KB | Delta-update index, only needed by auto-update clients |
+| `OpenPPTSpeaker-1.0.4-setup.exe` | ~88 MB | Windows installer (x64), NSIS, choose your own install directory |
+| `OpenPPTSpeaker-1.0.4-setup.exe.blockmap` | ~100 KB | Delta-update index, only needed by auto-update clients |
 
 ## ⚠️ Read this before installing
 
@@ -92,26 +91,25 @@ Requires Node.js >= 18.
 
 > 开源的 AI PPT 讲演助手：导入演示文稿，由大模型撰写讲解词，用语音逐页讲出来，字幕与声音精确同步，并支持听众随时打断提问。
 
-## 1.0.3 更新内容
+## 1.0.4 更新内容
 
-四个用户可感知的修复。如果你在 1.0.2 上遇到没声音、开关点不动，这一版就是需要升级的。
+两个新控件、两个修复，都在讲稿编辑页与演讲稿库里。
 
-- **Edge TTS 完全合成不出音频。** 微软把 `Sec-MS-GEC` 令牌换成了 v2 方案：哈希输入前面要拼 57 字节版权声明，输出变成 `<CS64 校验和>-<SHA-256>`，版本号前缀从 `1-` 改成 `2-`。旧代码一样都不符合，所以每个请求都返 403。现已实现校验和与前缀，并用真实合成验证（101 握手、收到 23 KB MP3）。
-- **设置里的开关全部点不动。** `<input>` 和装饰用的 `<i>` 胶囊完全重合，而胶囊绘制在上层 —— 点击全落在没有事件处理的元素上。现在胶囊是 `pointer-events: none`。（PPT 库里那个开关能用只是因为它恰好被 `<label>` 包着，label 会把点击转发给内部控件。）
-- **英文讲解被识别成中文。** `paraformer-realtime-v2` 本身支持英文，真正的问题是从来没传 `language_hints`，服务端一直用默认的 `["zh","en"]`，于是英文语音被往谐音中文上靠。现在该参数跟随界面语言：中文用 `["zh","en"]`（保留英文术语的可识别性），英文用 `["en"]`。
-- **设置「讲解中不显示」后，悬浮球仍会在演讲界面出现时闪一下。** 两个原因：一是悬浮球要等演讲窗口打开之后才收起；二是 `moveTop()` 这个原生窗口调用在 Windows 上会把已隐藏的窗口重新显示出来，且不触发 `show` 事件。现在打开演讲窗口前就隐藏，且所有 `moveTop()` 统一走一个会跳过不可见窗口的辅助方法。
+- **在编辑页直接用提示词生成讲稿。** 工具栏新增「提示词生成」面板：填写语气、受众、每页讲多少句，整份讲稿就地重写，并显示逐页进度。注意这会**整份重写** —— 讲解句、聚光框与字幕样式都会被重置，且无法撤销；面板上在你点按钮之前就写明了这一点。
+- **字幕可以关掉了。** 设置 → 通用 → 显示字幕，关掉后不再显示字幕条，语音与聚光不受影响。**讲解中切换即时生效**，重新打开会立刻显示当前句。
+- **删除稿件后，编辑页不再残留已删除的讲稿。** 编辑页用 `v-show` 常驻，切页签不销毁，所以内存里一直留着那份讲稿：在库页删掉它、再切回来，内容还在，而且能继续编辑。现在库页的每次增删改都会通知编辑页对账，发现自己的稿件已不存在就清空。
+- **「PPT 库 / PPT 管理」统一改称「演讲稿库 / 演讲稿管理」。** 窗口标题、托盘菜单、悬浮球按钮与提示、页签、空状态、稿件不存在等错误提示全部更新（13 处）。没有缩略图的稿件原本在缩略图位置显示写死的 `PPT` 字面量，现在也走了 i18n —— 英文界面此前会显示中文。
 
 本次同时包含：
 
-- **安装包不再携带预合成的语音缓存。** `data/tts-cache` 是开发机上的运行时缓存，已涨到 40 MB —— 既把安装包顶出了 Gitee 的 100 MB 附件上限，也等于把开发者本机演示过的讲解音频打进公开安装包。内置演示现在首次播放时现合成。
-- `scripts/edge-tts-probe.cjs` —— 端到端检查 Edge TTS 的维护脚本（握手 + 真实音频），不会打进安装包。
+- 其余无改动 —— 1.0.3 的 Edge TTS、设置开关、ASR 语种、悬浮球闪现四项修复仍全部有效。
 
 ## 下载
 
 | 文件 | 大小 | 说明 |
 | --- | --- | --- |
-| `OpenPPTSpeaker-1.0.3-setup.exe` | 约 88 MB | Windows 安装包（x64），NSIS，可自选安装目录 |
-| `OpenPPTSpeaker-1.0.3-setup.exe.blockmap` | 约 100 KB | 增量更新索引，仅自动更新客户端需要 |
+| `OpenPPTSpeaker-1.0.4-setup.exe` | 约 88 MB | Windows 安装包（x64），NSIS，可自选安装目录 |
+| `OpenPPTSpeaker-1.0.4-setup.exe.blockmap` | 约 100 KB | 增量更新索引，仅自动更新客户端需要 |
 
 ## ⚠️ 安装前必看
 
