@@ -248,6 +248,12 @@ export class TourEngine {
 
       this.setState('opening', t('tour.openingDeck', { title: deck.title }))
 
+      // 先把悬浮球切到迷你态（设置为「不显示」则直接隐藏），再打开讲解窗口。
+      // 顺序很重要：反过来的话演讲界面会先出现，而悬浮球要等窗口加载完、
+      // 语音会话启动后（下面几行）才收起，视觉上就是「演讲界面进来了、
+      // 大面板还压在上面一会儿」。失败时 catch 里会 restoreOrb 复原。
+      windowManager.minimizeOrb()
+
       // 打开讲解目标
       await browserController.open({ file: deck.file })
       await browserController.showSlide(this.sectionIndex + 1)
@@ -258,7 +264,6 @@ export class TourEngine {
       if (configStore.get('enableWake')) {
         void speechSession.start()
       }
-      windowManager.minimizeOrb()
 
       // 下发当前讲稿的字幕样式给字幕窗口（无配置时窗口保持默认样式）
       if (deck.subtitleStyle) {
