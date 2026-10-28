@@ -352,17 +352,88 @@ function floatToInt16Pcm(samples: Float32Array): Buffer {
 }
 const EDGE_WS_URL = 'wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1'
 const EDGE_TOKEN = '6A5AA1D4EAFF4E9FB37E23D68491D6F4'
-// 微软会校验 Chromium 版本（过期版本返回 403）——跟随官方 edge-tts 仓库常量的最新值更新
-// （当前对应 rany2/edge-tts master: CHROMIUM_FULL_VERSION = 143.0.3650.75）
-const EDGE_VERSION = '1-143.0.3650.75'
+// 微软会校验这个版本号（过期就 403），跟随上游常量的最新值更新。
+// 注意 "2-" 前缀是 v2 令牌协议的一部分（旧协议是 "1-"），必须和下面的算法一起改。
+// 当前对应 msedge-tts@2.1.1: Sec-MS-GEC-Version = 2-143.0.3650.96
+const EDGE_VERSION = '2-143.0.3650.96'
 const EDGE_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0'
 
-/** Sec-MS-GEC 防伪令牌：SHA-256(ticks + TrustedClientToken)。ticks = (Unix秒 + 11644473600) × 10^7 转 100ns 后向下取整到 300 秒窗口。用 BigInt 保证大数精度（double 在 1.3e17 量级会丢低位） */
+/**
+ * Sec-MS-GEC v2 防伪令牌 = `<CS64 校验和>-<SHA-256>`。
+ *
+ * 2026-10 微软把算法从「SHA-256(ticks+token)」换成了 v2：
+ *   1. 哈希输入前面要拼一段 57 字节的版权声明；
+ *   2. 输出由 CS64（自定义位运算）与标准 SHA-256 拼成，用 '-' 连接。
+ * 旧算法只会返回后面那 64 位、且没有前缀，因此必然 403。
+ *
+ * 算法参照 msedge-tts@2.1.1（dist/SecMsGec.js）与 rany2/edge-tts（drm.py），
+ * 两者对同一时间戳产出相同结果。改动后请用 scripts/edge-tts-probe.cjs 抓 101 验证。
+ *
+ * ⚠️ 不要改回 BigInt：微软客户端用双精度算 ticks×10^7，这里必须落到同一个整数上，
+ *    否则令牌对不上（实测 v2 用 Number 即可，反而是当初 v1 的 BigInt 写法不通用）。
+ */
+const EDGE_COPYRIGHT = 'Copyright (C) Microsoft Corporation. All rights reserved.'
+
+const SWAP_FIRST_WORD = { word: 0xef0569fb, sum: 0x76f50f34, product: 0xc3efea97 }
+const SWAP_SECOND_WORD = { word: 0xc31713db, sum: 0x1881ce3c, product: 0x35bd1ec9 }
+const MIX_FIRST_WORD = [0xcf98b111, 0x87085b9f, 0x12ceb96d, 0x257e1d83] as const
+const MIX_SECOND_WORD = [0xa27416f5, 0xd38396ff, 0x7c932b89, 0xbfa49f69] as const
+
+/** 交换 32 位的高 16 位与低 16 位（v2 校验和的基本操作） */
+const swapHalves = (v: number): number => ((v << 16) | (v >>> 16)) >>> 0
+
+function swapTerm(
+  word: number,
+  key: number,
+  m: { word: number; sum: number; product: number }
+): number {
+  const sum = Math.imul(word, key) + Math.imul(swapHalves(word), m.word)
+  const product = Math.imul(swapHalves(sum), m.sum) >>> 0
+  return (Math.imul(swapHalves(product), m.product) + product) >>> 0
+}
+
+function swapAndMultiply(value: number, multipliers: readonly number[]): number {
+  let v = value
+  for (const m of multipliers) v = Math.imul(swapHalves(v), m) >>> 0
+  return v
+}
+
+/** CS64 校验和：按 8 字节一组混合消息，输出 8 字节；两个 key 取自 SHA-256 摘要的前 8 字节（强制奇数） */
+function edgeCs64(message: Buffer, digest: Buffer): Buffer {
+  const keyA = (digest.readUInt32LE(0) | 1) >>> 0
+  const keyB = (digest.readUInt32LE(4) | 1) >>> 0
+  // 消息按小端 32 位字成对读取，不足 8 字节时补零到整组
+  const padded = Buffer.alloc(Math.ceil(message.length / 8) * 8)
+  message.copy(padded)
+  let swapSum = 0
+  let lastSwap = 0
+  let mix = 0
+  let mixSum = 0
+  for (let off = 0; off < padded.length; off += 8) {
+    const w0 = padded.readUInt32LE(off)
+    const w1 = padded.readUInt32LE(off + 4)
+    lastSwap = swapTerm(w1, keyB, SWAP_SECOND_WORD)
+    swapSum = (swapSum + swapTerm(w0, keyA, SWAP_FIRST_WORD) + lastSwap) >>> 0
+    mix = swapAndMultiply(Math.imul((mix + w0) | 0, keyA), MIX_FIRST_WORD)
+    mixSum = (mixSum + mix) >>> 0
+    mix = swapAndMultiply(Math.imul((mix + w1) | 0, keyB), MIX_SECOND_WORD)
+    mixSum = (mixSum + mix) >>> 0
+  }
+  const out = Buffer.alloc(8)
+  out.writeUInt32LE((lastSwap ^ mix) >>> 0, 0)
+  out.writeUInt32LE((swapSum ^ mixSum) >>> 0, 4)
+  return out
+}
+
+/** ticks = (Unix秒 + 11644473600) 向下取整到 300 秒窗口，再 ×10^7 转成 100ns 单位 */
 function edgeSecMsGec(): string {
-  const ticks = BigInt(Math.floor(Date.now() / 1000) + 11644473600) * 10000000n
-  const rounded = ticks - (ticks % 3000000000n)
-  return createHash('sha256').update(`${rounded}${EDGE_TOKEN}`).digest('hex').toUpperCase()
+  const ticks = Math.floor(Date.now() / 1000) + 11644473600
+  const rounded = ticks - (ticks % 300)
+  const windowsTicks = rounded * 10000000
+  const message = Buffer.from(`${EDGE_COPYRIGHT}${windowsTicks}${EDGE_TOKEN}`, 'utf8')
+  const digest = createHash('sha256').update(message).digest()
+  return `${edgeCs64(message, digest).toString('hex').toUpperCase()}-${digest.toString('hex').toUpperCase()}`
 }
 
 const xmlEscape = (s: string): string =>
