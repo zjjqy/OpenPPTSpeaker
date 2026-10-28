@@ -202,6 +202,13 @@ textarea {
   background: var(--vd-line);
   border: 1px solid var(--vd-hairline);
   transition: background var(--vd-motion) var(--vd-ease);
+  /*
+   * 纯装饰层：必须让点击穿透。
+   * <i> 与 <input> 都是 absolute inset:0 完全重合，且 <i> 在 DOM 中靠后，
+   * 不设这一行时它永远盖在 checkbox 上、吃掉所有点击，开关就成了死的。
+   * （被 <label> 包着的写法能靠 label 的点击转发绕开，但 <span> 写法不行。）
+   */
+  pointer-events: none;
 }
 .switch i::after {
   content: '';
