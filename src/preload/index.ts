@@ -42,7 +42,8 @@ const api = {
     quit: (): void => ipcRenderer.send(IPC.Window.Quit),
     onOrbMinimized: (cb: (minimized: boolean) => void): void => {
       ipcRenderer.on(IPC.Window.OrbModeChanged, (_e, minimized: boolean) => cb(minimized))
-    }
+    },
+    isOrbMinimized: (): Promise<boolean> => ipcRenderer.invoke(IPC.Window.OrbModeGet)
   },
   /** 无边框窗口的自定义标题栏：作用于调用方所在窗口 */
   windowCtl: {

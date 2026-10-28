@@ -141,7 +141,9 @@ export function registerIpc(): void {
     if (tourEngine.state !== 'idle' && tourEngine.state !== 'ended') return
     windowManager.orbWindow?.hide()
   })
-  ipcMain.on(IPC.Window.OrbRestore, () => windowManager.restoreOrb())
+  // 走 showOrb：它带了「讲解中 + 设置为不显示」的守卫，避免恢复请求把球弹出来
+  ipcMain.on(IPC.Window.OrbRestore, () => windowManager.showOrb())
+  ipcMain.handle(IPC.Window.OrbModeGet, () => windowManager.orbMinimized)
   ipcMain.on(IPC.Window.OpenSettings, () => windowManager.openSettings())
   ipcMain.on(IPC.Window.OpenPpt, () => windowManager.openPptWindow())
   ipcMain.on(IPC.Window.Quit, () => {

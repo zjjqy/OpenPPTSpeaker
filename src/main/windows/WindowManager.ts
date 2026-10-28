@@ -103,6 +103,20 @@ export class WindowManager {
     this.orbWindow.on('show', () => this.onOrbVisibilityChanged?.(true))
     this.orbWindow.on('hide', () => this.onOrbVisibilityChanged?.(false))
 
+    // 硬约束：讲解中 + 设置为「不显示」时，任何来源的显示请求都立即撤销。
+    // 只靠各调用方自觉会漏（托盘切换、崩溃重载后的恢复、手机遥控等路径）。
+    this.orbWindow.on('show', () => {
+      if (this.orbMinimized && this.orbPosition === 'none') this.orbWindow?.hide()
+    })
+
+    // 渲染层重载（崩溃自愈 / 手动 reload）后页面状态会清零，而主进程仍记着迷你态。
+    // 补发一次并重新停靠，避免「窗口已缩成迷你尺寸、页面却渲染完整大面板」。
+    this.orbWindow.webContents.on('did-finish-load', () => {
+      if (!this.orbMinimized) return
+      this.orbWindow?.webContents.send(IPC.Window.OrbModeChanged, true)
+      this.applyOrbDock() // 'none' 会在这里重新隐藏
+    })
+
     this.orbWindow.webContents.on('render-process-gone', () => {
       console.error('[OPS·渲染崩溃] 2秒后重启悬浮球')
       setTimeout(() => {
@@ -596,11 +610,14 @@ export class WindowManager {
 
   private toggleOrbVisible(): void {
     if (!this.orbWindow || this.orbWindow.isDestroyed()) return
-    if (this.orbWindow.isVisible()) this.orbWindow.hide()
-    else {
-      this.orbWindow.show()
-      this.orbWindow.focus()
+    if (this.orbWindow.isVisible()) {
+      this.orbWindow.hide()
+      return
     }
+    // 讲解中 + 设置为「不显示」：托盘切换也不该把球弹出来
+    if (this.orbMinimized && this.orbPosition === 'none') return
+    this.orbWindow.show()
+    this.orbWindow.focus()
   }
 
   /** 显示悬浮球（语音唤醒等场景：托盘隐藏则唤出、迷你讲解态则恢复常态大球） */

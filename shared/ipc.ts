@@ -21,6 +21,11 @@ export const IPC = {
     Quit: 'window:quit',
     /** 悬浮球迷你/完整模式切换事件（主进程 → 渲染层） */
     OrbModeChanged: 'window:orb-mode-changed',
+    /**
+     * 查询当前是否处于迷你讲解态（invoke）。
+     * 事件是一次性推送，渲染进程崩溃重载后会错过，重载时用它校正。
+     */
+    OrbModeGet: 'window:orb-mode-get',
   },
   /**
    * 无边框窗口的自定义标题栏控制。

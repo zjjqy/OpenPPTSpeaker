@@ -227,6 +227,12 @@ onMounted(() => {
   window.ops.window.onOrbMinimized((m) => {
     mini.value = m
   })
+  // 事件只在状态变化时推一次；渲染进程崩溃自愈重载后会漏掉，
+  // 于是「窗口已缩成迷你尺寸、页面还是完整大面板」被裁掉一半。
+  // 这里主动对一次账，保证首帧渲染的就是正确形态。
+  void window.ops.window.isOrbMinimized().then((m) => {
+    mini.value = m
+  })
 })
 </script>
 
