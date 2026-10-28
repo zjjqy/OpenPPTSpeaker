@@ -60,6 +60,8 @@ export const zhCN = {
   'settings.closeOrb.title': '关闭悬浮球面板',
   'settings.closeOrb.desc': '点击收起到系统托盘，后台继续聆听唤醒词',
   'settings.closeOrb.chip': '托盘常驻',
+  'settings.subtitle.title': '显示字幕',
+  'settings.subtitle.desc': '讲解时在屏幕下方显示逐句字幕；关闭后只保留语音与聚光',
 
   // 悬浮球停靠位置
   'orb.topLeft': '左上',
@@ -211,6 +213,7 @@ export const zhCN = {
 
   // ==================== PPT 库 / 讲稿编辑 ====================
   'ppt.subtitle': 'PPT 库 · 讲稿编辑',
+  'ppt.subtitleEditor': '演讲稿编辑',
   'ppt.tabDecks': 'PPT 管理',
   'ppt.tabEditor': '讲稿编辑',
   'ppt.libraryTitle': 'PPT 库',
@@ -259,7 +262,7 @@ export const zhCN = {
   'ppt.sample3.label': '技术分享 · 突出重点',
 
   // ==================== 讲稿编辑器 ====================
-  'edit.selectDeck': '选择要编辑的 PPT…',
+  'edit.selectDeck': '选择要编辑的演讲稿…',
   'edit.subtitleStyle': '字幕样式',
   'edit.subtitleStyleTip': '整份讲稿统一的字幕样式',
   'edit.undo': '↶ 撤销',
@@ -307,7 +310,7 @@ export const zhCN = {
   'edit.secPosition': '位置',
   'edit.bottomPct': '距底部 {v}%',
   'edit.maxWidthPct': '最大宽度 {v}%',
-  'edit.chooseHint': '选择一个 PPT 开始编辑讲稿与聚光框。内置演示的讲稿请直接编辑 introduceProduction/演讲稿.json。',
+  'edit.chooseHint': '选择一个演讲稿开始编辑讲稿与聚光框。内置演示的讲稿请直接编辑 introduceProduction/演讲稿.json。',
   'edit.fontMsYahei': '微软雅黑',
   'edit.fontSimHei': '黑体',
   'edit.fontSimSun': '宋体',
@@ -316,6 +319,15 @@ export const zhCN = {
   'edit.errSave': '保存失败',
   'edit.errSaveDetail': '保存失败: {msg}',
   'edit.errImport': '导入失败',
+
+  // 讲稿编辑页：用提示词生成讲稿
+  'edit.gen.open': '提示词生成',
+  'edit.gen.title': '用提示词生成讲稿',
+  'edit.gen.desc': '留空则按页面内容默认生成；填写可指定语气、侧重与受众',
+  'edit.gen.placeholder': '例如：面向首次体验的听众，语气轻松口语化，每页讲 3~5 句，先讲结论再解释…',
+  'edit.gen.button': '生成讲稿',
+  'edit.gen.busy': '正在生成…',
+  'edit.gen.overwrite': '注意：生成会整份重写讲稿，现有讲解句、聚光框与字幕样式都会被重置，且无法撤销。',
 
   // ==================== 内部工作页（隐藏窗口）====================
   'video.errImageLoad': '图片加载失败',

@@ -525,9 +525,26 @@ export class WindowManager {
   }
 
   showSubtitle(): void {
+    // 用户在设置里关掉字幕后，任何"显示字幕"的调用都直接忽略（翻页恢复、遥控继续等）
+    if (!configStore.get('subtitleEnabled')) {
+      this.hideSubtitle()
+      return
+    }
     if (this.subtitleWindow && !this.subtitleWindow.isDestroyed()) {
       this.subtitleWindow.showInactive()
     }
+  }
+
+  /**
+   * 按【显示字幕】设置即时开关字幕（讲解中改设置立即生效）。
+   * 讲解中关掉 → 立刻隐藏；讲解中重新打开 → 立即显示当前句。
+   */
+  applySubtitleVisibility(): void {
+    if (!configStore.get('subtitleEnabled')) {
+      this.hideSubtitle()
+      return
+    }
+    if (this.orbMinimized) this.showSubtitle()
   }
 
   hideSubtitle(): void {

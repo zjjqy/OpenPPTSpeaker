@@ -15,6 +15,14 @@
         >
           {{ t('edit.subtitleStyle') }}
         </button>
+        <button
+          class="btn"
+          :class="{ primary: genOpen }"
+          :disabled="generating"
+          @click="genOpen = !genOpen"
+        >
+          {{ t('edit.gen.open') }}
+        </button>
         <button class="btn" :disabled="!canUndo" :title="t('edit.undoTip')" @click="undo">
           {{ t('edit.undo') }}
         </button>
@@ -27,6 +35,32 @@
       </template>
     </div>
     <p v-if="error" class="err">⚠ {{ error }}</p>
+
+    <!-- 提示词生成讲稿 -->
+    <div v-if="deckId && genOpen" class="gen-panel">
+      <div class="gen-head">
+        <b>{{ t('edit.gen.title') }}</b>
+        <span class="gen-hint">{{ t('edit.gen.desc') }}</span>
+      </div>
+      <textarea
+        v-model="genPrompt"
+        class="gen-input"
+        rows="3"
+        :placeholder="t('edit.gen.placeholder')"
+        :disabled="generating"
+      ></textarea>
+      <div class="gen-foot">
+        <button class="btn primary" :disabled="generating" @click="doGenerate">
+          {{ generating ? t('edit.gen.busy') : t('edit.gen.button') }}
+        </button>
+        <span class="gen-note">{{ t('edit.gen.overwrite') }}</span>
+      </div>
+      <div v-if="generating" class="gen-progress">
+        <span>{{ t('ppt.stage.script') }}</span>
+        <span v-if="genProgress" class="mono">{{ genProgress.done }} / {{ genProgress.total }}</span>
+        <div class="gen-bar"><span :style="{ width: genPct + '%' }"></span></div>
+      </div>
+    </div>
 
     <div v-if="deckId && script" class="workbench">
       <!-- 左：页缩略图 -->
@@ -248,7 +282,14 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue'
-import type { DeckScriptV2, PptDeckMeta, SpotlightRect, SpeechSentenceV2, SubtitleStyle } from '@shared/ppt'
+import type {
+  DeckScriptV2,
+  PptDeckMeta,
+  PptProgressEvent,
+  SpotlightRect,
+  SpeechSentenceV2,
+  SubtitleStyle
+} from '@shared/ppt'
 import { DEFAULT_SUBTITLE_STYLE } from '@shared/ppt'
 import { subtitleShellStyle, subtitleTextStyle, subtitleProgressStyle } from '../subtitle-style'
 import { initI18n, t } from '../i18n'
@@ -257,7 +298,7 @@ import { initI18n, t } from '../i18n'
 initI18n()
 
 /** 从 PPT 管理页跳转过来的目标 deck（跳转后自动选中并加载） */
-const props = defineProps<{ targetDeckId?: string }>()
+const props = defineProps<{ targetDeckId?: string; decksVersion?: number }>()
 const emit = defineEmits<{ (e: 'clear-target'): void }>()
 
 watch(
@@ -284,6 +325,17 @@ const stageRef = ref<HTMLElement | null>(null)
 const dirty = ref(false)
 const savedTip = ref(false)
 const error = ref('')
+
+// ---------- 提示词生成讲稿 ----------
+const genOpen = ref(false)
+const genPrompt = ref('')
+const generating = ref(false)
+const genProgress = ref<PptProgressEvent | null>(null)
+const genPct = computed(() => {
+  const p = genProgress.value
+  if (!p || !p.total) return 0
+  return Math.round((p.done / p.total) * 100)
+})
 
 const editableDecks = computed(() => decks.value.filter((d) => d.source !== 'builtin'))
 const currentSpeech = computed<SpeechSentenceV2[]>(() => {
@@ -482,7 +534,12 @@ async function refreshDecks(): Promise<void> {
 async function loadDeck(keepHistory = false): Promise<void> {
   if (!deckId.value) return
   error.value = ''
-  const r = await window.ops.pptLib.getScript(deckId.value)
+  // deck 已被删除时主进程可能抛错或返回空，两种都按"已删除"处理
+  const r = await window.ops.pptLib.getScript(deckId.value).catch(() => null)
+  if (!r || (!r.slideCount && !r.script)) {
+    clearEditing()
+    return
+  }
   if (r.script) {
     script.value = r.script
   } else {
@@ -651,10 +708,66 @@ async function doImportScript(): Promise<void> {
   await loadDeck(true)
 }
 
+/** 用提示词重新生成整份讲稿（走主进程同一套生成流程；覆盖文本，保留样式与聚光） */
+async function doGenerate(): Promise<void> {
+  if (!deckId.value || generating.value) return
+  generating.value = true
+  error.value = ''
+  genProgress.value = null
+  try {
+    const r = await window.ops.pptLib.genScript({
+      deckId: deckId.value,
+      prompt: genPrompt.value.trim()
+    })
+    if (!r.ok) {
+      error.value = r.error ?? t('ppt.errGen')
+      return
+    }
+    await loadDeck()
+  } finally {
+    generating.value = false
+    genProgress.value = null
+  }
+}
+
+/**
+ * 与 PPT 管理页对账。
+ * 本组件由 v-show 常驻（切页签不销毁），所以 deck 被删除后内存里还留着旧讲稿；
+ * 这里发现当前 deck 已不存在就清空编辑区，避免继续展示已删除的内容。
+ */
+async function syncDecks(): Promise<void> {
+  const r = await window.ops.pptLib.list()
+  decks.value = r.decks
+  if (deckId.value && !r.decks.some((d) => d.id === deckId.value)) clearEditing()
+}
+
+/** 清空当前编辑目标（deck 被删除 / 讲稿读取失败） */
+function clearEditing(): void {
+  deckId.value = ''
+  script.value = null
+  slideImage.value = ''
+  for (const k of Object.keys(thumbs)) delete thumbs[Number(k)]
+  undoStack.value = []
+  redoStack.value = []
+  dirty.value = false
+  genOpen.value = false
+  error.value = ''
+}
+
+// 管理页的增删改后同步，修复「删掉当前稿件后仍打开已删除讲稿」
+watch(
+  () => props.decksVersion,
+  () => void syncDecks()
+)
+
 onMounted(() => {
   void refreshDecks()
   observeStage()
   window.addEventListener('keydown', onHistoryKeydown)
+  // 生成进度由主进程广播，只在生成中且处于"生成讲稿"阶段时采用
+  window.ops.pptLib.onProgress((ev) => {
+    if (generating.value && ev.stage === 'script') genProgress.value = ev
+  })
 })
 
 onBeforeUnmount(() => {
@@ -1017,4 +1130,44 @@ select {
   opacity: 0.4;
   cursor: not-allowed;
 }
+/* ===== 提示词生成面板 ===== */
+.gen-panel {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--vd-line);
+  border-radius: 12px;
+  background: var(--vd-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gen-head { display: flex; flex-direction: column; gap: 2px; }
+.gen-head b { font-size: 13.5px; }
+.gen-hint { font-size: 12px; color: var(--vd-text-3); }
+.gen-input {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 9px 11px;
+  border: 1px solid var(--vd-line);
+  border-radius: 8px;
+  background: var(--vd-bg-2);
+  color: var(--vd-text-1);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.55;
+  outline: none;
+}
+.gen-input:focus { border-color: var(--vd-accent); }
+.gen-foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.gen-note { font-size: 12px; color: var(--vd-text-3); }
+.gen-progress { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--vd-text-2); }
+.gen-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--vd-line);
+  overflow: hidden;
+}
+.gen-bar span { display: block; height: 100%; background: var(--vd-accent); transition: width 0.2s; }
 </style>

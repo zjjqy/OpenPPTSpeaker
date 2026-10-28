@@ -131,7 +131,11 @@ import { initI18n, t } from '../i18n'
 // 在 setup 阶段同步应用启动语言（本组件由 PptApp 渲染，此处兜底即可）
 initI18n()
 
-const emit = defineEmits<{ (e: 'edit-script', deckId: string): void }>()
+const emit = defineEmits<{
+  (e: 'edit-script', deckId: string): void
+  /** 稿件增删改后通知外层，让讲稿编辑页对账（避免继续展示已删除的讲稿） */
+  (e: 'decks-changed'): void
+}>()
 
 const decks = ref<PptDeckMeta[]>([])
 const activeId = ref('')
@@ -178,6 +182,8 @@ async function refresh(): Promise<void> {
     if (d.source === 'builtin' || thumbs[d.id]) continue
     thumbs[d.id] = await window.ops.pptLib.slideImage({ deckId: d.id, slide: 1, thumb: true })
   }
+  // 导入 / 重命名 / 删除都会走 refresh，统一在这里通知编辑页同步
+  emit('decks-changed')
 }
 
 async function doImport(kind: 'pdf' | 'images'): Promise<void> {

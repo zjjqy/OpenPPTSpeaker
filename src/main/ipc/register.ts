@@ -65,6 +65,7 @@ export function registerIpc(): void {
     configStore.set(key as never, value as never)
     // 讲解中改悬浮球位置即时生效（仅需重新停放，不必等下次讲解）
     if (key === 'orbPosition') windowManager.applyOrbDock()
+    if (key === 'subtitleEnabled') windowManager.applySubtitleVisibility()
     if (key === 'language') applyLanguageChange()
     notifyConfigChanged()
     return configStore.getAll()
@@ -72,6 +73,7 @@ export function registerIpc(): void {
   ipcMain.handle(IPC.Config.SetMany, (_e, partial: Record<string, unknown>) => {
     configStore.setMany(partial as never)
     if ('orbPosition' in partial) windowManager.applyOrbDock()
+    if ('subtitleEnabled' in partial) windowManager.applySubtitleVisibility()
     if ('language' in partial) applyLanguageChange()
     notifyConfigChanged()
     return configStore.getAll()

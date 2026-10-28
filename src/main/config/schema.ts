@@ -70,6 +70,8 @@ export interface AppConfig {
   phoneHost: string
   /** 讲解期间悬浮球停靠位置（none = 讲解中不显示悬浮球） */
   orbPosition: OrbPosition
+  /** 讲解时是否显示字幕条 */
+  subtitleEnabled: boolean
   /** 界面主题：跟随系统 / 浅色 / 深色 */
   theme: ThemeMode
   /** 强调色档位（见 ACCENTS） */
@@ -97,6 +99,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   phonePort: 8123,
   phoneHost: '',
   orbPosition: 'bottom-right',
+  subtitleEnabled: true,
   theme: 'auto',
   accent: 'ocean'
 }

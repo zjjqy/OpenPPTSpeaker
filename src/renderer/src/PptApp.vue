@@ -1,7 +1,8 @@
 <template>
   <div class="ppt-app">
     <!-- 无边框窗口：品牌与页签统一收进自绘标题栏 -->
-    <TitleBar :subtitle="t('ppt.subtitle')">
+    <!-- 讲稿页不再出现「PPT」字样：标题随页签切换 -->
+    <TitleBar :subtitle="tab === 'editor' ? t('ppt.subtitleEditor') : t('ppt.subtitle')">
       <nav class="tabs">
         <button :class="{ on: tab === 'ppt' }" @click="tab = 'ppt'">{{ t('ppt.tabDecks') }}</button>
         <button :class="{ on: tab === 'editor' }" @click="tab = 'editor'">{{ t('ppt.tabEditor') }}</button>
@@ -9,10 +10,14 @@
     </TitleBar>
 
     <div v-show="tab === 'ppt'" class="panel">
-      <PptManager @edit-script="onEditScript" />
+      <PptManager @edit-script="onEditScript" @decks-changed="decksVersion++" />
     </div>
     <div v-show="tab === 'editor'" class="panel editor-panel">
-      <ScriptEditor :target-deck-id="editingDeckId" @clear-target="editingDeckId = ''" />
+      <ScriptEditor
+        :target-deck-id="editingDeckId"
+        :decks-version="decksVersion"
+        @clear-target="editingDeckId = ''"
+      />
     </div>
   </div>
 </template>
@@ -30,6 +35,11 @@ initI18n()
 const tab = ref<'ppt' | 'editor'>('ppt')
 /** PPT 管理页点击"编辑讲稿"跳转过来的目标 deck */
 const editingDeckId = ref('')
+/**
+ * 稿件列表版本号：管理页增删改后 +1，编辑页据此对账。
+ * 编辑页用 v-show 常驻（切页签不销毁），不主动同步就会留着已删除的讲稿。
+ */
+const decksVersion = ref(0)
 
 function onEditScript(deckId: string): void {
   editingDeckId.value = deckId

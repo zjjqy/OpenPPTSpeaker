@@ -57,6 +57,15 @@
           </div>
           <div class="setting-row">
             <div class="sr-body">
+              <div class="sr-title">{{ t('settings.subtitle.title') }}</div>
+              <div class="sr-desc">{{ t('settings.subtitle.desc') }}</div>
+            </div>
+            <span class="switch">
+              <input v-model="form.subtitleEnabled" type="checkbox" @change="dirty = true" /><i></i>
+            </span>
+          </div>
+          <div class="setting-row">
+            <div class="sr-body">
               <div class="sr-title">{{ t('settings.closeOrb.title') }}</div>
               <div class="sr-desc">{{ t('settings.closeOrb.desc') }}</div>
             </div>
@@ -344,6 +353,7 @@ const form = reactive<AppConfig>({
   phonePort: 8123,
   phoneHost: '',
   orbPosition: 'bottom-right',
+  subtitleEnabled: true,
   theme: 'auto',
   accent: 'ocean'
 })

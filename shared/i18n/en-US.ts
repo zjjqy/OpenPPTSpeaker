@@ -62,6 +62,9 @@ export const enUS: Record<DictKey, string> = {
   'settings.closeOrb.title': 'Closing the orb panel',
   'settings.closeOrb.desc': 'Collapses to the system tray and keeps listening for the wake word',
   'settings.closeOrb.chip': 'Always in tray',
+  'settings.subtitle.title': 'Show subtitles',
+  'settings.subtitle.desc':
+    'Show the sentence-by-sentence subtitles during a presentation. Turn this off to keep only the audio and spotlights.',
 
   // Orb positions
   'orb.topLeft': 'Top left',
@@ -213,6 +216,7 @@ export const enUS: Record<DictKey, string> = {
 
   // ==================== Deck library / script editor ====================
   'ppt.subtitle': 'Deck library · Script editor',
+  'ppt.subtitleEditor': 'Script editor',
   'ppt.tabDecks': 'Decks',
   'ppt.tabEditor': 'Script editor',
   'ppt.libraryTitle': 'Deck library',
@@ -318,6 +322,17 @@ export const enUS: Record<DictKey, string> = {
   'edit.errSave': 'Save failed',
   'edit.errSaveDetail': 'Save failed: {msg}',
   'edit.errImport': 'Import failed',
+
+  // Script editor: generate with a prompt
+  'edit.gen.open': 'Prompt',
+  'edit.gen.title': 'Generate the script with a prompt',
+  'edit.gen.desc': 'Leave blank for the default page-by-page narration; fill it in to set tone, focus and audience',
+  'edit.gen.placeholder':
+    'e.g. For a first-time audience: conversational, 3–5 sentences per slide, conclusion first, then the reasoning…',
+  'edit.gen.button': 'Generate script',
+  'edit.gen.busy': 'Generating…',
+  'edit.gen.overwrite':
+    'Note: generating rewrites the whole script — existing sentences, spotlights and subtitle styling are all reset, and this cannot be undone.',
 
   // ==================== Internal worker pages (hidden windows)====================
   'video.errImageLoad': 'Image failed to load',
